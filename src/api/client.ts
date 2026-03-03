@@ -104,8 +104,19 @@ apiClient.interceptors.response.use(
       }
     }
     
-    // Return only the data part (matches Vue app behavior)
-    return response.data;
+    // Transform response to standard format
+    const transformedResponse = {
+      success: response.data.success || response.data.code === 200,
+      code: response.data.code,
+      msg: response.data.msg || response.data.message,
+      message: response.data.msg || response.data.message,
+      data: response.data.data,
+    };
+    
+    console.log('[HTTP Transformed Response]', transformedResponse);
+    
+    // Return transformed response
+    return transformedResponse;
   },
   (error) => {
     console.error(`[HTTP Error]`, error);
@@ -132,6 +143,7 @@ interface RequestOptions {
 export interface ApiResponse<T = any> {
   success: boolean;
   code?: number;
+  msg?: string;
   message?: string;
   data: T;
 }

@@ -86,9 +86,15 @@ export const SignInScreen: React.FC = () => {
         password: password,
       });
       
+      console.log('Login response:', res);
+      
       if (res.success && res.data) {
         // Set auth state - this will trigger navigation to Main
         const { accessToken, id, realname, mobile, email, avatar, membershipTier, coins } = res.data;
+        
+        console.log('Setting auth with token:', accessToken);
+        console.log('User data:', { id, realname, mobile });
+        
         await setAuth(
           {
             id: id,
@@ -101,8 +107,11 @@ export const SignInScreen: React.FC = () => {
           },
           accessToken
         );
+        
+        console.log('Auth set successfully, navigation should switch automatically');
         // Navigation will automatically switch to Main due to isAuthenticated change
       } else {
+        console.error('Login failed:', res);
         const newFailCount = failCount + 1;
         setFailCount(newFailCount);
         
@@ -122,10 +131,11 @@ export const SignInScreen: React.FC = () => {
             ]
           );
         } else {
-          Alert.alert('Error', res.message || 'Login failed. Please try again.');
+          Alert.alert('Error', res.msg || res.message || 'Login failed. Please try again.');
         }
       }
     } catch (error: any) {
+      console.error('Login error:', error);
       Alert.alert('Error', error.message || 'An error occurred');
     } finally {
       setLoading(false);

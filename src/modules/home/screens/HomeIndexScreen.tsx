@@ -12,28 +12,49 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  Image,
   Alert,
+  ImageBackground,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { Image } from 'expo-image';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import CyberLogo from '../../../../assets/images/cyber-logo.svg';
+import HomeLogo from '../../../../assets/images/home-logo.svg';
+import WarrantyLogo from '../../../../assets/images/warranty-logo.svg';
+import PetsLogo from '../../../../assets/images/pets-logo.svg';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { HomeStackParamList } from '../../../app/navigation/types';
 import { Card } from '../../../shared/components';
 import { Colors } from '../../../shared/constants/colors';
 import { Spacing, Typography, BorderRadius, Shadows } from '../../../shared/constants/styles';
-import { useUserStore, useAppStore } from '../../../store';
-import { getOssImg } from '../../../api';
+import { useUserStore, useAppStore, useAuthStore } from '../../../store';
+import { 
+  getOssImg, 
+  getMiscList, 
+  getUnreadNotificationCount,
+  initChat,
+  getCustomerUnfinishedTaskList,
+  getCategoryList,
+  getCompanyList,
+  Category,
+  Company as ApiCompany
+} from '../../../api';
+import { Linking } from 'react-native';
 
 type NavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeIndex'>;
 
 interface Announcement {
   id: number;
+  code: string;
+  title: string;
+  content: string;
+  type: number;
   docUrl: string;
-  linkUrl?: string;
+  value?: string; // Link URL
+  sort: number;
 }
 
 interface Company {
@@ -55,7 +76,9 @@ export const HomeIndexScreen: React.FC = () => {
   const getUserInfoAction = useUserStore((state) => state.getUserInfoAction);
   const getUserBalanceAction = useUserStore((state) => state.getUserBalanceAction);
   const getUserPurchaseMembershipListAction = useUserStore((state) => state.getUserPurchaseMembershipListAction);
+  const logoutAction = useUserStore((state) => state.logoutAction);
   
+  const logout = useAuthStore((state) => state.logout);
   const unreadNotifications = useAppStore((state) => state.unreadNotifications);
   
   // Local state
@@ -109,6 +132,97 @@ export const HomeIndexScreen: React.FC = () => {
     return name;
   }, [userInfo?.realname]);
 
+  // Fetch announcements
+  const getAnnouncements = useCallback(async () => {
+    try {
+      const res = await getMiscList({
+        type: 4, // Type 4 for announcements
+        state: 1, // Only get enabled announcements
+        page: 0,
+        limit: 10,
+      });
+      if (res.success && res.data && Array.isArray(res.data)) {
+        // Sort by sequence number
+        const sortedAnnouncements = res.data.sort((a: any, b: any) => (a.sort || 0) - (b.sort || 0));
+        setAnnouncements(sortedAnnouncements as any);
+      }
+    } catch (error) {
+      console.error('Failed to fetch announcements:', error);
+    }
+  }, []);
+
+  // Fetch unread notification count
+  const getUnreadNotificationCountData = useCallback(async () => {
+    if (!userInfo?.id) {
+      setUnreadNotificationCount(0);
+      return;
+    }
+    try {
+      const res = await getUnreadNotificationCount(userInfo.id);
+      if (res.success && res.data !== undefined) {
+        setUnreadNotificationCount(res.data.count || 0);
+      }
+    } catch (error) {
+      console.error('Failed to fetch unread notification count:', error);
+    }
+  }, [userInfo?.id]);
+
+  // Fetch companies for partner section
+  const getAllCompanies = useCallback(async (categoryList: Category[]) => {
+    try {
+      let allCompanies: ApiCompany[] = [];
+      
+      // Fetch companies for each category
+      if (categoryList && categoryList.length > 0) {
+        for (const category of categoryList) {
+          try {
+            const res = await getCompanyList(category.id);
+            if (res.success && res.data && Array.isArray(res.data)) {
+              allCompanies = [...allCompanies, ...res.data];
+            }
+          } catch (err) {
+            console.error(`Failed to fetch companies for category ${category.id}:`, err);
+          }
+        }
+      }
+      
+      // Filter unique companies with logos
+      const uniqueCompanies = allCompanies.filter(
+        (company, index, self) =>
+          company.logo &&
+          index === self.findIndex((c) => c.id === company.id)
+      );
+      
+      setCompanies(uniqueCompanies.map(c => ({
+        id: Number(c.id),
+        name: c.name,
+        logoUrl: c.logo || ''
+      })));
+    } catch (error) {
+      console.error('Failed to fetch companies:', error);
+    }
+  }, []);
+
+  // Fetch customer tasks
+  const getCustomerTask = useCallback(async () => {
+    if (!token) {
+      return;
+    }
+    try {
+      const res = await getCustomerUnfinishedTaskList({
+        page: 1,
+        limit: 1,
+      });
+      if (res.success && res.data?.records && res.data.records.length > 0) {
+        const task = res.data.records[0];
+        console.log('Customer task:', task);
+        // Handle task if needed (e.g., show PA_COMPLETION dialog)
+      }
+    } catch (error) {
+      console.error('Failed to fetch customer task:', error);
+    }
+  }, [token]);
+
   const loadData = useCallback(async () => {
     try {
       // Load user data if logged in
@@ -118,18 +232,38 @@ export const HomeIndexScreen: React.FC = () => {
           getUserBalanceAction(),
           getUserPurchaseMembershipListAction(),
         ]);
+        
+        // Load notification count and tasks
+        await getUnreadNotificationCountData();
+        await getCustomerTask();
       }
 
-      // TODO: Load notifications, companies, and announcements when APIs are ready
-      // For now, using placeholder data
+      // Load announcements
+      await getAnnouncements();
+      
+      // Load categories then companies
+      const categoryRes = await getCategoryList();
+      if (categoryRes.success && categoryRes.data) {
+        await getAllCompanies(categoryRes.data);
+      }
     } catch (error) {
       console.error('Failed to load home data:', error);
     }
-  }, [token, getUserInfoAction, getUserBalanceAction, getUserPurchaseMembershipListAction]);
+  }, [token, getUserInfoAction, getUserBalanceAction, getUserPurchaseMembershipListAction, getAnnouncements, getUnreadNotificationCountData, getAllCompanies, getCustomerTask]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Reload notification count and tasks when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (token) {
+        getUnreadNotificationCountData();
+        getCustomerTask();
+      }
+    }, [token, getUnreadNotificationCountData, getCustomerTask])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -137,13 +271,36 @@ export const HomeIndexScreen: React.FC = () => {
     setRefreshing(false);
   };
 
-  const toSignIn = () => {
-    (navigation as any).navigate('Auth', { screen: 'SignIn' });
+  const toSignIn = async () => {
+    // Logout both stores to trigger navigation back to Auth
+    logoutAction();
+    await logout();
   };
 
-  const toChat = () => {
-    // Navigate to AI chat
-    Alert.alert('Coming Soon', 'AI Chat feature is coming soon!');
+  const toChat = async () => {
+    if (!token || !userInfo?.id) {
+      Alert.alert('Login Required', 'Please sign in to use the chat feature.');
+      return;
+    }
+    
+    try {
+      const res = await initChat({
+        type: 2,
+        targetId: 9999999999999, // CREAMY AI chatbot ID
+      });
+      
+      if (res.success && res.data) {
+        // Navigate to AI chat page
+        Alert.alert('Chat', `Chat initialized with group ID: ${res.data.id}`);
+        // TODO: Navigate to chat screen when implemented
+        // navigation.navigate('Chat', { groupId: res.data.id, userType: 1 });
+      } else {
+        Alert.alert('Error', res.msg || 'Failed to initialize chat');
+      }
+    } catch (error) {
+      console.error('Failed to initialize chat:', error);
+      Alert.alert('Error', 'Failed to start chat. Please try again.');
+    }
   };
 
   const toNotification = () => {
@@ -152,7 +309,7 @@ export const HomeIndexScreen: React.FC = () => {
 
   const toMemberApply = () => {
     if (!token) {
-      toSignIn();
+      Alert.alert('Login Required', 'Please sign in to apply for membership.');
       return;
     }
     // Navigate to membership application
@@ -179,11 +336,20 @@ export const HomeIndexScreen: React.FC = () => {
     Alert.alert('FAQ', 'Frequently Asked Questions coming soon!');
   };
 
+  const onAnnouncementClick = (announcement: Announcement) => {
+    if (announcement.value) {
+      // Open the link in the browser
+      Linking.openURL(announcement.value).catch((err) =>
+        console.error('Failed to open URL:', err)
+      );
+    }
+  };
+
   const popularItems = [
-    { key: 'cyber', icon: 'shield-checkmark', label: 'Cyber', onPress: toCyber },
-    { key: 'home', icon: 'home', label: 'Home', onPress: toHome },
-    { key: 'warranty', icon: 'construct', label: 'Extended Warranty', onPress: comingSoon },
-    { key: 'pets', icon: 'paw', label: 'Pets', onPress: comingSoon },
+    { key: 'cyber', Icon: CyberLogo, label: 'Cyber', onPress: toCyber },
+    { key: 'home', Icon: HomeLogo, label: 'Home', onPress: toHome },
+    { key: 'warranty', Icon: WarrantyLogo, label: 'Extended Warranty', onPress: comingSoon },
+    { key: 'pets', Icon: PetsLogo, label: 'Pets', onPress: comingSoon },
   ];
 
   return (
@@ -200,9 +366,10 @@ export const HomeIndexScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Yellow Header Section */}
-        <LinearGradient
-          colors={[Colors.primary, Colors.primaryDark]}
+        <ImageBackground
+          source={require('../../../../assets/images/header-bg.png')}
           style={[styles.headerSection, { paddingTop: insets.top + Spacing.md }]}
+          resizeMode="cover"
         >
           {/* Header Row */}
           <View style={styles.headerRow}>
@@ -284,10 +451,14 @@ export const HomeIndexScreen: React.FC = () => {
               </View>
             </View>
           </View>
-        </LinearGradient>
+        </ImageBackground>
 
         {/* Coins Card */}
-        <View style={styles.coinCard}>
+        <ImageBackground
+          source={require('../../../../assets/images/coin-card-bg.png')}
+          style={styles.coinCard}
+          resizeMode="cover"
+        >
           <View style={styles.coinLeft}>
             <View style={styles.coinIconWrapper}>
               <Image
@@ -315,7 +486,7 @@ export const HomeIndexScreen: React.FC = () => {
               <Ionicons name="chevron-forward" size={16} color={Colors.textSecondary} />
             </TouchableOpacity>
           </View>
-        </View>
+        </ImageBackground>
 
         {/* Level Progress */}
         {token && (
@@ -343,7 +514,7 @@ export const HomeIndexScreen: React.FC = () => {
         {/* Popular Now Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Popular Now</Text>
+            <Text style={styles.sectionTitle} numberOfLines={1}>Popular Now</Text>
             <View style={styles.sectionUnderline} />
           </View>
           <View style={styles.popularGrid}>
@@ -354,7 +525,7 @@ export const HomeIndexScreen: React.FC = () => {
                 onPress={item.onPress}
               >
                 <View style={styles.popularIcon}>
-                  <Ionicons name={item.icon as any} size={28} color={Colors.primary} />
+                  <item.Icon width={40} height={40} />
                 </View>
                 <Text style={styles.popularLabel}>{item.label}</Text>
               </TouchableOpacity>
@@ -365,7 +536,7 @@ export const HomeIndexScreen: React.FC = () => {
         {/* What's New Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>What's New</Text>
+            <Text style={styles.sectionTitle} numberOfLines={1}>What's New</Text>
             <View style={styles.sectionUnderline} />
           </View>
           <ScrollView 
@@ -374,15 +545,29 @@ export const HomeIndexScreen: React.FC = () => {
             style={styles.announcementScroll}
           >
             {announcements.length > 0 ? (
-              announcements.map((announcement, index) => (
-                <TouchableOpacity key={announcement.id || index} style={styles.announcementCard}>
-                  <Image
-                    source={{ uri: getOssImg(announcement.docUrl) }}
-                    style={styles.announcementImage}
-                    resizeMode="cover"
-                  />
-                </TouchableOpacity>
-              ))
+              announcements.map((announcement, index) => {
+                // Try the docUrl as-is first (might already be a full URL)
+                let imageUrl = announcement.docUrl || '';
+                
+                // If it's not a full URL, use getOssImg
+                if (imageUrl && !imageUrl.startsWith('http')) {
+                  imageUrl = getOssImg(imageUrl);
+                }
+                
+                return (
+                  <TouchableOpacity 
+                    key={announcement.id || index} 
+                    style={styles.announcementCard}
+                    onPress={() => onAnnouncementClick(announcement)}
+                  >
+                    <Image
+                      source={{ uri: imageUrl }}
+                      style={styles.announcementImage}
+                      resizeMode="cover"
+                    />
+                  </TouchableOpacity>
+                );
+              })
             ) : (
               [1, 2, 3].map((item) => (
                 <View key={item} style={styles.announcementCard}>
@@ -398,17 +583,29 @@ export const HomeIndexScreen: React.FC = () => {
         {/* Help Center Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Help Center</Text>
+            <Text style={styles.sectionTitle} numberOfLines={1}>Help Center</Text>
             <View style={styles.sectionUnderline} />
           </View>
           <View style={styles.helpRow}>
             <TouchableOpacity style={styles.helpCard} onPress={toContactUs}>
-              <Text style={styles.helpText}>Contact Us</Text>
-              <Ionicons name="mail-outline" size={32} color={Colors.primary} />
+              <View>
+                <Text style={styles.helpText}>Contact Us</Text>
+              </View>
+              <Image
+                source={require('../../../../assets/images/contact-us-icon.png')}
+                style={styles.helpIcon}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
             <TouchableOpacity style={styles.helpCard} onPress={toFAQ}>
-              <Text style={styles.helpText}>FAQ</Text>
-              <Ionicons name="help-circle-outline" size={32} color={Colors.primary} />
+              <View>
+                <Text style={styles.helpText}>FAQ</Text>
+              </View>
+              <Image
+                source={require('../../../../assets/images/faq-icon.png')}
+                style={styles.helpIcon}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -417,7 +614,7 @@ export const HomeIndexScreen: React.FC = () => {
         {companies.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Our Partners</Text>
+              <Text style={styles.sectionTitle} numberOfLines={1}>Our Partners</Text>
               <View style={styles.sectionUnderline} />
             </View>
             <ScrollView 
@@ -445,7 +642,7 @@ export const HomeIndexScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroundGrey,
+    backgroundColor: '#FDFDFD',
   },
   
   scrollView: {
@@ -458,10 +655,11 @@ const styles = StyleSheet.create({
   
   // Header Section
   headerSection: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    paddingHorizontal: 24,
+    paddingBottom: 45,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    overflow: 'hidden',
   },
   
   headerRow: {
@@ -615,12 +813,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: Colors.background,
-    marginHorizontal: Spacing.lg,
-    marginTop: -Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    ...Shadows.md,
+    marginHorizontal: 12,
+    marginTop: -30,
+    borderRadius: 20,
+    padding: 10,
+    height: 53,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 2,
+    elevation: 4,
+    overflow: 'hidden',
   },
   
   coinLeft: {
@@ -687,17 +890,18 @@ const styles = StyleSheet.create({
   
   // Level Section
   levelSection: {
-    marginHorizontal: Spacing.lg,
-    marginTop: Spacing.lg,
+    marginHorizontal: 12,
+    marginTop: 8,
     backgroundColor: Colors.background,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
+    borderRadius: 20,
+    padding: 12,
+    paddingTop: 16,
   },
   
   levelTitle: {
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semiBold as any,
-    color: Colors.textPrimary,
+    fontSize: 13,
+    fontWeight: Typography.weight.bold as any,
+    color: '#343434',
     marginBottom: Spacing.sm,
   },
   
@@ -745,32 +949,34 @@ const styles = StyleSheet.create({
   
   tierName: {
     fontSize: 10,
-    color: Colors.textSecondary,
+    fontWeight: Typography.weight.bold as any,
+    color: '#808080',
   },
   
   // Section
   section: {
-    marginTop: Spacing.xl,
-    paddingHorizontal: Spacing.lg,
+    marginTop: 40,
+    paddingHorizontal: 12,
   },
   
   sectionHeader: {
     alignItems: 'center',
-    marginBottom: Spacing.md,
+    marginBottom: 20,
   },
   
   sectionTitle: {
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.semiBold as any,
-    color: Colors.textPrimary,
+    fontSize: 18,
+    fontWeight: Typography.weight.bold as any,
+    color: '#343434',
+    lineHeight: 20,
   },
   
   sectionUnderline: {
-    width: 40,
-    height: 3,
+    width: 30,
+    height: 2,
     backgroundColor: Colors.primary,
-    borderRadius: 2,
-    marginTop: Spacing.xs,
+    borderRadius: 1,
+    marginTop: 6,
   },
   
   // Popular Grid
@@ -795,22 +1001,23 @@ const styles = StyleSheet.create({
   },
   
   popularLabel: {
-    fontSize: Typography.size.xs,
-    color: Colors.textSecondary,
+    fontSize: 10,
+    fontWeight: Typography.weight.bold as any,
+    color: '#343434',
     textAlign: 'center',
   },
   
   // Announcements
   announcementScroll: {
-    marginLeft: -Spacing.lg,
-    paddingLeft: Spacing.lg,
+    marginLeft: -12,
+    paddingLeft: 12,
   },
   
   announcementCard: {
-    width: 200,
-    height: 150,
-    marginRight: Spacing.md,
-    borderRadius: BorderRadius.md,
+    width: 301,
+    height: 181,
+    marginRight: 11,
+    borderRadius: 20,
     overflow: 'hidden',
   },
   
@@ -830,30 +1037,41 @@ const styles = StyleSheet.create({
   // Help Row
   helpRow: {
     flexDirection: 'row',
-    gap: Spacing.md,
+    gap: 10,
+    paddingHorizontal: 42,
   },
   
   helpCard: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    ...Shadows.sm,
+    alignItems: 'flex-start',
+    backgroundColor: '#FEE29E',
+    borderRadius: 12,
+    paddingLeft: 14,
+    paddingTop: 16,
+    paddingRight: 0,
+    height: 106,
+    overflow: 'hidden',
   },
   
   helpText: {
-    fontSize: Typography.size.base,
-    fontWeight: Typography.weight.semiBold as any,
-    color: Colors.textPrimary,
+    fontSize: 15,
+    fontWeight: Typography.weight.bold as any,
+    color: '#000000',
+    lineHeight: 18,
+    marginTop: 4,
+  },
+  
+  helpIcon: {
+    width: 85,
+    height: 92,
   },
   
   // Partners
   partnersScroll: {
-    marginLeft: -Spacing.lg,
-    paddingLeft: Spacing.lg,
+    marginLeft: -12,
+    paddingLeft: 12,
   },
   
   partnerLogo: {
