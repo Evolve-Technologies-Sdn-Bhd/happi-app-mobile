@@ -3,18 +3,25 @@
  * Main Entry Point
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { StatusBar, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as SplashScreen from 'expo-splash-screen';
-import * as Font from 'expo-font';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import {
+  useFonts,
+  ZenMaruGothic_300Light,
+  ZenMaruGothic_400Regular,
+  ZenMaruGothic_500Medium,
+  ZenMaruGothic_700Bold,
+  ZenMaruGothic_900Black,
+} from '@expo-google-fonts/zen-maru-gothic';
 
 import { RootNavigator } from './src/app/navigation/RootNavigator';
 import { useAuthStore } from './src/store/authStore';
-import { Colors } from './src/shared/constants/colors';
+import { Colors, FontFamily } from './src/shared/constants';
 import './src/i18n';
 
 // Keep splash screen visible while loading resources
@@ -32,17 +39,20 @@ const queryClient = new QueryClient({
 });
 
 export default function App() {
-  const [appIsReady, setAppIsReady] = useState(false);
   const { checkAuth } = useAuthStore();
+
+  // Load Zen Maru Gothic fonts
+  const [fontsLoaded] = useFonts({
+    ZenMaruGothic_300Light,
+    ZenMaruGothic_400Regular,
+    ZenMaruGothic_500Medium,
+    ZenMaruGothic_700Bold,
+    ZenMaruGothic_900Black,
+  });
 
   useEffect(() => {
     async function prepare() {
       try {
-        // Load fonts
-        await Font.loadAsync({
-          // Add custom fonts here if needed
-        });
-
         // Check authentication state
         await checkAuth();
 
@@ -50,8 +60,6 @@ export default function App() {
         await new Promise((resolve) => setTimeout(resolve, 500));
       } catch (error) {
         console.warn('App initialization error:', error);
-      } finally {
-        setAppIsReady(true);
       }
     }
 
@@ -59,12 +67,12 @@ export default function App() {
   }, []);
 
   const onLayoutRootView = useCallback(async () => {
-    if (appIsReady) {
+    if (fontsLoaded) {
       await SplashScreen.hideAsync();
     }
-  }, [appIsReady]);
+  }, [fontsLoaded]);
 
-  if (!appIsReady) {
+  if (!fontsLoaded) {
     return null;
   }
 
@@ -86,19 +94,19 @@ export default function App() {
               },
               fonts: {
                 regular: {
-                  fontFamily: 'System',
+                  fontFamily: FontFamily.regular,
                   fontWeight: '400',
                 },
                 medium: {
-                  fontFamily: 'System',
+                  fontFamily: FontFamily.medium,
                   fontWeight: '500',
                 },
                 bold: {
-                  fontFamily: 'System',
+                  fontFamily: FontFamily.bold,
                   fontWeight: '700',
                 },
                 heavy: {
-                  fontFamily: 'System',
+                  fontFamily: FontFamily.black,
                   fontWeight: '800',
                 },
               },

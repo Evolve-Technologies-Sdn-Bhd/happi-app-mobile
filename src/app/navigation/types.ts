@@ -16,6 +16,7 @@ export type RootStackParamList = {
 
 export type AuthStackParamList = {
   Startup: undefined;
+  Onboarding: undefined;
   SignIn: undefined;
   SignUp: undefined;
   OTP: { phone: string; type: 'signup' | 'reset' };
@@ -26,7 +27,7 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   Home: undefined;
   Membership: undefined;
-  Vouchers: undefined;
+  Products: undefined;
   Profile: undefined;
 };
 
@@ -57,6 +58,11 @@ export type MembershipStackParamList = {
   Nominees: undefined;
   AddEditNominee: { nomineeId?: string };
   PurchaseHistory: undefined;
+};
+
+export type ProductStackParamList = {
+  ProductIndex: undefined;
+  ProductDetail: { productId: string };
 };
 
 export type VoucherStackParamList = {

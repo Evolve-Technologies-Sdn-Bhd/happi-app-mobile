@@ -43,16 +43,19 @@ export const StartupScreen: React.FC = () => {
   
   const [versionCode, setVersionCode] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [hasNavigatedToOnboarding, setHasNavigatedToOnboarding] = useState(false);
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    
     // Get version code
     const version = Constants.expoConfig?.version || Config.VERSION_CODE;
     setVersionCode(version);
     
-    // Check if already agreed and has token
-    if (agreed) {
+    // Only auto-navigate if already agreed on app start (not after clicking Agree)
+    if (agreed && !hasNavigatedToOnboarding) {
       // Navigate to main after splash delay
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         if (token) {
           // Navigate to main app (TabNavigator)
           navigation.dispatch(
@@ -65,15 +68,23 @@ export const StartupScreen: React.FC = () => {
           navigation.navigate('SignIn');
         }
       }, 2500);
-    } else {
+    } else if (!agreed) {
       setIsLoading(false);
     }
-  }, [agreed, token, navigation]);
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, []);  // Only run on mount
 
   const handleAgree = async () => {
     await setAgreed(true);
-    // Navigate to sign in (or startup flow for permissions)
-    navigation.navigate('SignIn');
+    setHasNavigatedToOnboarding(true);
+    // Navigate to onboarding flow
+    navigation.navigate('Onboarding');
   };
 
   const handleDisagree = () => {

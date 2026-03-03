@@ -3,6 +3,7 @@
  */
 
 export * from './StartupScreen';
+export * from './OnboardingScreen';
 export * from './SignInScreen';
 export * from './SignUpScreen';
 export * from './OtpScreen';
