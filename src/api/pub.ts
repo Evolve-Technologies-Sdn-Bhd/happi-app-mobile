@@ -50,6 +50,10 @@ export interface Misc {
   title: string;
   content: string;
   type: number;
+  docUrl?: string;
+  value?: string;
+  sort?: number;
+  state?: number;
 }
 
 export interface SupportEmailData {
