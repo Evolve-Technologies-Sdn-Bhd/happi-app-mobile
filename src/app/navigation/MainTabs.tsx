@@ -11,14 +11,14 @@ import { Colors } from '../../shared/constants/colors';
 import { Typography } from '../../shared/constants/styles';
 
 // Import tab stacks
-import { HomeStack, MembershipStack, VoucherStack, ProfileStack } from './stacks';
+import { HomeStack, MembershipStack, ProductStack, ProfileStack } from './stacks';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const tabIcons: Record<keyof MainTabParamList, { focused: keyof typeof Ionicons.glyphMap; default: keyof typeof Ionicons.glyphMap }> = {
   Home: { focused: 'home', default: 'home-outline' },
   Membership: { focused: 'card', default: 'card-outline' },
-  Vouchers: { focused: 'gift', default: 'gift-outline' },
+  Products: { focused: 'grid', default: 'grid-outline' },
   Profile: { focused: 'person', default: 'person-outline' },
 };
 
@@ -63,9 +63,9 @@ export const MainTabs: React.FC = () => {
         options={{ tabBarLabel: 'Membership' }}
       />
       <Tab.Screen
-        name="Vouchers"
-        component={VoucherStack}
-        options={{ tabBarLabel: 'Vouchers' }}
+        name="Products"
+        component={ProductStack}
+        options={{ tabBarLabel: 'Products' }}
       />
       <Tab.Screen
         name="Profile"

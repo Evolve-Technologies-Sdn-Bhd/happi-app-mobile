@@ -10,6 +10,7 @@ import { AuthStackParamList } from './types';
 // Import screens from auth module
 import {
   StartupScreen,
+  OnboardingScreen,
   SignInScreen,
   SignUpScreen,
   OtpScreen,
@@ -29,6 +30,7 @@ export const AuthStack: React.FC = () => {
       }}
     >
       <Stack.Screen name="Startup" component={StartupScreen} />
+      <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       <Stack.Screen name="SignIn" component={SignInScreen} />
       <Stack.Screen name="SignUp" component={SignUpScreen} />
       <Stack.Screen name="OTP" component={OtpScreen} />
