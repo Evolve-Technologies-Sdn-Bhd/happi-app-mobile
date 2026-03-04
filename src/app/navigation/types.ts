@@ -28,7 +28,7 @@ export type MainTabParamList = {
   Home: undefined;
   Membership: undefined;
   Products: undefined;
-  Profile: undefined;
+  Service: undefined;
 };
 
 export type HomeStackParamList = {
@@ -63,6 +63,12 @@ export type MembershipStackParamList = {
 export type ProductStackParamList = {
   ProductIndex: undefined;
   ProductDetail: { productId: string };
+  InsurancePlans: { tabCode?: number; categoryId?: string };
+};
+
+export type ServiceStackParamList = {
+  ServiceIndex: undefined;
+  ServiceDetail: { serviceId: string };
 };
 
 export type VoucherStackParamList = {

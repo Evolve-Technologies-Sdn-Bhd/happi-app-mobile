@@ -7,4 +7,5 @@ export { HomeStack } from './HomeStack';
 export { MembershipStack } from './MembershipStack';
 export { VoucherStack } from './VoucherStack';
 export { ProductStack } from './ProductStack';
+export { ServiceStack } from './ServiceStack';
 export { ProfileStack } from './ProfileStack';

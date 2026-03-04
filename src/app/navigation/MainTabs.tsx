@@ -11,7 +11,7 @@ import { Colors } from '../../shared/constants/colors';
 import { Typography } from '../../shared/constants/styles';
 
 // Import tab stacks
-import { HomeStack, MembershipStack, ProductStack, ProfileStack } from './stacks';
+import { HomeStack, MembershipStack, ProductStack, ServiceStack } from './stacks';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -19,7 +19,7 @@ const tabIcons: Record<keyof MainTabParamList, { focused: keyof typeof Ionicons.
   Home: { focused: 'home', default: 'home-outline' },
   Membership: { focused: 'card', default: 'card-outline' },
   Products: { focused: 'grid', default: 'grid-outline' },
-  Profile: { focused: 'person', default: 'person-outline' },
+  Service: { focused: 'briefcase', default: 'briefcase-outline' },
 };
 
 export const MainTabs: React.FC = () => {
@@ -68,9 +68,9 @@ export const MainTabs: React.FC = () => {
         options={{ tabBarLabel: 'Products' }}
       />
       <Tab.Screen
-        name="Profile"
-        component={ProfileStack}
-        options={{ tabBarLabel: 'Profile' }}
+        name="Service"
+        component={ServiceStack}
+        options={{ tabBarLabel: 'Service' }}
       />
     </Tab.Navigator>
   );
