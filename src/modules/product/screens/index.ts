@@ -3,3 +3,4 @@
  */
 
 export { ProductIndexScreen } from './ProductIndexScreen';
+export { InsurancePlansScreen } from './InsurancePlansScreen';

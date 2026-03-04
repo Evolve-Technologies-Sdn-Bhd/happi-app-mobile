@@ -7,7 +7,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ProductStackParamList } from '../types';
 
 // Import screens from product module
-import { ProductIndexScreen } from '../../../modules/product/screens';
+import { ProductIndexScreen, InsurancePlansScreen } from '../../../modules/product/screens';
 // Import detail screen from home module (can be moved later)
 import { ProductDetailScreen } from '../../../modules/home/screens';
 
@@ -22,6 +22,7 @@ export const ProductStack: React.FC = () => {
       }}
     >
       <Stack.Screen name="ProductIndex" component={ProductIndexScreen} />
+      <Stack.Screen name="InsurancePlans" component={InsurancePlansScreen} />
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
     </Stack.Navigator>
   );
