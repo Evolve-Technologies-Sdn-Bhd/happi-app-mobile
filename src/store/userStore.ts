@@ -144,13 +144,16 @@ export const useUserStore = create<UserState>((set, get) => ({
   // Get user balance (matching Vue app)
   getUserBalanceAction: async () => {
     try {
+      console.log('💰 [getUserBalanceAction] Calling API...');
       const res = await api.getUserBalanceInfo();
+      console.log('💰 [getUserBalanceAction] Response:', JSON.stringify(res, null, 2));
       if (res.success) {
+        console.log('💰 [getUserBalanceAction] Setting balance:', res.data.amount);
         set({ balance: res.data.amount });
       }
       return res;
     } catch (error) {
-      console.error('getUserBalanceAction error:', error);
+      console.error('❌ getUserBalanceAction error:', error);
       return { success: false, error };
     }
   },
@@ -169,31 +172,21 @@ export const useUserStore = create<UserState>((set, get) => ({
     }
   },
   
-  // Get user info (matching Vue app)
+  // Get user info (matching Vue app - store raw API response)
   getUserInfoAction: async () => {
     try {
+      console.log('👤 [getUserInfoAction] Calling API...');
       const res = await api.getCustomerInfo();
+      console.log('👤 [getUserInfoAction] Response:', JSON.stringify(res, null, 2));
       if (res.success && res.data) {
-        const userInfo: UserInfo = {
-          id: res.data.id,
-          realname: res.data.realname,
-          mobile: res.data.mobile,
-          email: res.data.email,
-          avatar: res.data.avatar,
-          membershipTier: res.data.membershipTier,
-          coins: res.data.coins,
-          referralCode: res.data.referralCode,
-          icNo: res.data.idNumber,
-          nationality: res.data.nationality,
-          birthday: res.data.birthday,
-          gender: res.data.gender ? parseInt(res.data.gender) : undefined,
-        };
-        set({ info: userInfo });
-        storage.set(StorageKeys.USER_DATA, userInfo);
+        console.log('👤 [getUserInfoAction] Setting info:', res.data);
+        // Store the raw API response directly like Vue does: this.info = res.data
+        set({ info: res.data as any });
+        storage.set(StorageKeys.USER_DATA, res.data);
       }
       return res;
     } catch (error) {
-      console.error('getUserInfoAction error:', error);
+      console.error('❌ getUserInfoAction error:', error);
       return { success: false, error };
     }
   },

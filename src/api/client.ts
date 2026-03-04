@@ -5,6 +5,7 @@
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useUserStore } from '../store/userStore';
 
 // Environment configuration - matches happi-app-customer/src/config/index.js
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://api.happi.com.my';
@@ -45,11 +46,14 @@ const apiClient: AxiosInstance = axios.create({
 // Request interceptor - matches Vue app's request interceptor
 apiClient.interceptors.request.use(
   async (config) => {
-    // Get token from storage
-    const token = await AsyncStorage.getItem(StorageKeys.AUTH_TOKEN);
+    // Get token from userStore (like Vue app) instead of AsyncStorage
+    const token = useUserStore.getState().token;
     
     if (token) {
       config.headers.Authorization = token;
+      console.log(`🔑 [HTTP] Using token from store:`, token.substring(0, 50) + '...');
+    } else {
+      console.log(`⚠️ [HTTP] No token in store`);
     }
     
     // Add timestamp to prevent caching for GET requests

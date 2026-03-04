@@ -9,6 +9,7 @@ import { RootStackParamList } from './types';
 import { AuthStack } from './AuthStack';
 import { MainTabs } from './MainTabs';
 import { useAuthStore } from '../../store/authStore';
+import { useUserStore } from '../../store/userStore';
 import { useAppStore } from '../../store/appStore';
 import { ScreenLoading } from '../../shared/components/Loading';
 
@@ -17,11 +18,16 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export const RootNavigator: React.FC = () => {
   const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
   const { loadAppSettings } = useAppStore();
+  const checkUserAuth = useUserStore((state) => state.checkAuth);
 
   useEffect(() => {
     const initializeApp = async () => {
       await loadAppSettings();
-      await checkAuth();
+      // Check both auth stores to keep them in sync
+      await Promise.all([
+        checkAuth(),
+        checkUserAuth(),
+      ]);
     };
     
     initializeApp();

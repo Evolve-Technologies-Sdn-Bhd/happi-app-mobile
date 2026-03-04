@@ -4,18 +4,22 @@
 import { httpRequest } from './client';
 
 export interface UserNotification {
-  id: string;
-  userId: string;
+  id: number;
+  userId: number;
   title: string;
-  message: string;
-  type: string;
-  isRead: boolean;
-  createdAt: string;
+  description: string;
+  message?: string;
+  type?: string;
+  isRead: number; // 0: unread, 1: read
+  createTime: string;
+  createdAt?: string;
   data?: any;
 }
 
+export type NotificationItem = UserNotification;
+
 export interface NotificationListParams {
-  userId: string;
+  userId: number | string;
   page?: number;
   limit?: number;
 }
@@ -24,7 +28,7 @@ export interface NotificationListParams {
  * Get user notifications (paginated)
  */
 export const getNotificationList = (params: NotificationListParams) => {
-  return httpRequest<{ list: UserNotification[]; total: number }>({
+  return httpRequest<{ records: UserNotification[]; total: number; current: number; size: number; pages: number }>({
     method: 'GET',
     url: '/v1/notification/list',
     params,
@@ -34,8 +38,8 @@ export const getNotificationList = (params: NotificationListParams) => {
 /**
  * Get unread notifications count
  */
-export const getUnreadNotificationCount = (userId: string) => {
-  return httpRequest<{ count: number }>({
+export const getUnreadNotificationCount = (userId: number | string) => {
+  return httpRequest<number>({
     method: 'GET',
     url: `/v1/notification/unread-count?userId=${userId}`,
   });
@@ -44,7 +48,7 @@ export const getUnreadNotificationCount = (userId: string) => {
 /**
  * Get recent unread notifications
  */
-export const getRecentUnreadNotifications = (params: { userId: string; limit?: number }) => {
+export const getRecentUnreadNotifications = (params: { userId: number | string; limit?: number }) => {
   return httpRequest<UserNotification[]>({
     method: 'GET',
     url: '/v1/notification/recent-unread',
@@ -55,7 +59,7 @@ export const getRecentUnreadNotifications = (params: { userId: string; limit?: n
 /**
  * Mark notification as read
  */
-export const markNotificationAsRead = (notificationId: string, userId: string) => {
+export const markNotificationAsRead = (notificationId: number | string, userId: number | string | undefined) => {
   return httpRequest({
     method: 'PUT',
     url: `/v1/notification/mark-read?notificationId=${notificationId}&userId=${userId}`,
@@ -65,7 +69,7 @@ export const markNotificationAsRead = (notificationId: string, userId: string) =
 /**
  * Mark all notifications as read
  */
-export const markAllNotificationsAsRead = (userId: string) => {
+export const markAllNotificationsAsRead = (userId: number | string) => {
   return httpRequest({
     method: 'PUT',
     url: `/v1/notification/mark-all-read?userId=${userId}`,
@@ -75,7 +79,7 @@ export const markAllNotificationsAsRead = (userId: string) => {
 /**
  * Delete notification
  */
-export const deleteNotification = (notificationId: string, userId: string) => {
+export const deleteNotification = (notificationId: number | string, userId: number | string | undefined) => {
   return httpRequest({
     method: 'DELETE',
     url: `/v1/notification/delete?notificationId=${notificationId}&userId=${userId}`,

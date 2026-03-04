@@ -24,24 +24,29 @@ import CyberLogo from '../../../../assets/images/cyber-logo.svg';
 import HomeLogo from '../../../../assets/images/home-logo.svg';
 import WarrantyLogo from '../../../../assets/images/warranty-logo.svg';
 import PetsLogo from '../../../../assets/images/pets-logo.svg';
+import FlagIcon from '../../../../assets/images/flag.svg';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { HomeStackParamList } from '../../../app/navigation/types';
-import { Card } from '../../../shared/components';
+import { Card, Toast } from '../../../shared/components';
 import { Colors } from '../../../shared/constants/colors';
+import { CategoryCard } from '../components/CategoryCard';
+import { useToast } from '../../../shared/hooks/useToast';
 import { Spacing, Typography, BorderRadius, Shadows } from '../../../shared/constants/styles';
 import { useUserStore, useAppStore, useAuthStore } from '../../../store';
 import { 
   getOssImg, 
   getMiscList, 
   getUnreadNotificationCount,
-  initChat,
   getCustomerUnfinishedTaskList,
   getCategoryList,
   getCompanyList,
   Category,
-  Company as ApiCompany
+  Company as ApiCompany,
+  MembershipItem,
+  MembershipMultiplier
 } from '../../../api';
+import membershipApi from '../../../api/membership';
 import { Linking } from 'react-native';
 
 type NavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeIndex'>;
@@ -64,6 +69,7 @@ interface Company {
 }
 
 export const HomeIndexScreen: React.FC = () => {
+  console.log('🏠 ===== HOME SCREEN COMPONENT LOADED (NEW CODE) =====');
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
@@ -80,12 +86,25 @@ export const HomeIndexScreen: React.FC = () => {
   
   const logout = useAuthStore((state) => state.logout);
   const unreadNotifications = useAppStore((state) => state.unreadNotifications);
+
+  // DEBUG: Log store values on every render
+  console.log('🎯 RENDER - Token:', token);
+  console.log('🎯 RENDER - UserInfo:', userInfo);
+  console.log('🎯 RENDER - Balance:', balance);
+  console.log('🎯 RENDER - UserInfo.id:', userInfo?.id);
+  console.log('🎯 RENDER - UserInfo.name:', (userInfo as any)?.name);
+  console.log('🎯 RENDER - UserInfo.avatar:', userInfo?.avatar);
   
   // Local state
   const [refreshing, setRefreshing] = useState(false);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const [memberships, setMemberships] = useState<MembershipItem[]>([]);
+  const [membershipMultipliers, setMembershipMultipliers] = useState<Map<string, number>>(new Map());
+  
+  // Toast
+  const { toast, showToast, hideToast } = useToast();
 
   // Get current membership (highest tier, not special, not expired)
   const currentMembership = React.useMemo(() => {
@@ -108,7 +127,11 @@ export const HomeIndexScreen: React.FC = () => {
 
   // Display name with truncation
   const displayName = React.useMemo(() => {
-    let name = userInfo?.realname ? String(userInfo.realname) : '';
+    console.log('🔤 Computing displayName - userInfo:', userInfo);
+    // Handle both 'name' and 'realname' from API (backend inconsistency)
+    let name = (userInfo as any)?.name || userInfo?.realname || '';
+    name = String(name);
+    console.log('🔤 Extracted name:', name);
     if (!name) return '';
     const maxLength = 25;
     if (name.length <= maxLength) return name;
@@ -130,7 +153,77 @@ export const HomeIndexScreen: React.FC = () => {
       return name.substring(0, maxLength) + '...';
     }
     return name;
-  }, [userInfo?.realname]);
+  }, [userInfo]); // Re-compute when userInfo changes
+
+  console.log('🔤 FINAL displayName:', displayName);
+
+  // Calculate target levels with active states (similar to Vue coin-card component)
+  const targetLevels = React.useMemo(() => {
+    // Create level objects from memberships
+    let levels = memberships.map((item) => ({
+      id: item.id,
+      tier: parseInt(item.tier, 10) || 0,
+      name: item.name,
+      active: false,
+      flag: false,
+    }));
+
+    // Sort by tier
+    levels.sort((a, b) => a.tier - b.tier);
+
+    // Add Non-Member at the beginning
+    levels = [
+      {
+        id: '0',
+        tier: 0,
+        name: 'Non-Member',
+        active: true,
+        flag: false,
+      },
+      ...levels,
+    ];
+
+    // Mark levels as active based on purchased memberships
+    const targetLevels = levels.map((level) => ({
+      ...level,
+      active: purchaseMembershipList?.some((membership: any) => {
+        if (level.tier === 1) {
+          return membership.tier === 1 || membership.isSpecial === 1;
+        }
+        return membership.tier == level.tier;
+      }) || false,
+    }));
+
+    targetLevels[0].active = true; // Non-Member is always active
+
+    // Find the last active index and mark all levels up to it as active
+    const lastActiveIndex = targetLevels.map((item) => item.active).lastIndexOf(true);
+    
+    // Set flag on last active level
+    targetLevels.forEach((item) => (item.flag = false));
+    if (lastActiveIndex !== -1) {
+      targetLevels[lastActiveIndex].flag = true;
+    }
+
+    // Activate all levels up to the last active one
+    for (let i = 0; i <= lastActiveIndex; i++) {
+      targetLevels[i].active = true;
+    }
+
+    return targetLevels;
+  }, [memberships, purchaseMembershipList]);
+
+  // Get the index of the topmost active multiplier
+  const topMultiplierIndex = React.useMemo(() => {
+    return targetLevels.map((item) => item.active).lastIndexOf(true);
+  }, [targetLevels]);
+
+  // Calculate progress bar width percentage
+  const progressWidth = React.useMemo(() => {
+    if (!token || targetLevels.length === 0) return '100%';
+    const percentage = (topMultiplierIndex / (targetLevels.length - 1)) * 100;
+    return `${Math.min(100, Math.max(0, percentage))}%`;
+  }, [token, topMultiplierIndex, targetLevels.length]);
 
   // Fetch announcements
   const getAnnouncements = useCallback(async () => {
@@ -159,11 +252,14 @@ export const HomeIndexScreen: React.FC = () => {
     }
     try {
       const res = await getUnreadNotificationCount(userInfo.id);
-      if (res.success && res.data !== undefined) {
-        setUnreadNotificationCount(res.data.count || 0);
+      if (res && res.success) {
+        // Handle both number and object response formats
+        const count = typeof res.data === 'number' ? res.data : (res.data?.count || 0);
+        setUnreadNotificationCount(count);
       }
     } catch (error) {
       console.error('Failed to fetch unread notification count:', error);
+      setUnreadNotificationCount(0);
     }
   }, [userInfo?.id]);
 
@@ -223,23 +319,61 @@ export const HomeIndexScreen: React.FC = () => {
     }
   }, [token]);
 
+  // Fetch membership list
+  const getMembershipListData = useCallback(async () => {
+    try {
+      const res = await membershipApi.getMembershipList();
+      if (res.success && res.data) {
+        setMemberships(res.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch membership list:', error);
+    }
+  }, []);
+
+  // Fetch membership multipliers
+  const getMembershipMultiplierListData = useCallback(async () => {
+    try {
+      const res = await membershipApi.getMembershipMultiplierList();
+      if (res.success && res.data) {
+        // Create a map of membershipId to multiplier
+        const multiplierMap = new Map<string, number>();
+        res.data.forEach((item) => {
+          multiplierMap.set(item.tier, item.multiplier);
+        });
+        setMembershipMultipliers(multiplierMap);
+      }
+    } catch (error) {
+      console.error('Failed to fetch membership multipliers:', error);
+    }
+  }, []);
+
   const loadData = useCallback(async () => {
+    console.log('📦 LoadData called - Token:', token);
     try {
       // Load user data if logged in
       if (token) {
+        console.log('✅ Token present, loading user data...');
         await Promise.all([
           getUserInfoAction(),
           getUserBalanceAction(),
           getUserPurchaseMembershipListAction(),
         ]);
+        console.log('✅ User data loaded');
         
         // Load notification count and tasks
         await getUnreadNotificationCountData();
         await getCustomerTask();
+      } else {
+        console.log('❌ No token, skipping user data load');
       }
 
-      // Load announcements
-      await getAnnouncements();
+      // Load announcements and membership data
+      await Promise.all([
+        getAnnouncements(),
+        getMembershipListData(),
+        getMembershipMultiplierListData(),
+      ]);
       
       // Load categories then companies
       const categoryRes = await getCategoryList();
@@ -249,9 +383,10 @@ export const HomeIndexScreen: React.FC = () => {
     } catch (error) {
       console.error('Failed to load home data:', error);
     }
-  }, [token, getUserInfoAction, getUserBalanceAction, getUserPurchaseMembershipListAction, getAnnouncements, getUnreadNotificationCountData, getAllCompanies, getCustomerTask]);
+  }, [token, getUserInfoAction, getUserBalanceAction, getUserPurchaseMembershipListAction, getAnnouncements, getUnreadNotificationCountData, getAllCompanies, getCustomerTask, getMembershipListData, getMembershipMultiplierListData]);
 
   useEffect(() => {
+    console.log('🔄 useEffect triggered - about to call loadData()');
     loadData();
   }, [loadData]);
 
@@ -279,28 +414,12 @@ export const HomeIndexScreen: React.FC = () => {
 
   const toChat = async () => {
     if (!token || !userInfo?.id) {
-      Alert.alert('Login Required', 'Please sign in to use the chat feature.');
+      showToast('Please sign in to use the chat feature.', 'warning');
       return;
     }
     
-    try {
-      const res = await initChat({
-        type: 2,
-        targetId: 9999999999999, // CREAMY AI chatbot ID
-      });
-      
-      if (res.success && res.data) {
-        // Navigate to AI chat page
-        Alert.alert('Chat', `Chat initialized with group ID: ${res.data.id}`);
-        // TODO: Navigate to chat screen when implemented
-        // navigation.navigate('Chat', { groupId: res.data.id, userType: 1 });
-      } else {
-        Alert.alert('Error', res.msg || 'Failed to initialize chat');
-      }
-    } catch (error) {
-      console.error('Failed to initialize chat:', error);
-      Alert.alert('Error', 'Failed to start chat. Please try again.');
-    }
+    // Navigate to AI chat screen
+    navigation.navigate('AIChat');
   };
 
   const toNotification = () => {
@@ -309,11 +428,11 @@ export const HomeIndexScreen: React.FC = () => {
 
   const toMemberApply = () => {
     if (!token) {
-      Alert.alert('Login Required', 'Please sign in to apply for membership.');
+      showToast('Please sign in to apply for membership.', 'warning');
       return;
     }
     // Navigate to membership application
-    Alert.alert('Membership', 'Membership application coming soon!');
+    showToast('Membership application coming soon!', 'info');
   };
 
   const toCyber = () => {
@@ -325,15 +444,15 @@ export const HomeIndexScreen: React.FC = () => {
   };
 
   const comingSoon = () => {
-    Alert.alert('Coming Soon', 'This feature is coming soon!');
+    showToast('This feature is coming soon!', 'info');
   };
 
   const toContactUs = () => {
-    Alert.alert('Contact Us', 'Contact support@happi.com.my for assistance.');
+    showToast('Contact support@happi.com.my for assistance.', 'info');
   };
 
   const toFAQ = () => {
-    Alert.alert('FAQ', 'Frequently Asked Questions coming soon!');
+    showToast('FAQ coming soon!', 'info');
   };
 
   const onAnnouncementClick = (announcement: Announcement) => {
@@ -351,6 +470,19 @@ export const HomeIndexScreen: React.FC = () => {
     { key: 'warranty', Icon: WarrantyLogo, label: 'Extended Warranty', onPress: comingSoon },
     { key: 'pets', Icon: PetsLogo, label: 'Pets', onPress: comingSoon },
   ];
+
+  // Helper function to get the correct image source and styling for multiplier circles
+  const getMultiplierImage = (level: typeof targetLevels[0], isLastLevel: boolean) => {
+    if (isLastLevel) {
+      return level.active 
+        ? require('../../../../assets/images/shield-active.png')
+        : require('../../../../assets/images/shield-inactive.png');
+    } else {
+      return level.active
+        ? require('../../../../assets/images/coin-active.png')
+        : require('../../../../assets/images/coin-inactive.png');
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -398,7 +530,10 @@ export const HomeIndexScreen: React.FC = () => {
                 <Text style={styles.loginBtnText}>Log In</Text>
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity style={styles.userRow} onPress={() => {}}>
+              <TouchableOpacity style={styles.userRow} onPress={() => {
+                console.log('👆 User row clicked, navigating to Profile');
+                navigation.getParent()?.navigate('Profile' as never);
+              }}>
                 <View style={styles.avatar}>
                   {userInfo.avatar ? (
                     <Image source={{ uri: getOssImg(userInfo.avatar) }} style={styles.avatarImage} />
@@ -416,100 +551,121 @@ export const HomeIndexScreen: React.FC = () => {
           <View style={styles.cardRow}>
             {!currentMembership ? (
               <TouchableOpacity style={styles.membershipEmpty} onPress={toMemberApply}>
-                <Ionicons name="ribbon-outline" size={40} color={Colors.primary} />
+                <Image
+                  source={require('../../../../assets/images/member-icon.png')}
+                  style={styles.memberIcon}
+                  contentFit="contain"
+                />
                 <View style={styles.beAMemberBtn}>
                   <Text style={styles.beAMemberText}>Be a member</Text>
                 </View>
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity style={styles.membershipCard}>
+              <TouchableOpacity style={styles.membershipCard} onPress={() => {}}>
                 {currentMembership.cardImgUrl && (
                   <Image
                     source={{ uri: getOssImg(currentMembership.cardImgUrl) }}
                     style={styles.membershipImage}
-                    resizeMode="cover"
+                    contentFit="cover"
                   />
                 )}
               </TouchableOpacity>
             )}
             
-            {/* Category Quick Menu */}
-            <View style={styles.categoryCard}>
-              <View style={styles.categoryGrid}>
-                <TouchableOpacity style={styles.categoryItem} onPress={toCyber}>
-                  <Ionicons name="shield-checkmark" size={20} color={Colors.primary} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.categoryItem} onPress={toHome}>
-                  <Ionicons name="home" size={20} color={Colors.primary} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.categoryItem} onPress={comingSoon}>
-                  <Ionicons name="car" size={20} color={Colors.textLight} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.categoryItem} onPress={comingSoon}>
-                  <Ionicons name="airplane" size={20} color={Colors.textLight} />
-                </TouchableOpacity>
-              </View>
-            </View>
+            {/* Category Card Component */}
+            <CategoryCard onComingSoon={comingSoon} />
           </View>
         </ImageBackground>
 
         {/* Coins Card */}
-        <ImageBackground
-          source={require('../../../../assets/images/coin-card-bg.png')}
-          style={styles.coinCard}
-          resizeMode="cover"
-        >
-          <View style={styles.coinLeft}>
-            <View style={styles.coinIconWrapper}>
+        <View style={styles.coinCardWrapper}>
+          {!token && <View style={styles.coinCardOverlay} />}
+          <ImageBackground
+            source={require('../../../../assets/images/coin-card-bg.png')}
+            style={styles.coinCard}
+            resizeMode="cover"
+          >
+            <View style={styles.coinLeft}>
               <Image
-                source={require('../../../../assets/icon.png')}
+                source={require('../../../../assets/images/coin-icon.png')}
                 style={styles.coinIcon}
                 resizeMode="contain"
               />
+              <View style={styles.coinInfo}>
+                <Text style={styles.coinValue}>
+                  {token ? (balance || 0) : '---'}
+                </Text>
+                <Text style={styles.coinLabel}>Available Coins</Text>
+              </View>
             </View>
-            <View style={styles.coinInfo}>
-              <Text style={styles.coinValue}>
-                {token ? (balance || 0) : '---'}
-              </Text>
-              <Text style={styles.coinLabel}>Available Coins</Text>
+            <View style={styles.coinRight}>
+              <TouchableOpacity 
+                style={styles.redeemBtn} 
+                onPress={token ? comingSoon : toSignIn}
+              >
+                <Text style={styles.redeemText}>{token ? 'Redeem Now' : 'Sign In'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.historyBtn} onPress={token ? comingSoon : undefined}>
+                <Text style={styles.historyText}>History</Text>
+                <Image
+                  source={require('../../../../assets/images/arrow-icon.png')}
+                  style={styles.historyIcon}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
             </View>
-          </View>
-          <View style={styles.coinRight}>
-            <TouchableOpacity 
-              style={styles.redeemBtn} 
-              onPress={token ? comingSoon : toSignIn}
-            >
-              <Text style={styles.redeemText}>{token ? 'Redeem' : 'Sign In'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.historyBtn} onPress={token ? comingSoon : undefined}>
-              <Text style={styles.historyText}>History</Text>
-              <Ionicons name="chevron-forward" size={16} color={Colors.textSecondary} />
-            </TouchableOpacity>
-          </View>
-        </ImageBackground>
+          </ImageBackground>
 
-        {/* Level Progress */}
-        {token && (
+          {/* Level Progress */}
           <View style={styles.levelSection}>
-            <Text style={styles.levelTitle}>Level Up Progress</Text>
-            <View style={styles.levelBar}>
-              <View style={[styles.levelProgress, { width: '20%' }]} />
+            <View style={styles.levelMain}>
+              <Text style={styles.levelTitle}>Level Up Progress</Text>
+              <View style={styles.levelBar}>
+                <View style={[styles.levelProgress, { width: progressWidth }]} />
+                <View style={[styles.levelInactive, { width: token ? `${100 - parseFloat(progressWidth)}%` : '0%' }]} />
+              </View>
+              <View style={styles.levelMarkers}>
+                {targetLevels.map((level, index) => {
+                  const isLastLevel = index === targetLevels.length - 1;
+                  const multiplier = membershipMultipliers.get(level.tier.toString()) || (index + 1);
+                  
+                  return (
+                    <View key={level.id} style={styles.levelMarker}>
+                      {level.flag && level.id !== '0' && (
+                        <View style={styles.flagContainer}>
+                          <FlagIcon width={16} height={16} />
+                        </View>
+                      )}
+                      <ImageBackground
+                        source={getMultiplierImage(level, isLastLevel)}
+                        style={styles.multiplierCircle}
+                        resizeMode="contain"
+                      >
+                        <Text style={styles.multiplierText}>x{multiplier}</Text>
+                      </ImageBackground>
+                      <Text style={[
+                        styles.tierName,
+                        level.active && styles.tierNameActive,
+                      ]}>
+                        {level.name}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
             </View>
-            <View style={styles.levelMarkers}>
-              {['Non-Member', 'Bronze', 'Silver', 'Gold', 'Platinum'].map((tier, index) => (
-                <View key={tier} style={styles.levelMarker}>
-                  <View style={[
-                    styles.multiplierCircle,
-                    index === 0 && styles.multiplierActive
-                  ]}>
-                    <Text style={styles.multiplierText}>x{index + 1}</Text>
-                  </View>
-                  <Text style={styles.tierName}>{tier}</Text>
-                </View>
-              ))}
-            </View>
+            {!token && (
+              <Text style={styles.bottomTips}>
+                Sign up to start collecting HAPPIcoins and unlock real perks!
+              </Text>
+            )}
+            {token && topMultiplierIndex < targetLevels.length - 1 && (
+              <Text style={styles.bottomTips}>
+                Reach Platinum to unlock rewards up to x5!
+              </Text>
+            )}
           </View>
-        )}
+        </View>
 
         {/* Popular Now Section */}
         <View style={styles.section}>
@@ -569,11 +725,20 @@ export const HomeIndexScreen: React.FC = () => {
                 );
               })
             ) : (
-              [1, 2, 3].map((item) => (
-                <View key={item} style={styles.announcementCard}>
-                  <View style={styles.announcementPlaceholder}>
-                    <Ionicons name="newspaper-outline" size={32} color={Colors.textLight} />
-                  </View>
+              // Fallback hardcoded images when no announcements
+              [
+                'happi/tmp/CMS-post-01.jpg',
+                'happi/tmp/CMS-post-02.jpg',
+                'happi/tmp/CMS-post-03.jpg',
+                'happi/tmp/CMS-post-04.jpg',
+                'happi/tmp/CMS-post-05.jpg',
+              ].map((imgPath, index) => (
+                <View key={index} style={styles.announcementCard}>
+                  <Image
+                    source={{ uri: getOssImg(imgPath) }}
+                    style={styles.announcementImage}
+                    resizeMode="cover"
+                  />
                 </View>
               ))
             )}
@@ -635,6 +800,16 @@ export const HomeIndexScreen: React.FC = () => {
           </View>
         )}
       </ScrollView>
+      
+      {/* Toast Notification */}
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        duration={toast.duration}
+        position={toast.position}
+        onHide={hideToast}
+      />
     </View>
   );
 };
@@ -746,136 +921,143 @@ const styles = StyleSheet.create({
   // Card Row
   cardRow: {
     flexDirection: 'row',
-    gap: Spacing.md,
+    gap: 8,
   },
   
   membershipEmpty: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
+    backgroundColor: '#FDFDFD',
+    borderRadius: 16,
+    width: 114,
+    height: 70,
+    paddingTop: 6,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
     alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 100,
+    justifyContent: 'space-between',
+  },
+  
+  memberIcon: {
+    width: 25,
+    height: 30,
   },
   
   beAMemberBtn: {
-    marginTop: Spacing.sm,
-    backgroundColor: Colors.primaryLight,
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    borderRadius: 15,
+    backgroundColor: '#FDB813',
+    borderRadius: 30,
+    paddingVertical: 4,
+    width: 79,
+    alignItems: 'center',
   },
   
   beAMemberText: {
-    color: Colors.primary,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semiBold as any,
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700' as any,
+    lineHeight: 14,
   },
   
   membershipCard: {
-    flex: 1,
-    borderRadius: BorderRadius.lg,
+    borderRadius: 16,
     overflow: 'hidden',
-    minHeight: 100,
+    width: 114,
+    height: 70,
   },
   
   membershipImage: {
-    width: '100%',
-    height: 100,
-  },
-  
-  categoryCard: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    justifyContent: 'center',
-  },
-  
-  categoryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  
-  categoryItem: {
-    width: '45%',
-    aspectRatio: 1.5,
-    backgroundColor: Colors.primaryLight,
-    borderRadius: BorderRadius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 114,
+    height: 70,
   },
   
   // Coin Card
-  coinCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  coinCardWrapper: {
     marginHorizontal: 12,
     marginTop: -30,
+    position: 'relative',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 10,
-    height: 53,
+    padding: 12,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 2,
     elevation: 4,
     overflow: 'hidden',
+    width: 382,
+    alignSelf: 'center',
+  },
+  
+  coinCardOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+    zIndex: 100,
+  },
+  
+  coinCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    height: 53,
+    overflow: 'hidden',
   },
   
   coinLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
-  },
-  
-  coinIconWrapper: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
+    gap: 7,
   },
   
   coinIcon: {
-    width: 30,
-    height: 30,
+    width: 46,
+    height: 48,
+    marginLeft: 5,
   },
   
-  coinInfo: {},
+  coinInfo: {
+    marginLeft: 7,
+  },
   
   coinValue: {
-    fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold as any,
+    fontSize: 24,
+    fontWeight: Typography.weight.black as any,
     color: Colors.textPrimary,
   },
   
   coinLabel: {
-    fontSize: Typography.size.xs,
+    fontSize: 10,
+    fontWeight: Typography.weight.black as any,
     color: Colors.textSecondary,
   },
   
   coinRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    gap: 9,
   },
   
   redeemBtn: {
     backgroundColor: Colors.primary,
-    paddingVertical: Spacing.sm,
+    paddingVertical: 8,
     paddingHorizontal: Spacing.lg,
-    borderRadius: 20,
+    borderRadius: 30,
+    height: 32,
+    width: 127,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 10,
   },
   
   redeemText: {
-    color: Colors.textWhite,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semiBold as any,
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: Typography.weight.bold as any,
   },
   
   historyBtn: {
@@ -884,73 +1066,117 @@ const styles = StyleSheet.create({
   },
   
   historyText: {
-    fontSize: Typography.size.sm,
+    fontSize: 14,
+    fontWeight: Typography.weight.bold as any,
     color: Colors.textSecondary,
+  },
+  
+  historyIcon: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginLeft: 2,
+    opacity: 0.5,
   },
   
   // Level Section
   levelSection: {
-    marginHorizontal: 12,
     marginTop: 8,
-    backgroundColor: Colors.background,
-    borderRadius: 20,
-    padding: 12,
-    paddingTop: 16,
+  },
+  
+  levelMain: {
+    marginTop: 16,
+    paddingHorizontal: 24,
+    paddingBottom: 62,
+    position: 'relative',
   },
   
   levelTitle: {
     fontSize: 13,
     fontWeight: Typography.weight.bold as any,
     color: '#343434',
-    marginBottom: Spacing.sm,
+    marginBottom: 10,
   },
   
   levelBar: {
-    height: 6,
-    backgroundColor: Colors.border,
-    borderRadius: 3,
-    marginBottom: Spacing.md,
+    height: 10,
+    backgroundColor: '#FDB813',
+    borderRadius: 10,
+    marginTop: 32,
+    marginBottom: 0,
+    flexDirection: 'row',
+    overflow: 'hidden',
   },
   
   levelProgress: {
-    height: 6,
-    backgroundColor: Colors.primary,
-    borderRadius: 3,
+    height: 10,
+    backgroundColor: '#FDB813',
+    borderRadius: 10,
+  },
+  
+  levelInactive: {
+    height: 10,
+    backgroundColor: '#D8D8D8',
   },
   
   levelMarkers: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 10,
+    paddingHorizontal: 16,
+    paddingTop: 28,
   },
   
   levelMarker: {
     alignItems: 'center',
+    flex: 1,
+    position: 'relative',
+  },
+  
+  flagContainer: {
+    position: 'absolute',
+    top: -18,
+    zIndex: 10,
   },
   
   multiplierCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Colors.border,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.xs,
-  },
-  
-  multiplierActive: {
-    backgroundColor: Colors.primary,
+    marginBottom: 8,
   },
   
   multiplierText: {
-    fontSize: Typography.size.xs,
+    fontSize: 12,
     fontWeight: Typography.weight.bold as any,
-    color: Colors.textWhite,
+    color: '#FFFFFF',
+    lineHeight: 14,
   },
   
   tierName: {
     fontSize: 10,
     fontWeight: Typography.weight.bold as any,
     color: '#808080',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  
+  tierNameActive: {
+    color: '#FDB813',
+  },
+  
+  bottomTips: {
+    color: '#808080',
+    textAlign: 'center',
+    fontSize: 10,
+    fontWeight: Typography.weight.bold as any,
+    marginTop: 0,
+    width: 334,
+    alignSelf: 'center',
   },
   
   // Section
@@ -993,8 +1219,6 @@ const styles = StyleSheet.create({
   popularIcon: {
     width: 56,
     height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.sm,
@@ -1024,14 +1248,6 @@ const styles = StyleSheet.create({
   announcementImage: {
     width: '100%',
     height: '100%',
-  },
-  
-  announcementPlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   
   // Help Row

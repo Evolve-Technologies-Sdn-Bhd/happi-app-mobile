@@ -55,7 +55,27 @@ export const MainTabs: React.FC = () => {
       <Tab.Screen
         name="Home"
         component={HomeStack}
-        options={{ tabBarLabel: 'Home' }}
+        options={({ route }) => ({
+          tabBarLabel: 'Home',
+          tabBarStyle: ((route) => {
+            const routeName = route.state
+              ? route.state.routes[route.state.index].name
+              : 'HomeIndex';
+            
+            // Hide tab bar on Notification and AIChat screens
+            if (routeName === 'Notification' || routeName === 'AIChat') {
+              return { display: 'none' };
+            }
+            
+            return {
+              backgroundColor: Colors.background,
+              borderTopColor: Colors.borderLight,
+              paddingTop: 4,
+              height: 60,
+              paddingBottom: 8,
+            };
+          })(route),
+        })}
       />
       <Tab.Screen
         name="Membership"
