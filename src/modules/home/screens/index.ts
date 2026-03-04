@@ -5,4 +5,3 @@
 export * from './HomeIndexScreen';
 export * from './ProductListScreen';
 export * from './ProductDetailScreen';
-export * from './NotificationScreen';

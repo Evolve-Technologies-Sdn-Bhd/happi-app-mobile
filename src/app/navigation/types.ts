@@ -39,6 +39,7 @@ export type HomeStackParamList = {
   ServiceDetail: { serviceId: string };
   Notification: undefined;
   NotificationDetail: { notificationId: string };
+  AIChat: undefined;
 };
 
 export type MembershipStackParamList = {

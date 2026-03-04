@@ -13,16 +13,23 @@ export interface Notification {
 }
 
 export interface NotifyPageParams {
-  pageNum?: number;
-  pageSize?: number;
-  type?: number;
+  page: number;
+  limit: number;
+  state?: number; // 5 for user messages, 4 for order messages
 }
 
 /**
  * Get notification page list
+ * API returns paginated response with 'records' array
  */
 export const getNotifyPage = (params: NotifyPageParams) => {
-  return httpRequest<{ list: Notification[]; total: number }>({
+  return httpRequest<{
+    records: Notification[];
+    total: number;
+    current: number;
+    size: number;
+    pages: number;
+  }>({
     method: 'GET',
     url: '/v1/notify/app/paging',
     params,
