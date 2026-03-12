@@ -23,6 +23,7 @@ import { Card } from '../../../shared/components';
 import { Colors } from '../../../shared/constants/colors';
 import { Spacing, Typography, BorderRadius, Shadows } from '../../../shared/constants/styles';
 import { useAuthStore } from '../../../store/authStore';
+import { useUserStore } from '../../../store/userStore';
 import { useAppStore } from '../../../store/appStore';
 
 type NavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'ProfileIndex'>;
@@ -42,6 +43,7 @@ export const ProfileIndexScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { t, i18n } = useTranslation();
   const { user, logout } = useAuthStore();
+  const logoutAction = useUserStore((state) => state.logoutAction);
   const { language, setLanguage } = useAppStore();
 
   const getTierGradient = (tier: string): readonly [string, string] => {
@@ -65,6 +67,8 @@ export const ProfileIndexScreen: React.FC = () => {
           text: t('profile.logout'),
           style: 'destructive',
           onPress: async () => {
+            // Clear both auth stores
+            logoutAction();
             await logout();
           },
         },

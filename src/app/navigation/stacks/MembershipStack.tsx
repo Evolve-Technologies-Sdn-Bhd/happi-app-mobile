@@ -14,6 +14,7 @@ import {
   VehiclesScreen,
   NomineesScreen,
   PurchaseHistoryScreen,
+  MyMembershipListScreen,
 } from '../../../modules/membership/screens';
 
 const Stack = createNativeStackNavigator<MembershipStackParamList>();
@@ -29,7 +30,6 @@ export const MembershipStack: React.FC = () => {
       <Stack.Screen name="MembershipIndex" component={MembershipIndexScreen} />
       <Stack.Screen name="MembershipDetail" component={PolicyDetailScreen} />
       <Stack.Screen name="MembershipList" component={PurchaseHistoryScreen} />
-      <Stack.Screen name="MembershipPurchaseList" component={PurchaseHistoryScreen} />
     </Stack.Navigator>
   );
 };

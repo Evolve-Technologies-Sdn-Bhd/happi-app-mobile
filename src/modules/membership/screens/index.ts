@@ -8,3 +8,4 @@ export * from './FamilyMembersScreen';
 export * from './VehiclesScreen';
 export * from './NomineesScreen';
 export * from './PurchaseHistoryScreen';
+export * from './MyMembershipListScreen';

@@ -10,6 +10,11 @@ export type RootStackParamList = {
   // Main App Stack
   Main: undefined;
   
+  // Modal screens (overlay tab bar)
+  Notification: undefined;
+  AIChat: undefined;
+  MembershipPurchaseList: undefined;
+  
   // Modals
   WebView: { url: string; title?: string };
 };
@@ -17,7 +22,7 @@ export type RootStackParamList = {
 export type AuthStackParamList = {
   Startup: undefined;
   Onboarding: undefined;
-  SignIn: undefined;
+  SignIn: { fromSplash?: boolean } | undefined;
   SignUp: undefined;
   OTP: { phone: string; type: 'signup' | 'reset' };
   ResetPassword: { phone: string };
@@ -37,16 +42,13 @@ export type HomeStackParamList = {
   ProductDetail: { productId: string };
   ServiceList: undefined;
   ServiceDetail: { serviceId: string };
-  Notification: undefined;
   NotificationDetail: { notificationId: string };
-  AIChat: undefined;
 };
 
 export type MembershipStackParamList = {
   MembershipIndex: undefined;
   MembershipList: undefined;
   MembershipDetail: { membershipId: string };
-  MembershipPurchaseList: undefined;
   MembershipPurchaseConfirm: { membershipId: string; tier?: string };
   MembershipPurchaseSubmit: { orderId: string };
   MembershipCompletion: { orderId: string };

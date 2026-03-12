@@ -4,7 +4,7 @@
  * Shows privacy notice on first launch, splash screen if already agreed
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,8 @@ import {
   Alert,
   Linking,
   Platform,
+  Animated,
+  Easing,
 } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -31,6 +33,166 @@ import { useUserStore } from '../../../store';
 import { Config } from '../../../api/client';
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Startup'>;
+
+// Animated Splash Screen Component
+const AnimatedSplashScreen: React.FC = () => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.3)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const backgroundOpacity = useRef(new Animated.Value(0.7)).current;
+
+  useEffect(() => {
+    // Logo entrance animation: Fade in + Scale up
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // After entrance, start pulse animation
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.05,
+            duration: 1500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 1500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    });
+
+    // Background subtle pulse animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(backgroundOpacity, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(backgroundOpacity, {
+          toValue: 0.7,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+
+  return (
+    <View style={styles.splashContainer}>
+      {/* Background Image with pulse animation */}
+      <Animated.Image
+        source={require('../../../../assets/images/sign-in-background.png')}
+        style={[
+          styles.splashBackground,
+          {
+            opacity: backgroundOpacity,
+          },
+        ]}
+        resizeMode="cover"
+      />
+      
+      {/* Gradient overlay for depth */}
+      <LinearGradient
+        colors={['rgba(254, 247, 219, 0.1)', 'rgba(254, 218, 131, 0.2)']}
+        style={StyleSheet.absoluteFillObject}
+      />
+
+      {/* Animated Logo */}
+      <Animated.View
+        style={[
+          styles.splashContent,
+          {
+            opacity: fadeAnim,
+            transform: [
+              { scale: Animated.multiply(scaleAnim, pulseAnim) },
+            ],
+          },
+        ]}
+      >
+        <Image
+          source={require('../../../../assets/images/happi-white.png')}
+          style={styles.splashLogo}
+          resizeMode="contain"
+        />
+        
+        {/* Loading indicator dots */}
+        <View style={styles.loadingDots}>
+          <LoadingDot delay={0} />
+          <LoadingDot delay={200} />
+          <LoadingDot delay={400} />
+        </View>
+      </Animated.View>
+    </View>
+  );
+};
+
+// Animated Loading Dot Component
+const LoadingDot: React.FC<{ delay: number }> = ({ delay }) => {
+  const animatedValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(animatedValue, {
+          toValue: 1,
+          duration: 600,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(animatedValue, {
+          toValue: 0,
+          duration: 600,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    animation.start();
+
+    return () => animation.stop();
+  }, [delay]);
+
+  const opacity = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.3, 1],
+  });
+
+  const scale = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.8, 1.2],
+  });
+
+  return (
+    <Animated.View
+      style={[
+        styles.dot,
+        {
+          opacity,
+          transform: [{ scale }],
+        },
+      ]}
+    />
+  );
+};
 
 export const StartupScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -54,7 +216,7 @@ export const StartupScreen: React.FC = () => {
     
     // Only auto-navigate if already agreed on app start (not after clicking Agree)
     if (agreed && !hasNavigatedToOnboarding) {
-      // Navigate to main after splash delay
+      // Navigate to main after splash delay - give time for logo animation
       timeoutId = setTimeout(() => {
         if (token) {
           // Navigate to main app (TabNavigator)
@@ -65,9 +227,9 @@ export const StartupScreen: React.FC = () => {
             })
           );
         } else {
-          navigation.navigate('SignIn');
+          navigation.navigate('SignIn', { fromSplash: true });
         }
-      }, 2500);
+      }, 2800); // Increased delay for better transition timing
     } else if (!agreed) {
       setIsLoading(false);
     }
@@ -101,19 +263,7 @@ export const StartupScreen: React.FC = () => {
 
   // Show splash screen if already agreed
   if (agreed || isLoading) {
-    return (
-      <LinearGradient
-        colors={[Colors.primary, Colors.primaryDark]}
-        style={styles.splashContainer}
-      >
-        <View style={styles.splashContent}>
-          {/* White logo for splash */}
-          <View style={styles.logoPlaceholder}>
-            <Text style={styles.logoTextWhite}>HAPPI</Text>
-          </View>
-        </View>
-      </LinearGradient>
-    );
+    return <AnimatedSplashScreen />;
   }
 
   // Show privacy notice if not agreed
@@ -197,8 +347,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   
+  splashBackground: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
+  
   splashContent: {
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
+  splashLogo: {
+    width: 150,
+    height: 80,
+  },
+  
+  loadingDots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 30,
+    gap: 8,
+  },
+  
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
   
   logoPlaceholder: {

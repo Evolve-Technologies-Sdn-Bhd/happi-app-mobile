@@ -2,6 +2,7 @@
  * Onboarding Screen
  * Modern multi-page onboarding with smooth scroll animations
  * Uses native ScrollView paging for smooth transitions
+ * Supports skip to home (guest mode)
  */
 
 import React, { useRef, useState, useCallback } from 'react';
@@ -23,6 +24,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthStackParamList } from '../../../app/navigation/types';
 import { FontFamily } from '../../../shared/constants';
+import { useAuthStore } from '../../../store/authStore';
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Onboarding'>;
 
@@ -218,10 +220,13 @@ export const OnboardingScreen: React.FC = () => {
   const scrollViewRef = useRef<ScrollView | null>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const [currentPage, setCurrentPage] = useState(0);
+  const setGuestMode = useAuthStore((state) => state.setGuestMode);
 
   const handleClose = useCallback(() => {
-    navigation.navigate('SignIn');
-  }, [navigation]);
+    // Auto-navigate to home as guest (no confirmation)
+    setGuestMode(true);
+    // Navigation will automatically switch to Main due to guest mode
+  }, [setGuestMode]);
 
   const handleIndicatorPress = useCallback((index: number) => {
     scrollViewRef.current?.scrollTo({

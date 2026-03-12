@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from './types';
 import { Colors } from '../../shared/constants/colors';
@@ -55,32 +56,26 @@ export const MainTabs: React.FC = () => {
       <Tab.Screen
         name="Home"
         component={HomeStack}
-        options={({ route }) => ({
-          tabBarLabel: 'Home',
-          tabBarStyle: ((route) => {
-            const routeName = route.state
-              ? route.state.routes[route.state.index].name
-              : 'HomeIndex';
-            
-            // Hide tab bar on Notification and AIChat screens
-            if (routeName === 'Notification' || routeName === 'AIChat') {
-              return { display: 'none' };
-            }
-            
-            return {
+        options={{ tabBarLabel: 'Home' }}
+      />
+      <Tab.Screen
+        name="Membership"
+        component={MembershipStack}
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route);
+          // Hide tab bar on MembershipDetail
+          const hideTabBar = routeName === 'MembershipDetail';
+          return {
+            tabBarLabel: 'Membership',
+            tabBarStyle: hideTabBar ? { display: 'none' } : {
               backgroundColor: Colors.background,
               borderTopColor: Colors.borderLight,
               paddingTop: 4,
               height: 60,
               paddingBottom: 8,
-            };
-          })(route),
-        })}
-      />
-      <Tab.Screen
-        name="Membership"
-        component={MembershipStack}
-        options={{ tabBarLabel: 'Membership' }}
+            },
+          };
+        }}
       />
       <Tab.Screen
         name="Products"

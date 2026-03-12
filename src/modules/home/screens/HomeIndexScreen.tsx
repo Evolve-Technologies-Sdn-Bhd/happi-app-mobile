@@ -4,7 +4,7 @@
  * Main home screen with membership card, coins, products, and announcements
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -48,8 +48,13 @@ import {
 } from '../../../api';
 import membershipApi from '../../../api/membership';
 import { Linking } from 'react-native';
+import { RootStackParamList } from '../../../app/navigation/types';
+import { CompositeNavigationProp } from '@react-navigation/native';
 
-type NavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeIndex'>;
+type NavigationProp = CompositeNavigationProp<
+  NativeStackNavigationProp<HomeStackParamList, 'HomeIndex'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 interface Announcement {
   id: number;
@@ -103,6 +108,10 @@ export const HomeIndexScreen: React.FC = () => {
   const [memberships, setMemberships] = useState<MembershipItem[]>([]);
   const [membershipMultipliers, setMembershipMultipliers] = useState<Map<string, number>>(new Map());
   
+  // Partner slideshow state
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const slideTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
   // Toast
   const { toast, showToast, hideToast } = useToast();
 
@@ -154,6 +163,26 @@ export const HomeIndexScreen: React.FC = () => {
     }
     return name;
   }, [userInfo]); // Re-compute when userInfo changes
+
+  // Visible partner logos for slideshow (2 logos at a time)
+  const visiblePartnerLogos = useMemo(() => {
+    console.log('🎯 Computing visiblePartnerLogos - companies.length:', companies.length, 'currentSlideIndex:', currentSlideIndex);
+    if (!companies.length) {
+      return { left: null, right: null };
+    }
+
+    const count = companies.length;
+    const leftIndex = currentSlideIndex % count;
+    const rightIndex = (currentSlideIndex + 1) % count;
+
+    const result = {
+      left: companies[leftIndex],
+      right: companies[rightIndex],
+    };
+    
+    console.log('🎯 Visible logos:', result);
+    return result;
+  }, [companies, currentSlideIndex]);
 
   console.log('🔤 FINAL displayName:', displayName);
 
@@ -265,6 +294,7 @@ export const HomeIndexScreen: React.FC = () => {
 
   // Fetch companies for partner section
   const getAllCompanies = useCallback(async (categoryList: Category[]) => {
+    console.log('🏢 getAllCompanies called with categories:', categoryList?.length || 0);
     try {
       let allCompanies: ApiCompany[] = [];
       
@@ -272,8 +302,10 @@ export const HomeIndexScreen: React.FC = () => {
       if (categoryList && categoryList.length > 0) {
         for (const category of categoryList) {
           try {
+            console.log(`🏢 Fetching companies for category ${category.id} (${category.name})`);
             const res = await getCompanyList(category.id);
             if (res.success && res.data && Array.isArray(res.data)) {
+              console.log(`✅ Got ${res.data.length} companies for category ${category.id}`);
               allCompanies = [...allCompanies, ...res.data];
             }
           } catch (err) {
@@ -282,18 +314,25 @@ export const HomeIndexScreen: React.FC = () => {
         }
       }
       
+      console.log('🏢 Total companies fetched:', allCompanies.length);
+      
       // Filter unique companies with logos
       const uniqueCompanies = allCompanies.filter(
         (company, index, self) =>
-          company.logo &&
+          (company.logoUrl || company.logo) &&
           index === self.findIndex((c) => c.id === company.id)
       );
       
-      setCompanies(uniqueCompanies.map(c => ({
+      console.log('🏢 Unique companies with logos:', uniqueCompanies.length);
+      
+      const mappedCompanies = uniqueCompanies.map(c => ({
         id: Number(c.id),
         name: c.name,
-        logoUrl: c.logo || ''
-      })));
+        logoUrl: c.logoUrl || c.logo || ''
+      }));
+      
+      console.log('🏢 Setting companies state:', mappedCompanies);
+      setCompanies(mappedCompanies);
     } catch (error) {
       console.error('Failed to fetch companies:', error);
     }
@@ -400,6 +439,30 @@ export const HomeIndexScreen: React.FC = () => {
     }, [token, getUnreadNotificationCountData, getCustomerTask])
   );
 
+  // Partner slideshow timer
+  useEffect(() => {
+    // Clear any existing timer
+    if (slideTimerRef.current) {
+      clearInterval(slideTimerRef.current);
+      slideTimerRef.current = null;
+    }
+
+    // Only start slideshow if we have companies
+    if (companies.length > 0) {
+      slideTimerRef.current = setInterval(() => {
+        setCurrentSlideIndex((prev) => prev + 1);
+      }, 4000); // Auto-slide every 4 seconds
+    }
+
+    // Cleanup on unmount or when companies change
+    return () => {
+      if (slideTimerRef.current) {
+        clearInterval(slideTimerRef.current);
+        slideTimerRef.current = null;
+      }
+    };
+  }, [companies]); // Restart slideshow when companies change
+
   const onRefresh = async () => {
     setRefreshing(true);
     await loadData();
@@ -423,6 +486,10 @@ export const HomeIndexScreen: React.FC = () => {
   };
 
   const toNotification = () => {
+    if (!token || !userInfo?.id) {
+      showToast('Please sign in to view notifications.', 'warning');
+      return;
+    }
     navigation.navigate('Notification');
   };
 
@@ -453,6 +520,18 @@ export const HomeIndexScreen: React.FC = () => {
 
   const toFAQ = () => {
     showToast('FAQ coming soon!', 'info');
+  };
+
+  const toMyMembership = () => {
+    if (!token) {
+      showToast('Please sign in to view membership details.', 'warning');
+      return;
+    }
+    // Navigate to My Membership List screen (root level modal)
+    const parent = navigation.getParent();
+    if (parent) {
+      parent.navigate('MembershipPurchaseList' as never);
+    }
   };
 
   const onAnnouncementClick = (announcement: Announcement) => {
@@ -561,7 +640,7 @@ export const HomeIndexScreen: React.FC = () => {
                 </View>
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity style={styles.membershipCard} onPress={() => {}}>
+              <TouchableOpacity style={styles.membershipCard} onPress={toMyMembership}>
                 {currentMembership.cardImgUrl && (
                   <Image
                     source={{ uri: getOssImg(currentMembership.cardImgUrl) }}
@@ -618,7 +697,11 @@ export const HomeIndexScreen: React.FC = () => {
 
           {/* Level Progress */}
           <View style={styles.levelSection}>
-            <View style={styles.levelMain}>
+            <TouchableOpacity 
+              style={styles.levelMain}
+              onPress={toMyMembership}
+              activeOpacity={0.7}
+            >
               <Text style={styles.levelTitle}>Level Up Progress</Text>
               <View style={styles.levelBar}>
                 <View style={[styles.levelProgress, { width: progressWidth }]} />
@@ -653,7 +736,7 @@ export const HomeIndexScreen: React.FC = () => {
                   );
                 })}
               </View>
-            </View>
+            </TouchableOpacity>
             {!token && (
               <Text style={styles.bottomTips}>
                 Sign up to start collecting HAPPIcoins and unlock real perks!
@@ -776,27 +859,37 @@ export const HomeIndexScreen: React.FC = () => {
         </View>
 
         {/* Partners Section */}
+        {(() => {
+          console.log('🎨 Rendering Partners Section - companies.length:', companies.length);
+          console.log('🎨 visiblePartnerLogos:', visiblePartnerLogos);
+          return null;
+        })()}
         {companies.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle} numberOfLines={1}>Our Partners</Text>
               <View style={styles.sectionUnderline} />
             </View>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              style={styles.partnersScroll}
-            >
-              {companies.map((company) => (
-                <View key={company.id} style={styles.partnerLogo}>
+            <View style={styles.partnerSlideshow}>
+              {visiblePartnerLogos.left && (
+                <View style={styles.partnerLogo}>
                   <Image
-                    source={{ uri: getOssImg(company.logoUrl) }}
+                    source={{ uri: getOssImg(visiblePartnerLogos.left.logoUrl) }}
                     style={styles.partnerImage}
                     resizeMode="contain"
                   />
                 </View>
-              ))}
-            </ScrollView>
+              )}
+              {visiblePartnerLogos.right && (
+                <View style={styles.partnerLogo}>
+                  <Image
+                    source={{ uri: getOssImg(visiblePartnerLogos.right.logoUrl) }}
+                    style={styles.partnerImage}
+                    resizeMode="contain"
+                  />
+                </View>
+              )}
+            </View>
           </View>
         )}
       </ScrollView>
@@ -1285,15 +1378,15 @@ const styles = StyleSheet.create({
   },
   
   // Partners
-  partnersScroll: {
-    marginLeft: -12,
-    paddingLeft: 12,
+  partnerSlideshow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: Spacing.md,
   },
   
   partnerLogo: {
     width: 120,
     height: 60,
-    marginRight: Spacing.md,
     backgroundColor: Colors.background,
     borderRadius: BorderRadius.sm,
     alignItems: 'center',
