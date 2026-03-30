@@ -8,24 +8,30 @@ export interface FamilyMember {
   name: string;
   relationship: string;
   email?: string;
-  phone?: string;
-  dateOfBirth?: string;
-  icNo?: string;
-  passportNo?: string;
-  gender?: number;
+  mobile?: string;
+  countryCode?: string;
+  birthday?: string;
+  idNumber?: string;
+  passportNumber?: string;
+  gender?: number | string;
   nationality?: string;
+  foreignerState?: number;
+  defaultNominee?: number;
 }
 
 export interface AddFamilyMemberData {
   name: string;
   relationship: string;
   email?: string;
-  phone?: string;
-  dateOfBirth?: string;
-  icNo?: string;
-  passportNo?: string;
+  mobile?: string;
+  countryCode?: string;
+  birthday?: string;
+  idNumber?: string;
+  passportNumber?: string;
   gender?: number;
   nationality?: string;
+  foreignerState?: number;
+  defaultNominee?: number;
 }
 
 export interface UpdateFamilyMemberData extends AddFamilyMemberData {

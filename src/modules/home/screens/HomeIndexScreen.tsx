@@ -514,6 +514,18 @@ export const HomeIndexScreen: React.FC = () => {
     showToast('This feature is coming soon!', 'info');
   };
 
+  const toVoucher = () => {
+    if (!token) { toSignIn(); return; }
+    const parent = navigation.getParent();
+    if (parent) parent.navigate('Voucher' as never);
+  };
+
+  const toVoucherHistory = () => {
+    if (!token) { toSignIn(); return; }
+    const parent = navigation.getParent();
+    if (parent) parent.navigate('Voucher' as never, { screen: 'CoinHistory' } as never);
+  };
+
   const toContactUs = () => {
     showToast('Contact support@happi.com.my for assistance.', 'info');
   };
@@ -680,11 +692,11 @@ export const HomeIndexScreen: React.FC = () => {
             <View style={styles.coinRight}>
               <TouchableOpacity 
                 style={styles.redeemBtn} 
-                onPress={token ? comingSoon : toSignIn}
+                onPress={token ? toVoucher : toSignIn}
               >
                 <Text style={styles.redeemText}>{token ? 'Redeem Now' : 'Sign In'}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.historyBtn} onPress={token ? comingSoon : undefined}>
+              <TouchableOpacity style={styles.historyBtn} onPress={token ? toVoucherHistory : undefined}>
                 <Text style={styles.historyText}>History</Text>
                 <Image
                   source={require('../../../../assets/images/arrow-icon.png')}

@@ -1,5 +1,6 @@
-/**
+﻿/**
  * OTP Verification Screen
+ * UI matches happi-app-customer/src/views/public/otp.vue
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -10,17 +11,17 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTranslation } from 'react-i18next';
 import { AuthStackParamList } from '../../../app/navigation/types';
-import { Header, Button } from '../../../shared/components';
-import { Colors } from '../../../shared/constants/colors';
-import { Spacing, Typography, BorderRadius } from '../../../shared/constants/styles';
+import { Header } from '../../../shared/components';
 import { authApi } from '../api/authApi';
 import { useAuthStore } from '../../../store/authStore';
+import { storage } from '../../../shared/utils/storage';
+import { StorageKeys } from '../../../shared/constants/config';
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, 'OTP'>;
 type OtpRouteProp = RouteProp<AuthStackParamList, 'OTP'>;
@@ -32,19 +33,17 @@ export const OtpScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<OtpRouteProp>();
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
   const { setAuth } = useAuthStore();
-  
-  const { phone, type } = route.params;
-  
+
+  const { phone, type, countryCode = '60' } = route.params;
+
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(RESEND_TIMEOUT);
   const [canResend, setCanResend] = useState(false);
-  
-  const inputRefs = useRef<TextInput[]>([]);
 
-  // Resend timer countdown
+  const inputRefs = useRef<(TextInput | null)[]>(Array(OTP_LENGTH).fill(null));
+
   useEffect(() => {
     if (resendTimer > 0) {
       const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
@@ -57,24 +56,18 @@ export const OtpScreen: React.FC = () => {
   const handleOtpChange = (value: string, index: number) => {
     if (value.length > 1) {
       // Handle paste
-      const pastedOtp = value.slice(0, OTP_LENGTH).split('');
+      const digits = value.replace(/\D/g, '').slice(0, OTP_LENGTH).split('');
       const newOtp = [...otp];
-      pastedOtp.forEach((char, i) => {
-        if (index + i < OTP_LENGTH) {
-          newOtp[index + i] = char;
-        }
+      digits.forEach((d, i) => {
+        if (index + i < OTP_LENGTH) newOtp[index + i] = d;
       });
       setOtp(newOtp);
-      
-      // Focus last filled input or next empty
-      const nextIndex = Math.min(index + pastedOtp.length, OTP_LENGTH - 1);
+      const nextIndex = Math.min(index + digits.length, OTP_LENGTH - 1);
       inputRefs.current[nextIndex]?.focus();
     } else {
       const newOtp = [...otp];
-      newOtp[index] = value;
+      newOtp[index] = value.replace(/\D/g, '');
       setOtp(newOtp);
-      
-      // Auto-focus next input
       if (value && index < OTP_LENGTH - 1) {
         inputRefs.current[index + 1]?.focus();
       }
@@ -83,38 +76,39 @@ export const OtpScreen: React.FC = () => {
 
   const handleKeyPress = (key: string, index: number) => {
     if (key === 'Backspace' && !otp[index] && index > 0) {
+      const newOtp = [...otp];
+      newOtp[index - 1] = '';
+      setOtp(newOtp);
       inputRefs.current[index - 1]?.focus();
     }
   };
 
   const handleVerify = async () => {
     const otpCode = otp.join('');
-    
     if (otpCode.length !== OTP_LENGTH) {
-      Alert.alert(t('error.error'), t('error.otpRequired'));
+      Alert.alert('', 'Please enter a valid verification code');
       return;
     }
 
     try {
       setLoading(true);
-      const response = await authApi.verifyOtp(phone, otpCode, type);
-      
-      if (response.code === 200) {
+      const response = await authApi.verifyOtp(phone, otpCode, type, countryCode);
+      if ((response as any).success) {
         if (type === 'signup') {
-          // Registration successful, set auth and navigate to main
-          await setAuth(response.data.user, response.data.token, response.data.refreshToken);
-        } else if (type === 'reset') {
-          // Navigate to reset password screen
-          navigation.navigate('ResetPassword', { phone });
+          await setAuth((response as any).data.user, (response as any).data.token, (response as any).data.refreshToken);
+        } else {
+          // Store OTP-issued token temporarily so reset-password can use it as Bearer
+          const otpToken = (response as any).data?.token;
+          if (otpToken) {
+            await storage.set(StorageKeys.AUTH_TOKEN, otpToken);
+          }
+          navigation.navigate('ResetPassword', { phone, countryCode });
         }
       } else {
-        Alert.alert(t('error.error'), response.message || t('error.otpInvalid'));
+        Alert.alert('', (response as any).msg || 'Verification failed');
       }
     } catch (error: any) {
-      Alert.alert(
-        t('error.error'),
-        error.response?.data?.message || t('error.otpInvalid')
-      );
+      Alert.alert('Error', error.response?.data?.message || 'Verification failed');
     } finally {
       setLoading(false);
     }
@@ -124,73 +118,80 @@ export const OtpScreen: React.FC = () => {
     try {
       setCanResend(false);
       setResendTimer(RESEND_TIMEOUT);
-      
-      await authApi.sendOtp(phone, type);
-      Alert.alert(t('common.success'), `${t('auth.otpSent')} ${phone}`);
-    } catch (error) {
-      Alert.alert(t('error.error'), t('error.network'));
+      const res = await authApi.sendOtp(phone, type, countryCode);
+      if ((res as any).success) {
+        Alert.alert('', 'OTP code sent');
+      } else {
+        Alert.alert('', (res as any).msg || 'Failed to resend OTP');
+        setCanResend(true);
+      }
+    } catch {
+      Alert.alert('Error', 'Network error. Please try again.');
       setCanResend(true);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Header title={t('auth.otp')} />
-      
+      <Header title="Enter verification code" showBack />
+
       <View style={[styles.content, { paddingBottom: insets.bottom + 20 }]}>
-        {/* Header */}
-        <View style={styles.headerSection}>
-          <Text style={styles.title}>Verification Code</Text>
-          <Text style={styles.subtitle}>
-            {t('auth.otpSent')}{'\n'}
-            <Text style={styles.phone}>{phone}</Text>
-          </Text>
+        {/* Title */}
+        <View style={styles.titleWrapper}>
+          <Text style={styles.title}>Enter OTP</Text>
+          <Text style={styles.subtitle}>Check your SMS and enter the 6-digit code.</Text>
+          <Text style={styles.phoneHint}>Sent to +{countryCode} {phone}</Text>
         </View>
 
-        {/* OTP Input */}
-        <View style={styles.otpContainer}>
+        {/* 6-box OTP input */}
+        <View style={styles.otpRow}>
           {otp.map((digit, index) => (
             <TextInput
               key={index}
-              ref={(ref) => {
-                if (ref) inputRefs.current[index] = ref;
-              }}
-              style={[
-                styles.otpInput,
-                digit && styles.otpInputFilled,
-              ]}
+              ref={(ref) => { inputRefs.current[index] = ref; }}
+              style={[styles.otpBox, digit ? styles.otpBoxActive : null]}
               value={digit}
-              onChangeText={(value) => handleOtpChange(value, index)}
+              onChangeText={(v) => handleOtpChange(v, index)}
               onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
               keyboardType="number-pad"
               maxLength={OTP_LENGTH}
               selectTextOnFocus
+              textAlign="center"
             />
           ))}
         </View>
 
         {/* Resend */}
-        <View style={styles.resendSection}>
+        <View style={styles.resendRow}>
           {canResend ? (
             <TouchableOpacity onPress={handleResend}>
-              <Text style={styles.resendLink}>{t('auth.resendOtp')}</Text>
+              <Text style={styles.resendLink}>Resend OTP</Text>
             </TouchableOpacity>
           ) : (
             <Text style={styles.resendTimer}>
-              {t('auth.resendIn', { seconds: resendTimer })}
+              Resend in <Text style={styles.resendTimerBold}>{resendTimer}s</Text>
             </Text>
           )}
         </View>
 
-        {/* Verify Button */}
-        <Button
-          title={t('common.confirm')}
-          onPress={handleVerify}
-          loading={loading}
-          size="lg"
-          fullWidth
-          disabled={otp.join('').length !== OTP_LENGTH}
-        />
+        {/* Verify Now button */}
+        <View style={styles.btnWrapper}>
+          <TouchableOpacity
+            style={[
+              styles.verifyBtn,
+              (otp.join('').length !== OTP_LENGTH || loading) && styles.verifyBtnDisabled,
+            ]}
+            onPress={handleVerify}
+            disabled={otp.join('').length !== OTP_LENGTH || loading}
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.verifyBtnText}>Verify Now</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -199,76 +200,106 @@ export const OtpScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#ffffff',
   },
-  
+
   content: {
     flex: 1,
-    padding: Spacing.xl,
+    paddingTop: 10,
+    paddingHorizontal: 24,
   },
-  
-  headerSection: {
-    marginBottom: Spacing.xxl,
+
+  titleWrapper: {
     alignItems: 'center',
+    marginTop: 30,
+    marginBottom: 36,
   },
-  
+
   title: {
-    fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.md,
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#333333',
+    marginBottom: 12,
   },
-  
+
   subtitle: {
-    fontSize: Typography.size.base,
-    color: Colors.textSecondary,
+    fontSize: 15,
+    color: '#808080',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
   },
-  
-  phone: {
-    color: Colors.textPrimary,
-    fontWeight: Typography.weight.semiBold,
+
+  phoneHint: {
+    marginTop: 6,
+    fontSize: 14,
+    color: '#fdb813',
+    fontWeight: '600',
   },
-  
-  otpContainer: {
+
+  otpRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.xxl,
+    gap: 10,
+    marginBottom: 28,
   },
-  
-  otpInput: {
+
+  otpBox: {
     width: 48,
     height: 56,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.md,
-    textAlign: 'center',
-    fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
-    backgroundColor: Colors.backgroundGrey,
+    borderWidth: 2,
+    borderColor: 'rgba(128,128,128,0.25)',
+    borderRadius: 12,
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#333333',
+    backgroundColor: '#fafafa',
   },
-  
-  otpInputFilled: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primaryLight,
+
+  otpBoxActive: {
+    borderColor: '#fdb813',
+    backgroundColor: '#fff9ec',
   },
-  
-  resendSection: {
+
+  resendRow: {
     alignItems: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: 36,
   },
-  
+
   resendTimer: {
-    fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
+    fontSize: 14,
+    color: '#808080',
   },
-  
+
+  resendTimerBold: {
+    fontWeight: '700',
+    color: '#333333',
+  },
+
   resendLink: {
-    fontSize: Typography.size.sm,
-    color: Colors.primary,
-    fontWeight: Typography.weight.semiBold,
+    fontSize: 14,
+    color: '#fdb813',
+    fontWeight: '700',
+  },
+
+  btnWrapper: {
+    alignItems: 'center',
+  },
+
+  verifyBtn: {
+    backgroundColor: '#fdb813',
+    borderRadius: 25,
+    paddingVertical: 14,
+    width: 250,
+    alignItems: 'center',
+  },
+
+  verifyBtnDisabled: {
+    opacity: 0.5,
+  },
+
+  verifyBtnText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#ffffff',
   },
 });

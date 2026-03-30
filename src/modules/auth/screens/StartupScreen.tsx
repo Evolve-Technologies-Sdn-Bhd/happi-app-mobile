@@ -29,6 +29,7 @@ import { Colors } from '../../../shared/constants/colors';
 import { Spacing, Typography } from '../../../shared/constants/styles';
 import { useTranslation } from 'react-i18next';
 import { useCommonStore } from '../../../store';
+import { useAppStore } from '../../../store/appStore';
 import { useUserStore } from '../../../store';
 import { Config } from '../../../api/client';
 
@@ -201,6 +202,7 @@ export const StartupScreen: React.FC = () => {
   
   const agreed = useCommonStore((state) => state.agreed);
   const setAgreed = useCommonStore((state) => state.setAgreed);
+  const onboardingCompleted = useAppStore((state) => state.onboardingCompleted);
   const token = useUserStore((state) => state.token);
   
   const [versionCode, setVersionCode] = useState('');
@@ -215,7 +217,12 @@ export const StartupScreen: React.FC = () => {
     setVersionCode(version);
     
     // Only auto-navigate if already agreed on app start (not after clicking Agree)
-    if (agreed && !hasNavigatedToOnboarding) {
+    if (onboardingCompleted) {
+      // User has already completed onboarding once — go straight to login
+      timeoutId = setTimeout(() => {
+        navigation.navigate('SignIn', { fromSplash: true });
+      }, 2800);
+    } else if (agreed && !hasNavigatedToOnboarding) {
       // Navigate to main after splash delay - give time for logo animation
       timeoutId = setTimeout(() => {
         if (token) {

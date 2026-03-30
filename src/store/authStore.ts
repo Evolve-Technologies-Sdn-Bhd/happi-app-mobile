@@ -81,12 +81,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   
   // Logout
   logout: async () => {
+    // Only remove auth-specific keys — keep PRIVACY_AGREED and ONBOARDING_COMPLETED
+    // so the user doesn't see the privacy notice or onboarding again after logout
     await storage.remove(StorageKeys.AUTH_TOKEN);
     await storage.remove(StorageKeys.REFRESH_TOKEN);
     await storage.remove(StorageKeys.USER_DATA);
-    
-    // Clear all storage cache
-    await storage.clearCache();
     
     set({
       isAuthenticated: false,

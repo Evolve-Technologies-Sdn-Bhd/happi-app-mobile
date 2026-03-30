@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import { getFocusedRouteNameFromRoute, CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from './types';
 import { Colors } from '../../shared/constants/colors';
@@ -86,6 +86,24 @@ export const MainTabs: React.FC = () => {
         name="Profile"
         component={ProfileStack}
         options={{ tabBarLabel: 'Profile' }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            const state = navigation.getState();
+            navigation.dispatch(
+              CommonActions.reset({
+                ...state,
+                // Strip the nested state from the Profile route so it resets to ProfileIndex
+                routes: state.routes.map((route) =>
+                  route.name === 'Profile'
+                    ? { name: 'Profile', key: route.key }
+                    : route
+                ),
+                index: state.routes.findIndex((r) => r.name === 'Profile'),
+              })
+            );
+          },
+        })}
       />
     </Tab.Navigator>
   );

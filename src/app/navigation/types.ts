@@ -17,6 +17,9 @@ export type RootStackParamList = {
   
   // Modals
   WebView: { url: string; title?: string };
+  
+  // Voucher (full-screen stack)
+  Voucher: { screen?: string } | undefined;
 };
 
 export type AuthStackParamList = {
@@ -24,8 +27,8 @@ export type AuthStackParamList = {
   Onboarding: undefined;
   SignIn: { fromSplash?: boolean } | undefined;
   SignUp: undefined;
-  OTP: { phone: string; type: 'signup' | 'reset' };
-  ResetPassword: { phone: string };
+  OTP: { phone: string; type: 'signup' | 'reset'; countryCode?: string };
+  ResetPassword: { phone: string; countryCode?: string };
   ForgotPassword: undefined;
 };
 
@@ -70,12 +73,20 @@ export type ProductStackParamList = {
 
 export type VoucherStackParamList = {
   VoucherIndex: undefined;
-  VoucherList: undefined;
-  VoucherDetail: { voucherId: string };
   VoucherMy: undefined;
+  VoucherDetail: { voucherItemId: string };
+  CoinHistory: undefined;
+  VoucherCountdown: {
+    voucherItemId: string;
+    mode: number;
+    voucherCode: string;
+    voucherName: string;
+    countdownTime: number;
+    remainingSeconds: number;
+    merchantId?: string;
+  };
   VoucherRedeem: { voucherId: string };
-  VoucherUse: { voucherId: string };
-  RedeemVoucher: undefined;
+  RedeemSuccess: { voucherId: string; voucherItemId: string };
 };
 
 export type ProfileStackParamList = {
@@ -91,7 +102,11 @@ export type ProfileStackParamList = {
   HomeAssetList: undefined;
   HomeAssetEdit: { homeId?: string };
   PrivacySecurity: undefined;
+  PasswordSettings: undefined;
   ChangePassword: undefined;
+  PinEnter: undefined;
+  PinNew: undefined;
+  PinConfirm: { newPin: string };
   Support: undefined;
   QRCode: undefined;
   Coins: undefined;
@@ -102,6 +117,8 @@ export type ProfileStackParamList = {
   TermsOfService: undefined;
   HelpCenter: undefined;
   ContactUs: undefined;
+  CallService: undefined;
+  OurLocation: undefined;
 };
 
 export type PaymentStackParamList = {

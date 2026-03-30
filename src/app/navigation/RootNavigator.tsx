@@ -17,6 +17,7 @@ import { ScreenLoading } from '../../shared/components/Loading';
 import NotificationScreen from '../../modules/notification/screens/NotificationScreen';
 import AIChatScreen from '../../modules/chat/screens/AIChatScreen';
 import { MyMembershipListScreen } from '../../modules/membership/screens';
+import { VoucherStack } from './stacks';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -76,6 +77,14 @@ export const RootNavigator: React.FC = () => {
             options={{
               presentation: 'card',
               animation: 'fade',
+            }}
+          />
+          <Stack.Screen 
+            name="Voucher" 
+            component={VoucherStack}
+            options={{
+              presentation: 'card',
+              animation: 'slide_from_right',
             }}
           />
         </>

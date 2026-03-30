@@ -25,6 +25,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthStackParamList } from '../../../app/navigation/types';
 import { FontFamily } from '../../../shared/constants';
 import { useAuthStore } from '../../../store/authStore';
+import { useAppStore } from '../../../store/appStore';
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Onboarding'>;
 
@@ -221,12 +222,13 @@ export const OnboardingScreen: React.FC = () => {
   const scrollX = useRef(new Animated.Value(0)).current;
   const [currentPage, setCurrentPage] = useState(0);
   const setGuestMode = useAuthStore((state) => state.setGuestMode);
+  const setOnboardingCompleted = useAppStore((state) => state.setOnboardingCompleted);
 
-  const handleClose = useCallback(() => {
-    // Auto-navigate to home as guest (no confirmation)
+  const handleClose = useCallback(async () => {
+    // Mark onboarding as done so it is never shown again (even after logout)
+    await setOnboardingCompleted(true);
     setGuestMode(true);
-    // Navigation will automatically switch to Main due to guest mode
-  }, [setGuestMode]);
+  }, [setGuestMode, setOnboardingCompleted]);
 
   const handleIndicatorPress = useCallback((index: number) => {
     scrollViewRef.current?.scrollTo({

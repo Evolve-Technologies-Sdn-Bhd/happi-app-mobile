@@ -14,7 +14,6 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   Animated,
   Dimensions,
   ActivityIndicator,
@@ -31,7 +30,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { AuthStackParamList } from '../../../app/navigation/types';
-import { Button } from '../../../shared/components';
+import { Button, Toast, ToastType } from '../../../shared/components';
 import { Colors } from '../../../shared/constants/colors';
 import { Spacing, Typography } from '../../../shared/constants/styles';
 import { useUserStore } from '../../../store';
@@ -62,6 +61,13 @@ export const SignInScreen: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [failCount, setFailCount] = useState(0);
+
+  // Toast state
+  const [toast, setToast] = useState<{ visible: boolean; message: string; type: ToastType }>(
+    { visible: false, message: '', type: 'error' }
+  );
+  const showToast = (message: string, type: ToastType = 'error') =>
+    setToast({ visible: true, message, type });
   
   // Country code
   const [countryCode] = useState('60');
@@ -220,11 +226,11 @@ export const SignInScreen: React.FC = () => {
 
   const handleLogin = async () => {
     if (!username.trim()) {
-      Alert.alert('Error', 'Please enter your phone number');
+      showToast('Please enter your phone number');
       return;
     }
     if (!password) {
-      Alert.alert('Error', 'Please enter your password');
+      showToast('Please enter your password');
       return;
     }
 
@@ -265,27 +271,16 @@ export const SignInScreen: React.FC = () => {
         setFailCount(newFailCount);
         
         if (newFailCount >= 3) {
-          Alert.alert(
-            'Forgot Password?',
-            'You have entered the wrong password 3 times. Confirm to Reset Password?',
-            [
-              { text: 'Cancel', style: 'cancel' },
-              { 
-                text: 'OK', 
-                onPress: () => {
-                  setFailCount(0);
-                  navigation.navigate('ForgotPassword');
-                }
-              },
-            ]
-          );
+          setFailCount(0);
+          showToast('Too many failed attempts. Please reset your password.', 'warning');
+          setTimeout(() => navigation.navigate('ForgotPassword'), 1800);
         } else {
-          Alert.alert('Error', res.msg || res.message || 'Login failed. Please try again.');
+          showToast(res.msg || res.message || 'Login failed. Please try again.');
         }
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      Alert.alert('Error', error.message || 'An error occurred');
+      showToast(error.response?.data?.msg || error.message || 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -440,6 +435,15 @@ export const SignInScreen: React.FC = () => {
           </TouchableOpacity>
         </KeyboardAvoidingView>
       </Animated.View>
+
+      {/* Toast notifications */}
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        position="top"
+        onHide={() => setToast((t) => ({ ...t, visible: false }))}
+      />
     </View>
   );
 };
