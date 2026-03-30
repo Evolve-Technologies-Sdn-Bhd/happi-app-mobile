@@ -63,8 +63,10 @@ export const MainTabs: React.FC = () => {
         component={MembershipStack}
         options={({ route }) => {
           const routeName = getFocusedRouteNameFromRoute(route);
-          // Hide tab bar on MembershipDetail
-          const hideTabBar = routeName === 'MembershipDetail';
+          // Hide tab bar on MembershipDetail, PurchaseConfirm and PurchaseSubmit
+          const hideTabBar = routeName === 'MembershipDetail' ||
+            routeName === 'MembershipPurchaseConfirm' ||
+            routeName === 'MembershipPurchaseSubmit';
           return {
             tabBarLabel: 'Membership',
             tabBarStyle: hideTabBar ? { display: 'none' } : {

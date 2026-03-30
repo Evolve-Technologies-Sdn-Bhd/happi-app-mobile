@@ -40,6 +40,13 @@ export const MembershipCardStack: React.FC<MembershipCardStackProps> = ({
   const dragY = useRef(new Animated.Value(0)).current;
   const isDragging = useRef(false);
 
+  // Keep a ref to always have fresh cards length inside PanResponder callbacks
+  // (PanResponder is created once in useRef so its closure would be stale otherwise)
+  const cardsRef = useRef(cards);
+  useEffect(() => {
+    cardsRef.current = cards;
+  }, [cards]);
+
   // Reset currentIndex if it's out of bounds when cards change
   useEffect(() => {
     if (cards && cards.length > 0 && currentIndex >= cards.length) {
@@ -66,29 +73,29 @@ export const MembershipCardStack: React.FC<MembershipCardStackProps> = ({
     return result;
   }, [cards, currentIndex]);
 
-  // Pan responder for drag gestures
+  // Pan responder for drag gestures.
+  // NOTE: do NOT use onStartShouldSetPanResponderCapture — that steals every
+  // touch before children (TouchableOpacity) can receive it, breaking taps.
+  // Instead only claim the responder once the user actually starts dragging.
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onStartShouldSetPanResponderCapture: () => true,
+      // Let children (TouchableOpacity) handle taps; only intercept on move
+      onStartShouldSetPanResponder: () => false,
+      onStartShouldSetPanResponderCapture: () => false,
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dy) > 3;
+        return Math.abs(gestureState.dy) > 5;
       },
       onMoveShouldSetPanResponderCapture: (_, gestureState) => {
-        return Math.abs(gestureState.dy) > 3;
+        return Math.abs(gestureState.dy) > 5;
       },
       
       onPanResponderGrant: () => {
-        isDragging.current = false;
+        isDragging.current = true;
         dragY.stopAnimation();
         dragY.setValue(0);
       },
       
       onPanResponderMove: (_, gestureState) => {
-        if (Math.abs(gestureState.dy) > 2) {
-          isDragging.current = true;
-        }
-        
         // Direct 1:1 movement - no damping for instant response
         dragY.setValue(gestureState.dy);
       },
@@ -96,16 +103,19 @@ export const MembershipCardStack: React.FC<MembershipCardStackProps> = ({
       onPanResponderRelease: (_, gestureState) => {
         const velocity = gestureState.vy;
         const distance = gestureState.dy;
+        const total = cardsRef.current?.length ?? 0;
         
         // Lower threshold for easier card changes
         const threshold = CARD_SPACING * 0.35;
         
-        if (distance < -threshold || velocity < -0.4) {
-          // Dragged up = previous card
-          setCurrentIndex((prev) => (prev === 0 ? cards.length - 1 : prev - 1));
-        } else if (distance > threshold || velocity > 0.4) {
-          // Dragged down = next card
-          setCurrentIndex((prev) => (prev + 1) % cards.length);
+        if (total > 1) {
+          if (distance < -threshold || velocity < -0.4) {
+            // Dragged up = previous card
+            setCurrentIndex((prev) => (prev === 0 ? total - 1 : prev - 1));
+          } else if (distance > threshold || velocity > 0.4) {
+            // Dragged down = next card
+            setCurrentIndex((prev) => (prev + 1) % total);
+          }
         }
         
         // Use timing with easeOut for buttery smooth animation
@@ -118,7 +128,7 @@ export const MembershipCardStack: React.FC<MembershipCardStackProps> = ({
         
         setTimeout(() => {
           isDragging.current = false;
-        }, 50);
+        }, 100);
       },
       
       onPanResponderTerminate: () => {
@@ -131,16 +141,15 @@ export const MembershipCardStack: React.FC<MembershipCardStackProps> = ({
         
         setTimeout(() => {
           isDragging.current = false;
-        }, 50);
+        }, 100);
       },
     })
   ).current;
 
   const handleCardPress = (card: any, index: number) => {
+    // Only navigate when tapping the front card and not in the middle of a drag
     if (isDragging.current) return;
-    
     if (index === 0) {
-      // Tapped on front card = navigate to detail
       onCardPress(card);
     }
   };

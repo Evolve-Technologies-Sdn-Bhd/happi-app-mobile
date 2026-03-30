@@ -307,33 +307,24 @@ export const MyMembershipListScreen: React.FC = () => {
   
   const goToMembershipIndex = () => {
     // Navigate to membership tab/index
-    const parent = navigation.getParent();
-    if (parent) {
-      (parent.navigate as any)('Membership', {
-        screen: 'MembershipIndex',
-      });
-    }
+    // This screen is in the root stack, so navigate via 'Main' to reach the tab
+    (navigation as any).navigate('Main', {
+      screen: 'Membership',
+      params: { screen: 'MembershipIndex' },
+    });
   };
   
   const goToMembershipById = (id: string) => {
     // Navigate to membership detail in Membership stack
-    const parent = navigation.getParent();
-    if (parent) {
-      (parent.navigate as any)('Membership', {
-        screen: 'MembershipDetail',
-        params: { membershipId: id },
-      });
-    }
+    (navigation as any).navigate('Main', {
+      screen: 'Membership',
+      params: { screen: 'MembershipDetail', params: { membershipId: id } },
+    });
   };
   
   const handleBack = () => {
     // Navigate back to Home tab
-    const parent = navigation.getParent();
-    if (parent) {
-      (parent.navigate as any)('Home');
-    } else {
-      navigation.goBack();
-    }
+    (navigation as any).navigate('Main', { screen: 'Home' });
   };
   
   return (

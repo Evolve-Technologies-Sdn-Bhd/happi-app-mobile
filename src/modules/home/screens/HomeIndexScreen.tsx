@@ -22,8 +22,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import CyberLogo from '../../../../assets/images/cyber-logo.svg';
 import HomeLogo from '../../../../assets/images/home-logo.svg';
-import WarrantyLogo from '../../../../assets/images/warranty-logo.svg';
-import PetsLogo from '../../../../assets/images/pets-logo.svg';
+import WarrantyLogo from '../../../../assets/images/travel-coming-soon.svg';
+import PetsLogo from '../../../../assets/images/auto-coming-soon.svg';
 import FlagIcon from '../../../../assets/images/flag.svg';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -556,10 +556,10 @@ export const HomeIndexScreen: React.FC = () => {
   };
 
   const popularItems = [
-    { key: 'cyber', Icon: CyberLogo, label: 'Cyber', onPress: toCyber },
-    { key: 'home', Icon: HomeLogo, label: 'Home', onPress: toHome },
-    { key: 'warranty', Icon: WarrantyLogo, label: 'Extended Warranty', onPress: comingSoon },
-    { key: 'pets', Icon: PetsLogo, label: 'Pets', onPress: comingSoon },
+    { key: 'cyber', Icon: CyberLogo, label: 'Cyber', onPress: toCyber, iconSize: 40 },
+    { key: 'home', Icon: HomeLogo, label: 'Home', onPress: toHome, iconSize: 40 },
+    { key: 'travel', Icon: WarrantyLogo, label: 'Travel', onPress: comingSoon, iconSize: 50 },
+    { key: 'auto', Icon: PetsLogo, label: 'Auto', onPress: comingSoon, iconSize: 50 },
   ];
 
   // Helper function to get the correct image source and styling for multiplier circles
@@ -776,7 +776,7 @@ export const HomeIndexScreen: React.FC = () => {
                 onPress={item.onPress}
               >
                 <View style={styles.popularIcon}>
-                  <item.Icon width={40} height={40} />
+                  <item.Icon width={item.iconSize} height={item.iconSize} />
                 </View>
                 <Text style={styles.popularLabel}>{item.label}</Text>
               </TouchableOpacity>
@@ -1026,7 +1026,9 @@ const styles = StyleSheet.create({
   // Card Row
   cardRow: {
     flexDirection: 'row',
-    gap: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
   },
   
   membershipEmpty: {

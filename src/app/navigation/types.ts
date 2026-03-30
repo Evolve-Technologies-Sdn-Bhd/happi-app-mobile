@@ -52,12 +52,12 @@ export type MembershipStackParamList = {
   MembershipIndex: undefined;
   MembershipList: undefined;
   MembershipDetail: { membershipId: string };
-  MembershipPurchaseConfirm: { membershipId: string; tier?: string };
-  MembershipPurchaseSubmit: { orderId: string };
+  MembershipPurchaseConfirm: { membershipId: string; tier?: string; addedNominee?: any };
+  MembershipPurchaseSubmit: { membershipId: string; nominees?: any[] };
   MembershipCompletion: { orderId: string };
   // Additional screens for family/vehicles
   PolicyDetail: { policyId: string };
-  FamilyMembers: undefined;
+  FamilyMembers: { fromNominee?: boolean; membershipId?: string } | undefined;
   AddEditFamilyMember: { memberId?: string };
   Vehicles: undefined;
   AddEditVehicle: { vehicleId?: string };
