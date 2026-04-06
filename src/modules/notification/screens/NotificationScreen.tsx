@@ -14,7 +14,6 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
-  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +27,7 @@ import {
   NotificationItem,
 } from '../../../api/notification';
 import { useUserStore } from '../../../store/userStore';
+import { Header } from '../../../shared/components';
 
 type NotificationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Notification'>;
 type NotificationScreenRouteProp = RouteProp<RootStackParamList, 'Notification'>;
@@ -43,6 +43,7 @@ interface INotificationItem {
   description: string;
   createTime: number;
   isRead: boolean;
+  notificationType?: string;
 }
 
 const NotificationScreen: React.FC<IProps> = ({ navigation }) => {
@@ -99,6 +100,7 @@ const NotificationScreen: React.FC<IProps> = ({ navigation }) => {
           description: item.description || item.message || '',
           createTime: typeof item.createTime === 'string' ? new Date(item.createTime).getTime() : item.createTime,
           isRead: item.isRead === 1,
+          notificationType: item.notificationType || item.type || '',
         }));
         setNotifications(mappedNotifications);
         console.log('Notifications loaded from API:', mappedNotifications.length);
@@ -287,7 +289,13 @@ const NotificationScreen: React.FC<IProps> = ({ navigation }) => {
         }
       }
       // Navigate to detail
-      // navigation.navigate('NotificationDetail', { id: item.id });
+      navigation.navigate('NotificationDetail', {
+        notificationId: item.id.toString(),
+        title: item.title,
+        description: item.description,
+        createTime: item.createTime,
+        notificationType: item.notificationType,
+      });
     }
   };
 
@@ -325,29 +333,19 @@ const NotificationScreen: React.FC<IProps> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#FDB813" />
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        
-        <Text style={styles.headerTitle}>
-          Notification{unreadCount > 0 ? ` (${unreadCount})` : ''}
-        </Text>
-        
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={toggleEditMode}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Ionicons name="create-outline" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
+      <Header
+        title={`Notification${unreadCount > 0 ? ` (${unreadCount})` : ''}`}
+        showBack
+        titleRight={
+          <TouchableOpacity
+            onPress={toggleEditMode}
+            hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+          >
+            <Ionicons name={isEditMode ? 'close' : 'create-outline'} size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        }
+      />
 
       {/* Select All */}
       {isEditMode && notifications.length > 0 && (
@@ -429,39 +427,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FDFDFD',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 50,
-    paddingBottom: 16,
-    backgroundColor: '#FDB813',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    flex: 1,
-  },
-  editButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   selectAllContainer: {
     padding: 16,

@@ -257,29 +257,37 @@ export const MembershipDetailScreen: React.FC = () => {
       <Modal
         visible={coverageVisible}
         transparent
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setCoverageVisible(false)}
       >
+        {/* Dimmed backdrop */}
         <TouchableOpacity
-          style={styles.modalOverlay}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)' }}
           activeOpacity={1}
           onPress={() => setCoverageVisible(false)}
         />
-        <View style={styles.bottomSheet}>
-          <View style={styles.sheetHandle} />
-          <ScrollView showsVerticalScrollIndicator={false} style={styles.sheetScroll}>
-            {membershipInfo.coverage ? (
-              <HtmlText html={membershipInfo.coverage} baseStyle={styles.sheetHtml} />
-            ) : (
-              <Text style={styles.sheetHtml}>No coverage information available.</Text>
-            )}
-          </ScrollView>
-          <TouchableOpacity
-            style={styles.sheetCloseBtn}
-            onPress={() => setCoverageVisible(false)}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.sheetCloseBtnText}>Close</Text>
+        {/* Sheet pinned to bottom */}
+        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
+          <TouchableOpacity activeOpacity={1}>
+            <View style={styles.bottomSheet}>
+              <Text style={styles.sheetTitle}>More Information</Text>
+              <ScrollView showsVerticalScrollIndicator={false} style={styles.sheetScroll}>
+                {membershipInfo.coverage ? (
+                  <HtmlText html={membershipInfo.coverage} baseStyle={styles.sheetHtml} />
+                ) : (
+                  <Text style={styles.sheetHtml}>No coverage information available.</Text>
+                )}
+              </ScrollView>
+              <View style={styles.sheetActions}>
+                <TouchableOpacity
+                  style={styles.sheetCloseBtn}
+                  onPress={() => setCoverageVisible(false)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.sheetCloseBtnText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </TouchableOpacity>
         </View>
       </Modal>
@@ -333,11 +341,6 @@ const styles = StyleSheet.create({
     marginTop: -120,
     marginHorizontal: 24,
     alignItems: 'center',
-    // iOS shadow only (elevation omitted intentionally — Android render order handles stacking)
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
   },
 
   cardContainer: {
@@ -347,7 +350,6 @@ const styles = StyleSheet.create({
 
   cardPlaceholder: {
     backgroundColor: '#333355',
-    borderRadius: 16,
   },
 
   cardName: {
@@ -450,6 +452,7 @@ const styles = StyleSheet.create({
   group4: {
     marginTop: 40,
     marginHorizontal: 52,
+
   },
 
   detailHtml: {
@@ -503,57 +506,49 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // ── Coverage Modal ──
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-
+  // ── Coverage Modal (voucher filter sheet style) ──
   bottomSheet: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 24,
-    paddingTop: 16,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 40,
     paddingBottom: 40,
-    maxHeight: '75%',
+    minHeight: 376,
+    maxHeight: '80%',
   },
 
-  sheetHandle: {
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#E0E0E0',
-    marginBottom: 24,
+  sheetTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#808080',
+    marginBottom: 20,
   },
 
   sheetScroll: {
-    maxHeight: 400,
+    maxHeight: 360,
   },
 
   sheetHtml: {
-    fontSize: 15,
-    fontFamily: FontFamily.bold,
-    fontWeight: '700',
+    fontSize: 14,
     color: '#808080',
-    lineHeight: 22,
+  },
+
+  sheetActions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
   },
 
   sheetCloseBtn: {
-    marginTop: 24,
-    alignSelf: 'center',
-    width: 274,
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: 20,
     backgroundColor: '#FDB813',
-    borderRadius: 30,
-    paddingVertical: 16,
-    alignItems: 'center',
   },
 
   sheetCloseBtnText: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontFamily: FontFamily.bold,
+    fontSize: 16,
+    color: '#fff',
     fontWeight: '700',
   },
 });

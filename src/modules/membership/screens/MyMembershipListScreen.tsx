@@ -818,8 +818,6 @@ const styles = StyleSheet.create({
   progressWrapper: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 25,
-    gap: 2,
   },
   
   progressItem: {
@@ -830,9 +828,10 @@ const styles = StyleSheet.create({
   },
   
   progressIcon: {
-    width: 16,
-    height: 16,
-    marginBottom: 4,
+    width: 12,
+    height: 12,
+    marginBottom: 2,
+    marginTop: 4,
   },
   
   multiplierText: {
@@ -851,7 +850,7 @@ const styles = StyleSheet.create({
   
   progressLine: {
     marginTop: 8,
-    width: 66,
+    alignSelf: 'stretch',
     height: 6,
     backgroundColor: 'rgba(253, 184, 19, 0.5)',
   },
@@ -862,7 +861,7 @@ const styles = StyleSheet.create({
   
   levelDesc: {
     marginTop: 8,
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: Typography.weight.bold as any,
     color: '#000000',
     lineHeight: 12,
@@ -881,6 +880,7 @@ const styles = StyleSheet.create({
   // Memberships Wrapper (matching memberships-wrapper and equal-division from Vue)
   membershipsWrapper: {
     paddingHorizontal: 20,
+    // marginTop: 40,
   },
   
   membershipsContent: {

@@ -181,17 +181,18 @@ export const MembershipIndexScreen: React.FC = () => {
             ))}
           </View>
         </View>
-        
-        {/* Membership Cards Stack */}
-        <View style={styles.cardsSection}>
-          <MembershipCardStack
-            cards={membershipList}
-            displayName={displayName}
-            displayMemberId={displayMemberId}
-            onCardPress={handleCardPress}
-          />
-        </View>
       </ScrollView>
+
+      {/* Membership Cards Stack — kept OUTSIDE the ScrollView so vertical
+          swipe gestures don't conflict with the outer ScrollView on Android */}
+      <View style={styles.cardsSection}>
+        <MembershipCardStack
+          cards={membershipList}
+          displayName={displayName}
+          displayMemberId={displayMemberId}
+          onCardPress={handleCardPress}
+        />
+      </View>
     </View>
   );
 };
@@ -203,7 +204,7 @@ const styles = StyleSheet.create({
   },
   
   scrollView: {
-    flex: 1,
+    flexShrink: 0,
   },
   
   scrollContent: {

@@ -10,6 +10,7 @@ export interface UserNotification {
   description: string;
   message?: string;
   type?: string;
+  notificationType?: string;
   isRead: number; // 0: unread, 1: read
   createTime: string;
   createdAt?: string;

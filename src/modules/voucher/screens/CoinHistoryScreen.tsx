@@ -14,7 +14,6 @@ import {
   ActivityIndicator,
   ScrollView,
   Dimensions,
-  Image as RNImage,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -22,11 +21,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
 import { VoucherStackParamList } from '../../../app/navigation/types';
+import { Header } from '../../../shared/components';
 import userApi from '../../../api/user';
 
 type NavigationProp = NativeStackNavigationProp<VoucherStackParamList, 'CoinHistory'>;
 
-const imgHeaderBar = require('../../../../assets/images/voucher-header-bar.png');
 
 // changeType mappings from Vue balanceChangeTypes()
 const CHANGE_TYPE_MAP: Record<number, string> = {
@@ -246,17 +245,7 @@ export const CoinHistoryScreen: React.FC = () => {
 
   return (
     <View style={styles.page}>
-      {/* Header bar image background */}
-      <RNImage source={imgHeaderBar} style={[styles.headerBar, { height: insets.top + 130 }]} resizeMode="cover" />
-
-      {/* Nav row */}
-      <View style={[styles.nav, { paddingTop: insets.top + 12 }]}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.navTitle}>HAPPIcoin History</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <Header title="HAPPIcoin History" showBack />
 
       {loading ? (
         <View style={styles.loadingBox}>
@@ -267,7 +256,7 @@ export const CoinHistoryScreen: React.FC = () => {
           data={historyList}
           keyExtractor={(item) => item.month}
           renderItem={renderGroup}
-          contentContainerStyle={[styles.list, { paddingTop: insets.top + 130 + 56 }]}
+          contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
             <TouchableOpacity style={styles.filterRow} onPress={openFilter}>
@@ -282,8 +271,14 @@ export const CoinHistoryScreen: React.FC = () => {
       )}
 
       {/* Filter popup */}
-      <Modal visible={showFilter} transparent animationType="slide" onRequestClose={() => setShowFilter(false)}>
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowFilter(false)} />
+      <Modal visible={showFilter} transparent animationType="fade" onRequestClose={() => setShowFilter(false)}>
+        <TouchableOpacity
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)' }}
+          activeOpacity={1}
+          onPress={() => setShowFilter(false)}
+        />
+        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
+        <TouchableOpacity activeOpacity={1}>
         <View style={[styles.filterPopup, { paddingBottom: insets.bottom + 16 }]}>
           <Text style={styles.filterTitle}>Filter by Date</Text>
 
@@ -359,6 +354,8 @@ export const CoinHistoryScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         </View>
+        </TouchableOpacity>
+        </View>
       </Modal>
     </View>
   );
@@ -366,32 +363,16 @@ export const CoinHistoryScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: '#F5F5F5' },
-  headerBar: {
-    position: 'absolute', top: 0, left: 0, right: 0,
-    zIndex: 1,
-  },
-  nav: {
-    position: 'absolute', top: 0, left: 0, right: 0,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, zIndex: 2,
-  },
-  backBtn: {
-    width: 40, height: 40,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  navTitle: {
-    flex: 1, textAlign: 'center',
-    fontSize: 17, fontWeight: '700', color: '#fff',
-  },
+
   loadingBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   list: { paddingHorizontal: 16, paddingBottom: 32 },
   filterRow: {
     flexDirection: 'row', alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 16,  marginTop: 28 ,
   },
-  filterLabel: { fontSize: 15, fontWeight: '600', color: '#343434', marginRight: 4 },
+  filterLabel: { fontSize: 15, fontWeight: '600', color: '#343434', marginRight: 4},
   group: { marginBottom: 20 },
-  monthLabel: { fontSize: 14, fontWeight: '700', color: '#343434', marginBottom: 8 },
+  monthLabel: { fontSize: 14, fontWeight: '700', color: '#343434', marginBottom: 8, },
   histItem: {
     backgroundColor: '#fff',
     borderRadius: 10,
@@ -409,16 +390,12 @@ const styles = StyleSheet.create({
   histNote: { fontSize: 12, color: '#808080', flex: 1, marginRight: 8 },
   histTime: { fontSize: 12, color: '#808080' },
   emptyText: { textAlign: 'center', color: '#aaa', marginTop: 40, fontSize: 14 },
-  /* Filter popup */
-  modalOverlay: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
   filterPopup: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: '#fff',
-    borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    paddingHorizontal: 20, paddingTop: 20,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    paddingHorizontal: 40,
+    paddingTop: 40,
   },
   filterTitle: { fontSize: 16, fontWeight: '700', color: '#343434', textAlign: 'center', marginBottom: 16 },
   quickGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },

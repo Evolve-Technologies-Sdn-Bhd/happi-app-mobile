@@ -16,7 +16,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,6 +24,7 @@ import dayjs from 'dayjs';
 import { MembershipStackParamList } from '../../../app/navigation/types';
 import { getFamilyMemberList, FamilyMember } from '../../../api/family';
 import { FontFamily } from '../../../shared/constants/fonts';
+import { Header } from '../../../shared/components';
 
 type RouteProps = RouteProp<MembershipStackParamList, 'FamilyMembers'>;
 type NavigationProp = NativeStackNavigationProp<MembershipStackParamList, 'FamilyMembers'>;
@@ -113,16 +113,8 @@ export const FamilyMembersScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Plain white happi-nav-bar style header */}
-      <SafeAreaView edges={['top']} style={styles.headerSafe}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-            <Ionicons name="arrow-back" size={24} color="#343434" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{title}</Text>
-          <View style={{ width: 32 }} />
-        </View>
-      </SafeAreaView>
+      {/* Header */}
+      <Header title={title} showBack />
 
       {loading ? (
         <View style={styles.center}>
@@ -166,13 +158,21 @@ export const FamilyMembersScreen: React.FC = () => {
                   >
                     <Text style={styles.cardTitle}>{getCardTitle(item)}</Text>
                     <View style={styles.cardHeaderRight}>
-                      {fromNominee && (
+                      {fromNominee ? (
                         <TouchableOpacity
                           style={styles.selectBtn}
                           onPress={() => handleSelect(item)}
                           activeOpacity={0.85}
                         >
                           <Text style={styles.selectBtnText}>Select</Text>
+                        </TouchableOpacity>
+                      ) : (
+                        <TouchableOpacity
+                          style={styles.editBtn}
+                          onPress={() => navigation.navigate('AddEditFamilyMember', { memberId: item.id })}
+                          activeOpacity={0.85}
+                        >
+                          <Text style={styles.editBtnText}>Edit</Text>
                         </TouchableOpacity>
                       )}
                       <Ionicons
@@ -234,26 +234,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fdfdfd' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
-  // Header — plain white with bottom separator, mirrors happi-nav-bar
-  headerSafe: { backgroundColor: '#FFFFFF' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#E0E0E0',
-  },
-  backBtn: { padding: 4 },
-  headerTitle: {
-    fontSize: 18,
-    fontFamily: FontFamily.bold,
-    fontWeight: '700',
-    color: '#343434',
-  },
-
   // Card
   card: {
     backgroundColor: '#ffffff',
@@ -294,6 +274,20 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+
+  // Edit button (normal mode) — matches HomeAssetListScreen
+  editBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: '#FDB813',
+    borderRadius: 20,
+  },
+  editBtnText: {
+    fontSize: 13,
+    color: '#FDB813',
+    fontWeight: '600',
   },
 
   // Info rows

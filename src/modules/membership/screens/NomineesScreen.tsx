@@ -177,7 +177,7 @@ export const NomineesScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroundGrey,
+    backgroundColor: '#FDFDFD',
   },
 
   percentageBanner: {

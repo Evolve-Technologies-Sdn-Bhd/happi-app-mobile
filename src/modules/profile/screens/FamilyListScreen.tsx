@@ -120,7 +120,6 @@ export const FamilyListScreen: React.FC = () => {
                           navigation.navigate('FamilyEdit', { memberId: item.id })
                         }
                       >
-                        <Ionicons name="create-outline" size={16} color="#FDB813" />
                         <Text style={styles.editBtnText}>Edit</Text>
                       </TouchableOpacity>
                       <Ionicons
@@ -227,21 +226,10 @@ const styles = StyleSheet.create({
   },
 
   editBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FDB813',
+    paddingHorizontal: 12, paddingVertical: 5,
+    borderWidth: 1, borderColor: '#FDB813', borderRadius: 20,
   },
-
-  editBtnText: {
-    fontSize: 12,
-    color: '#FDB813',
-    fontWeight: '500',
-  },
+  editBtnText: { fontSize: 13, color: '#FDB813', fontWeight: '600' },
 
   chevron: { marginLeft: 4 },
 
@@ -279,17 +267,17 @@ const styles = StyleSheet.create({
   },
 
   addBtn: {
-    alignSelf: 'center',
+    marginTop: 8,
     backgroundColor: '#FDB813',
     borderRadius: 30,
-    paddingHorizontal: 36,
-    paddingVertical: 12,
-    marginTop: 8,
+    paddingVertical: 13,
+    alignItems: 'center',
+    marginHorizontal: 4,
   },
 
   addBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '600',
     color: '#ffffff',
   },
 });

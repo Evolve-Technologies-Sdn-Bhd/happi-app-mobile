@@ -24,7 +24,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { VoucherStackParamList } from '../../../app/navigation/types';
-import { Toast } from '../../../shared/components';
+import { Toast, Header } from '../../../shared/components';
 import { useToast } from '../../../shared/hooks/useToast';
 import { useUserStore } from '../../../store';
 import { AppConfig } from '../../../shared/constants/config';
@@ -43,7 +43,6 @@ const imgTicket    = require('../../../../assets/images/voucher-ticket-icon.png'
 const imgMyArrow   = require('../../../../assets/images/voucher-my-arrow.png');
 const imgHistArrow = require('../../../../assets/images/voucher-history-arrow.png');
 const imgSearch    = require('../../../../assets/images/voucher-search-icon.png');
-const imgHeaderBar = require('../../../../assets/images/voucher-header-bar.png');
 
 export const VoucherIndexScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -145,17 +144,16 @@ export const VoucherIndexScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
-  // section2 starts at (insets.top + 80), height ~130px → bottom at insets.top+210.
-  // Add 16px gap so content starts visibly below the card.
-  const headerH = insets.top + 226;
+  // Header is now in-flow (~insets.top + 64px). section2 (absolute) bottom ≈ insets.top+210.
+  // Body paddingTop = (insets.top + 226) - (insets.top + 64) = 162, pushing content below the card.
+  const headerH = 162;
 
   return (
     <View style={styles.page}>
-      {/* Nav bar background image */}
-      <RNImage source={imgHeaderBar} style={[styles.headerBar, { height: insets.top + 130 }]} resizeMode="cover" />
+      <Header title="HAPPI Redemption" showBack />
 
       {/* Yellow info card pinned below nav bar */}
-      <View style={[styles.section2, { top: insets.top + 80 }]}>
+      <View style={[styles.section2, { top: insets.top + 90 }]}>
         {/* Light yellow balance section */}
         <View style={styles.section3}>
           <RNImage source={imgCoin} style={styles.coinIcon} resizeMode="contain" />
@@ -316,15 +314,6 @@ export const VoucherIndexScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: '#fdfdfd' },
-
-  headerBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    width: '100%',
-    zIndex: 1,
-  },
 
   // Yellow info card (section_2) — fixed
   section2: {

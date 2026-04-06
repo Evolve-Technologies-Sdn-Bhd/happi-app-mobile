@@ -25,6 +25,9 @@ import HomeLogo from '../../../../assets/images/home-logo.svg';
 import WarrantyLogo from '../../../../assets/images/travel-coming-soon.svg';
 import PetsLogo from '../../../../assets/images/auto-coming-soon.svg';
 import FlagIcon from '../../../../assets/images/flag.svg';
+import AIIconSvg from '../../../../assets/images/profile/profile-ai-icon.svg';
+import NotifDotSvg from '../../../../assets/images/profile/profile-notification-dot.svg';
+import NotifIconSvg from '../../../../assets/images/profile/profile-notification-icon.svg';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { HomeStackParamList } from '../../../app/navigation/types';
@@ -494,12 +497,7 @@ export const HomeIndexScreen: React.FC = () => {
   };
 
   const toMemberApply = () => {
-    if (!token) {
-      showToast('Please sign in to apply for membership.', 'warning');
-      return;
-    }
-    // Navigate to membership application
-    showToast('Membership application coming soon!', 'info');
+    navigation.getParent()?.navigate('Membership' as never);
   };
 
   const toCyber = () => {
@@ -599,16 +597,13 @@ export const HomeIndexScreen: React.FC = () => {
             <Text style={styles.greeting}>HAPPI Day!</Text>
             <View style={styles.headerIcons}>
               <TouchableOpacity onPress={toChat} style={styles.iconBtn}>
-                <Ionicons name="chatbubble-ellipses-outline" size={24} color={Colors.textWhite} />
+                <AIIconSvg width={26.5} height={27.5} />
               </TouchableOpacity>
               <TouchableOpacity onPress={toNotification} style={styles.iconBtn}>
-                <Ionicons 
-                  name={unreadNotificationCount > 0 ? 'notifications' : 'notifications-outline'} 
-                  size={24} 
-                  color={Colors.textWhite} 
-                />
-                {unreadNotificationCount > 0 && (
-                  <View style={styles.notificationDot} />
+                {unreadNotificationCount > 0 ? (
+                  <NotifDotSvg width={28} height={27.5} />
+                ) : (
+                  <NotifIconSvg width={28} height={27.5} />
                 )}
               </TouchableOpacity>
             </View>
@@ -1089,7 +1084,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 4,
     overflow: 'hidden',
-    width: 382,
+    width: 372,
     alignSelf: 'center',
   },
   
@@ -1155,7 +1150,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     borderRadius: 30,
     height: 32,
-    width: 127,
+    width: 120,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 10,
@@ -1163,7 +1158,7 @@ const styles = StyleSheet.create({
   
   redeemText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: Typography.weight.bold as any,
   },
   
@@ -1408,7 +1403,7 @@ const styles = StyleSheet.create({
   },
   
   partnerImage: {
-    width: 100,
-    height: 50,
+    width: 120,
+    height: 80,
   },
 });
