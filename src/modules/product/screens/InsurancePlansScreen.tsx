@@ -95,7 +95,7 @@ export const InsurancePlansScreen: React.FC = () => {
       const res = await getPolicyPage({
         page: 1,
         limit: 999,
-        categoryId: currentCategoryId,
+        categoryId: currentCategoryId || undefined,
       });
 
       if (res.success) {
@@ -477,7 +477,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
-export default InsurancePlansScreen;
 
 export default InsurancePlansScreen;
