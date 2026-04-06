@@ -18,6 +18,7 @@ import notifyApi from './notify';
 import notificationApi from './notification';
 import orderApi from './order';
 import payApi from './pay';
+import policyApi from './policy';
 import productApi from './product';
 import pubApi from './pub';
 import userApi from './user';
@@ -39,6 +40,7 @@ export * from './notify';
 export * from './notification';
 export * from './order';
 export * from './pay';
+export * from './policy';
 export * from './product';
 export * from './pub';
 export * from './user';
@@ -65,6 +67,7 @@ const api = {
   ...vehicleApi,
   ...familyApi,
   ...productApi,
+  ...policyApi,
   ...voucherApi,
   ...merchantApi,
   ...serviceApi,
@@ -89,6 +92,7 @@ export {
   notificationApi,
   orderApi,
   payApi,
+  policyApi,
   productApi,
   pubApi,
   userApi,
