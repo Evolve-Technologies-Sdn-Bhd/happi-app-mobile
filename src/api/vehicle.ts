@@ -5,21 +5,23 @@ import { httpRequest } from './client';
 
 export interface Vehicle {
   id: string;
-  plateNumber: string;
+  vehicleNumber: string;
   brand?: string;
   model?: string;
   year?: number;
   color?: string;
   type?: string;
+  postcode?: string;
 }
 
 export interface AddVehicleData {
-  plateNumber: string;
+  vehicleNumber: string;
   brand?: string;
   model?: string;
   year?: number;
   color?: string;
   type?: string;
+  postcode?: string;
 }
 
 export interface UpdateVehicleData extends AddVehicleData {

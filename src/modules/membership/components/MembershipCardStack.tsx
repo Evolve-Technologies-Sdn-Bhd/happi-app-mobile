@@ -8,20 +8,20 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   Dimensions,
-  ImageBackground,
   Animated,
-  PanResponder,
   Easing,
 } from 'react-native';
+import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import { Image } from 'expo-image';
 import { getOssImg } from '../../../api';
 import { Typography } from '../../../shared/constants/styles';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const CARD_WIDTH = 330;
-const CARD_HEIGHT = 190;
-const CARD_SPACING = 50; // Distance between stacked cards
+// Match MembershipDetailScreen exactly: full width minus 24px each side, Vue ratio 382×220
+const CARD_WIDTH = SCREEN_WIDTH - 48;
+const CARD_HEIGHT = Math.round(CARD_WIDTH * (220 / 382));
+const CARD_SPACING = 50;
 
 interface MembershipCardStackProps {
   cards: any[];
@@ -40,12 +40,14 @@ export const MembershipCardStack: React.FC<MembershipCardStackProps> = ({
   const dragY = useRef(new Animated.Value(0)).current;
   const isDragging = useRef(false);
 
-  // Keep a ref to always have fresh cards length inside PanResponder callbacks
-  // (PanResponder is created once in useRef so its closure would be stale otherwise)
   const cardsRef = useRef(cards);
-  useEffect(() => {
-    cardsRef.current = cards;
-  }, [cards]);
+  useEffect(() => { cardsRef.current = cards; }, [cards]);
+
+  // Keep fresh index + callback refs for gestures (created once in useMemo)
+  const currentIndexRef = useRef(currentIndex);
+  useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
+  const onCardPressRef = useRef(onCardPress);
+  useEffect(() => { onCardPressRef.current = onCardPress; }, [onCardPress]);
 
   // Reset currentIndex if it's out of bounds when cards change
   useEffect(() => {
@@ -57,102 +59,77 @@ export const MembershipCardStack: React.FC<MembershipCardStackProps> = ({
   // Compute visible cards - simply reorder without modifying original objects
   const visibleCards = useMemo(() => {
     if (!cards || cards.length === 0) return [];
-    
     const total = cards.length;
     const result = [];
-    
-    // Reorder cards based on currentIndex
     for (let step = 0; step < total; step++) {
       const idx = (currentIndex + step) % total;
       const card = cards[idx];
-      if (card) { // Safety check for undefined cards
-        result.push(card);
-      }
+      if (card) result.push(card);
     }
-    
     return result;
   }, [cards, currentIndex]);
 
-  // Pan responder for drag gestures.
-  // NOTE: do NOT use onStartShouldSetPanResponderCapture — that steals every
-  // touch before children (TouchableOpacity) can receive it, breaking taps.
-  // Instead only claim the responder once the user actually starts dragging.
-  const panResponder = useRef(
-    PanResponder.create({
-      // Let children (TouchableOpacity) handle taps; only intercept on move
-      onStartShouldSetPanResponder: () => false,
-      onStartShouldSetPanResponderCapture: () => false,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dy) > 5;
-      },
-      onMoveShouldSetPanResponderCapture: (_, gestureState) => {
-        return Math.abs(gestureState.dy) > 5;
-      },
-      
-      onPanResponderGrant: () => {
-        isDragging.current = true;
-        dragY.stopAnimation();
-        dragY.setValue(0);
-      },
-      
-      onPanResponderMove: (_, gestureState) => {
-        // Direct 1:1 movement - no damping for instant response
-        dragY.setValue(gestureState.dy);
-      },
-      
-      onPanResponderRelease: (_, gestureState) => {
-        const velocity = gestureState.vy;
-        const distance = gestureState.dy;
-        const total = cardsRef.current?.length ?? 0;
-        
-        // Lower threshold for easier card changes
-        const threshold = CARD_SPACING * 0.35;
-        
-        if (total > 1) {
-          if (distance < -threshold || velocity < -0.4) {
-            // Dragged up = previous card
-            setCurrentIndex((prev) => (prev === 0 ? total - 1 : prev - 1));
-          } else if (distance > threshold || velocity > 0.4) {
-            // Dragged down = next card
-            setCurrentIndex((prev) => (prev + 1) % total);
+  // Use RNGH Gesture.Pan — runs at native layer on Android, no JS responder conflicts.
+  // activeOffsetY: pan only activates after 10px vertical movement, so
+  // short taps (<10px) fall through to TouchableOpacity normally.
+  const pan = useMemo(
+    () =>
+      Gesture.Pan()
+        .runOnJS(true)
+        .activeOffsetY([-10, 10])
+        .onBegin(() => {
+          dragY.stopAnimation();
+          dragY.setValue(0);
+        })
+        .onStart(() => {
+          isDragging.current = true;
+        })
+        .onUpdate(({ translationY }) => {
+          dragY.setValue(translationY);
+        })
+        .onEnd(({ translationY, velocityY }) => {
+          const total = cardsRef.current?.length ?? 0;
+          const threshold = CARD_SPACING * 0.35;
+          if (total > 1) {
+            if (translationY < -threshold || velocityY < -0.4) {
+              setCurrentIndex((prev) => (prev === 0 ? total - 1 : prev - 1));
+            } else if (translationY > threshold || velocityY > 0.4) {
+              setCurrentIndex((prev) => (prev + 1) % total);
+            }
           }
-        }
-        
-        // Use timing with easeOut for buttery smooth animation
-        Animated.timing(dragY, {
-          toValue: 0,
-          duration: 300,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }).start();
-        
-        setTimeout(() => {
-          isDragging.current = false;
-        }, 100);
-      },
-      
-      onPanResponderTerminate: () => {
-        Animated.timing(dragY, {
-          toValue: 0,
-          duration: 300,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }).start();
-        
-        setTimeout(() => {
-          isDragging.current = false;
-        }, 100);
-      },
-    })
-  ).current;
+          Animated.timing(dragY, {
+            toValue: 0,
+            duration: 300,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }).start(() => { isDragging.current = false; });
+        })
+        .onFinalize(() => {
+          Animated.timing(dragY, {
+            toValue: 0,
+            duration: 300,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }).start(() => { isDragging.current = false; });
+        }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
-  const handleCardPress = (card: any, index: number) => {
-    // Only navigate when tapping the front card and not in the middle of a drag
-    if (isDragging.current) return;
-    if (index === 0) {
-      onCardPress(card);
-    }
-  };
+  // Tap gesture for front-card press — fires only if pan didn't activate (no 10px movement)
+  const tap = useMemo(
+    () =>
+      Gesture.Tap()
+        .runOnJS(true)
+        .onEnd(() => {
+          const frontCard = cardsRef.current?.[currentIndexRef.current];
+          if (frontCard) onCardPressRef.current(frontCard);
+        }),
+    []
+  );
+
+  // Race: first gesture to activate wins. Pan wins on swipe (after 10px), tap wins on quick tap.
+  const composed = useMemo(() => Gesture.Race(pan, tap), [pan, tap]);
 
   if (!cards || cards.length === 0) {
     return (
@@ -163,7 +140,8 @@ export const MembershipCardStack: React.FC<MembershipCardStackProps> = ({
   }
 
   return (
-    <View style={styles.cardStack} {...panResponder.panHandlers}>
+    <GestureDetector gesture={composed}>
+      <View style={styles.cardStack}>
       {visibleCards.map((card: any, index: number) => {
         // Safety check for undefined card
         if (!card) return null;
@@ -202,17 +180,6 @@ export const MembershipCardStack: React.FC<MembershipCardStackProps> = ({
           extrapolate: 'clamp',
         });
 
-        // Rotation - front card tilts smoothly
-        const rotateX = dragY.interpolate({
-          inputRange: [-100, 0, 100],
-          outputRange: [
-            index === 0 ? '20deg' : '0deg',
-            '0deg',
-            index === 0 ? '-20deg' : '0deg',
-          ],
-          extrapolate: 'clamp',
-        });
-
         // Opacity - next card becomes visible
         const animatedOpacity = dragY.interpolate({
           inputRange: [-80, 0, 80],
@@ -232,8 +199,6 @@ export const MembershipCardStack: React.FC<MembershipCardStackProps> = ({
               {
                 transform: [
                   { translateY: animatedOffset },
-                  { perspective: 1000 },
-                  { rotateX: rotateX },
                   { scale: animatedScale },
                 ],
                 opacity: animatedOpacity,
@@ -241,96 +206,92 @@ export const MembershipCardStack: React.FC<MembershipCardStackProps> = ({
               },
             ]}
           >
-            <TouchableOpacity
-              style={styles.cardTouchable}
-              onPress={() => handleCardPress(card, index)}
-              activeOpacity={0.9}
-            >
-              <ImageBackground
-                source={imageUrl ? { uri: imageUrl } : undefined}
-                style={[styles.cardBackground, !imageUrl && styles.placeholderCard]}
-                imageStyle={styles.cardBackgroundImage}
-              >
-                <View style={styles.cardContent}>
-                  <Text style={styles.cardName}>{displayName}</Text>
-                  <View style={styles.memberIdSection}>
-                    <Text style={styles.memberIdLabel}>Member ID</Text>
-                    <Text style={styles.memberIdValue}>{displayMemberId}</Text>
-                  </View>
+            <View style={styles.cardTouchable}>
+              <View style={[styles.cardContainer, !imageUrl && styles.cardPlaceholder]}>
+                {!!imageUrl && (
+                  <Image
+                    source={{ uri: imageUrl }}
+                    style={StyleSheet.absoluteFill}
+                    contentFit="cover"
+                    pointerEvents="none"
+                  />
+                )}
+                <Text
+                  style={[
+                    styles.cardName,
+                    {
+                      top: Math.round(CARD_HEIGHT * (80 / 220)),
+                      left: Math.round(CARD_WIDTH * (28 / 382)),
+                    },
+                  ]}
+                >
+                  {displayName}
+                </Text>
+                <View
+                  style={[
+                    styles.memberIdWrapper,
+                    {
+                      bottom: Math.round(CARD_HEIGHT * (30 / 220)),
+                      left: Math.round(CARD_WIDTH * (28 / 382)),
+                    },
+                  ]}
+                >
+                  <Text style={styles.memberIdLabel}>Member ID</Text>
+                  <Text style={styles.memberIdValue}>{displayMemberId}</Text>
                 </View>
-              </ImageBackground>
-            </TouchableOpacity>
+              </View>
+            </View>
           </Animated.View>
         );
       })}
-    </View>
+      </View>
+    </GestureDetector>
   );
 };
 
 const styles = StyleSheet.create({
   cardStack: {
     width: CARD_WIDTH,
-    height: 300,
+    height: CARD_HEIGHT + CARD_SPACING * 2 + 20,
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'flex-start',
-    paddingTop: 60,
+    paddingTop: CARD_SPACING,
   },
 
   membershipCard: {
     position: 'absolute',
-    top: 60,
+    top: CARD_SPACING,
+  },
+
+  cardTouchable: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+  },
+
+  cardContainer: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
     borderRadius: 16,
     overflow: 'hidden',
   },
 
-  cardTouchable: {
-    width: '100%',
-    height: '100%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-
-  cardBackground: {
-    width: '100%',
-    height: '100%',
-  },
-
-  cardBackgroundImage: {
-    borderRadius: 16,
-  },
-
-  placeholderCard: {
-    backgroundColor: '#6B46C1',
-    borderRadius: 16,
-  },
-
-  cardContent: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 50,
-    paddingBottom: 30,
-    justifyContent: 'space-between',
+  cardPlaceholder: {
+    backgroundColor: '#333355',
   },
 
   cardName: {
+    position: 'absolute',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
-    lineHeight: 20,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
     letterSpacing: 1,
   },
 
-  memberIdSection: {
-    marginTop: 'auto',
+  memberIdWrapper: {
+    position: 'absolute',
+    flexDirection: 'column',
+    gap: 2,
   },
 
   memberIdLabel: {
@@ -339,7 +300,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     opacity: 0.9,
     letterSpacing: 0.5,
-    marginBottom: 2,
   },
 
   memberIdValue: {

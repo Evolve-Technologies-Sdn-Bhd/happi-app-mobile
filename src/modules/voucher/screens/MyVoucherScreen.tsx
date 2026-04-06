@@ -22,7 +22,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { VoucherStackParamList } from '../../../app/navigation/types';
-import { Toast } from '../../../shared/components';
+import { Toast, Header } from '../../../shared/components';
 import { useToast } from '../../../shared/hooks/useToast';
 import { useUserStore } from '../../../store';
 import { AppConfig } from '../../../shared/constants/config';
@@ -34,7 +34,6 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = (SCREEN_WIDTH - 48 - 12) / 2;
 
 const imgCoin      = require('../../../../assets/images/voucher-coin-icon.png');
-const imgHeaderBar = require('../../../../assets/images/voucher-header-bar.png');
 const imgSearch    = require('../../../../assets/images/voucher-search-icon.png');
 
 const TABS = [
@@ -121,21 +120,14 @@ export const MyVoucherScreen: React.FC = () => {
     );
   };
 
-  const headerH = insets.top + 192;
+  const headerH = 128;
 
   return (
     <View style={styles.page}>
-      {/* Nav bar background image */}
-      <RNImage source={imgHeaderBar} style={[styles.headerBar, { height: insets.top + 130 }]} resizeMode="cover" />
-
-      {/* Back button over the header */}
-      <TouchableOpacity style={[styles.backBtn, { top: insets.top + 12 }]} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={24} color="#fff" />
-      </TouchableOpacity>
-      <Text style={[styles.headerTitle, { top: insets.top + 14 }]}>My Vouchers</Text>
+      <Header title="My Vouchers" showBack />
 
       {/* Balance + History card (section_2 in Vue — light yellow #FFF8E7) */}
-      <View style={[styles.section2, { top: insets.top + 80 }]}>
+      <View style={[styles.section2, { top: insets.top + 130 }]}>
         <View style={styles.balanceLeft}>
           <RNImage source={imgCoin} style={styles.coinIcon} resizeMode="contain" />
           <View>
@@ -222,18 +214,7 @@ export const MyVoucherScreen: React.FC = () => {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: '#fdfdfd' },
 
-  headerBar: {
-    position: 'absolute', top: 0, left: 0, right: 0, width: '100%', zIndex: 1,
-  },
-  backBtn: { position: 'absolute', left: 16, zIndex: 20 },
-  headerTitle: {
-    position: 'absolute',
-    alignSelf: 'center',
-    left: 0, right: 0,
-    textAlign: 'center',
-    fontSize: 17, fontWeight: '700', color: '#fff',
-    zIndex: 20,
-  },
+
 
   // Light yellow balance card (section_2 in Vue)
   section2: {

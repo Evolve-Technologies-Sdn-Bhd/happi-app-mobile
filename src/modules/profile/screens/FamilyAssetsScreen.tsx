@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   familyIcons: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    width: 110,
+    width: 80,
     height: 42,
     position: 'relative',
   },
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
 
   assetIcon: {
     width: 91.5,
-    height: 91.5,
+    height: 51.5,
     resizeMode: 'contain',
     marginTop: 14,
   },

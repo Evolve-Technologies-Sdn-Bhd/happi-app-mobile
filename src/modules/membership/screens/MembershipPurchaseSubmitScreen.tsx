@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { MembershipStackParamList, RootStackParamList } from '../../../app/navigation/types';
 import { FontFamily } from '../../../shared/constants/fonts';
 import { Colors } from '../../../shared/constants/colors';
+import { Header } from '../../../shared/components';
 import customerApi from '../../../api/customer';
 import api from '../../../api';
 
@@ -28,6 +29,24 @@ type RouteProps = RouteProp<MembershipStackParamList, 'MembershipPurchaseSubmit'
 type NavigationProp = NativeStackNavigationProp<MembershipStackParamList, 'MembershipPurchaseSubmit'>;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatGender(val?: string | number): string {
+  if (val == null) return '—';
+  const s = String(val).trim().toLowerCase();
+  if (s === '1' || s === 'male' || s === 'm') return 'Male';
+  if (s === '2' || s === 'female' || s === 'f') return 'Female';
+  return val ? String(val) : '—';
+}
+
+function formatMaritalStatus(val?: string | number): string {
+  if (val == null) return '—';
+  const s = String(val).trim();
+  if (s === '1' || s.toLowerCase() === 'single') return 'Single';
+  if (s === '2' || s.toLowerCase() === 'married') return 'Married';
+  if (s === '3' || s.toLowerCase() === 'divorced') return 'Divorced';
+  if (s === '4' || s.toLowerCase() === 'widowed') return 'Widowed';
+  return s || '—';
+}
 
 function fmtPrice(val: number | string | undefined) {
   if (val == null || val === '') return 'RM 0.00';
@@ -201,16 +220,8 @@ export const MembershipPurchaseSubmitScreen: React.FC = () => {
   return (
     <View style={s.container}>
 
-      {/* ── Header (happi-nav-bar title="Confirm & Pay") ── */}
-      <SafeAreaView edges={['top']} style={s.headerSafe}>
-        <View style={s.header}>
-          <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-            <Ionicons name="arrow-back" size={24} color="#343434" />
-          </TouchableOpacity>
-          <Text style={s.headerTitle}>Confirm & Pay</Text>
-          <View style={{ width: 32 }} />
-        </View>
-      </SafeAreaView>
+      {/* ── Header ── */}
+      <Header title="Confirm & Pay" showBack />
 
       {/* ── .page → .group (pt20) ── */}
       <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
@@ -222,14 +233,14 @@ export const MembershipPurchaseSubmitScreen: React.FC = () => {
           <CollapseCard title="Member Details" borderRadius={30}>
             <InfoRow label="Full Name" value={customerInfo?.realname} />
             <InfoRow label="Nationality" value={customerInfo?.nationality} />
-            <InfoRow label="Gender" value={customerInfo?.gender} />
+            <InfoRow label="Gender" value={formatGender(customerInfo?.gender)} />
             <InfoRow label="Address" value={customerInfo?.address} />
             <InfoRow label="NRIC" value={customerInfo?.idNumber} />
             <InfoRow label="Mobile" value={customerInfo?.mobile ? `+${customerInfo.countryCode || '60'}${customerInfo.mobile}` : undefined} />
             <InfoRow label="Email" value={customerInfo?.email} />
             <InfoRow label="Date of Birth" value={customerInfo?.birthday} />
             <InfoRow label="Occupation" value={customerInfo?.occupation} />
-            <InfoRow label="Marital Status" value={customerInfo?.maritalStatus} last />
+            <InfoRow label="Marital Status" value={formatMaritalStatus(customerInfo?.maritalStatus)} last />
           </CollapseCard>
 
           {/* Nominee detail cards (one per nominee, borderRadius 24, title = "Name - X%") */}
@@ -312,19 +323,6 @@ export const MembershipPurchaseSubmitScreen: React.FC = () => {
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FDFDFD' },
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FDFDFD' },
-
-  // Header
-  headerSafe: { backgroundColor: '#FFFFFF' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: '#FFFFFF',
-  },
-  backBtn: { padding: 4 },
-  headerTitle: { fontSize: 18, fontFamily: FontFamily.bold, fontWeight: '700', color: '#343434' },
 
   // .page { padding-bottom: 45px } → .group { padding: 20px 0 0 }
   scroll: { flex: 1 },

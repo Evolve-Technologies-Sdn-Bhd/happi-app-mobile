@@ -12,6 +12,13 @@ export type RootStackParamList = {
   
   // Modal screens (overlay tab bar)
   Notification: undefined;
+  NotificationDetail: {
+    notificationId: string;
+    title: string;
+    description: string;
+    createTime: number;
+    notificationType?: string;
+  };
   AIChat: undefined;
   MembershipPurchaseList: undefined;
   

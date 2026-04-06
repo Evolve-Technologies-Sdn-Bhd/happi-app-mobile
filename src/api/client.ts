@@ -4,11 +4,17 @@
  */
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserStore } from '../store/userStore';
 
-// Environment configuration - matches happi-app-customer/src/config/index.js
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://api.happi.com.my';
+// On web, route through the local proxy server to avoid CORS issues.
+// Run `npm run web:dev` to start both the proxy and Expo web together.
+const proxyUrl = process.env.EXPO_PUBLIC_API_PROXY_URL;
+const API_BASE_URL =
+  Platform.OS === 'web' && proxyUrl
+    ? proxyUrl
+    : process.env.EXPO_PUBLIC_API_BASE_URL || 'https://api.happi.com.my';
 const IMG_BASE_URL = process.env.EXPO_PUBLIC_IMG_BASE_URL || 'https://cdn.happi.com.my';
 const APP_KEY = 'happi-customer';
 const VERSION_CODE = '126.01.23';

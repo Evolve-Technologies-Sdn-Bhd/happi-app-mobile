@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f3dbb6',
     borderRadius: 30,
     alignItems: 'center',
-    width: 96,
+    width: 120,
   },
 
   text4: {

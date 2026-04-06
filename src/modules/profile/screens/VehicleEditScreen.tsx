@@ -39,7 +39,7 @@ type RoutePropType = RouteProp<ProfileStackParamList, 'VehicleEdit'>;
 
 interface FormState {
   id: string;
-  plateNumber: string;
+  vehicleNumber: string;
   type: string;
   brand: string;
   model: string;
@@ -49,7 +49,7 @@ interface FormState {
 
 const EMPTY: FormState = {
   id: '',
-  plateNumber: '',
+  vehicleNumber: '',
   type: '',
   brand: '',
   model: '',
@@ -98,7 +98,7 @@ export const VehicleEditScreen: React.FC = () => {
         if (info) {
           setForm({
             id: info.id ?? '',
-            plateNumber: info.plateNumber ?? '',
+            vehicleNumber: info.vehicleNumber ?? '',
             type: info.type ?? '',
             brand: info.brand ?? '',
             model: info.model ?? '',
@@ -158,17 +158,18 @@ export const VehicleEditScreen: React.FC = () => {
 
   // ── Save ─────────────────────────────────────────────────────────────────────
   const doSave = async () => {
-    if (!form.plateNumber.trim()) {
+    if (!form.vehicleNumber.trim()) {
       Alert.alert('Validation', 'Vehicle number is required'); return;
     }
     setSaving(true);
     try {
       const payload = {
-        plateNumber: form.plateNumber.toUpperCase(),
+        vehicleNumber: form.vehicleNumber.toUpperCase(),
         type: form.type,
         brand: form.brand,
         model: form.model,
         postcode: form.postcode,
+        agreeStatus: form.agreeStatus ? 1 : 0,
       };
       if (isAdd) {
         await addVehicle(payload);
@@ -226,8 +227,8 @@ export const VehicleEditScreen: React.FC = () => {
           <Row label="Vehicle Number">
             <TextInput
               style={styles.input}
-              value={form.plateNumber}
-              onChangeText={(v) => update('plateNumber', v.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+              value={form.vehicleNumber}
+              onChangeText={(v) => update('vehicleNumber', v.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
               textAlign="right"
               autoCapitalize="characters"
               underlineColorAndroid="transparent"

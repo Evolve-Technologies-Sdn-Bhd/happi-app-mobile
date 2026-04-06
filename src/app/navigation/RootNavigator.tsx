@@ -15,9 +15,11 @@ import { ScreenLoading } from '../../shared/components/Loading';
 
 // Import modal screens
 import NotificationScreen from '../../modules/notification/screens/NotificationScreen';
+import NotificationDetailScreen from '../../modules/notification/screens/NotificationDetailScreen';
 import AIChatScreen from '../../modules/chat/screens/AIChatScreen';
 import { MyMembershipListScreen } from '../../modules/membership/screens';
 import { VoucherStack } from './stacks';
+import WebViewScreen from '../../shared/screens/WebViewScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -64,6 +66,14 @@ export const RootNavigator: React.FC = () => {
             }}
           />
           <Stack.Screen 
+            name="NotificationDetail" 
+            component={NotificationDetailScreen}
+            options={{
+              presentation: 'card',
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
             name="AIChat" 
             component={AIChatScreen}
             options={{
@@ -82,6 +92,14 @@ export const RootNavigator: React.FC = () => {
           <Stack.Screen 
             name="Voucher" 
             component={VoucherStack}
+            options={{
+              presentation: 'card',
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="WebView"
+            component={WebViewScreen}
             options={{
               presentation: 'card',
               animation: 'slide_from_right',

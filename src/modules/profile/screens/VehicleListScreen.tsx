@@ -97,7 +97,7 @@ export const VehicleListScreen: React.FC = () => {
                       color="#010101"
                     />
                   </TouchableOpacity>
-                  <Text style={styles.cardTitle}>{item.plateNumber}</Text>
+                  <Text style={styles.cardTitle}>{item.vehicleNumber}</Text>
                   <TouchableOpacity
                     style={styles.editBtn}
                     onPress={() => navigation.navigate('VehicleEdit', { vehicleId: item.id })}
@@ -109,7 +109,7 @@ export const VehicleListScreen: React.FC = () => {
                 {/* Expanded details */}
                 {expanded && (
                   <View style={styles.cardBody}>
-                    <InfoRow label="Vehicle Number" value={item.plateNumber} />
+                    <InfoRow label="Vehicle Number" value={item.vehicleNumber} />
                     <View style={styles.divider} />
                     <InfoRow label="Vehicle Type" value={item.type} />
                     <View style={styles.divider} />
