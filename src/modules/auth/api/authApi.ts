@@ -60,14 +60,20 @@ export const authApi = {
 
   /**
    * Send OTP to phone number
+   * businessType: 3 = reset password, 1 = sign up
    */
   sendOtp: async (
     phone: string,
-    type: 'signup' | 'reset'
+    type: 'signup' | 'reset',
+    countryCode = '60',
+    channel = 'sms'
   ): Promise<ApiResponse<OtpResponse>> => {
+    const businessType = type === 'reset' ? 3 : 1;
     return api.post<OtpResponse>(Endpoints.AUTH.SEND_OTP, {
+      countryCode,
       mobile: phone,
-      type,
+      channel,
+      businessType,
     });
   },
 
@@ -77,12 +83,17 @@ export const authApi = {
   verifyOtp: async (
     phone: string,
     code: string,
-    type: 'signup' | 'reset'
+    type: 'signup' | 'reset',
+    countryCode = '60',
+    channel = 'sms'
   ): Promise<ApiResponse<VerifyOtpResponse>> => {
+    const businessType = type === 'reset' ? 3 : 1;
     return api.post<VerifyOtpResponse>(Endpoints.AUTH.VERIFY_OTP, {
+      countryCode,
       mobile: phone,
-      code,
-      type,
+      phoneCaptcha: code,
+      channel,
+      businessType,
     });
   },
 
@@ -91,11 +102,13 @@ export const authApi = {
    */
   resetPassword: async (
     phone: string,
-    newPassword: string
+    newPassword: string,
+    countryCode = '60'
   ): Promise<ApiResponse<ResetPasswordResponse>> => {
     return api.post<ResetPasswordResponse>(Endpoints.AUTH.RESET_PASSWORD, {
       mobile: phone,
       password: newPassword,
+      countryCode,
     });
   },
 

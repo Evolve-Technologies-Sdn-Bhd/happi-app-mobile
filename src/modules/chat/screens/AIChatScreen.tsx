@@ -17,11 +17,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  StatusBar,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
-import { HomeStackParamList } from '../../../app/navigation/types';
+import { RootStackParamList } from '../../../app/navigation/types';
 import {
   initChat,
   getChatMsgList,
@@ -30,8 +33,8 @@ import {
 } from '../../../api/msg';
 import { useUserStore } from '../../../store/userStore';
 
-type AIChatScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'AIChat'>;
-type AIChatScreenRouteProp = RouteProp<HomeStackParamList, 'AIChat'>;
+type AIChatScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AIChat'>;
+type AIChatScreenRouteProp = RouteProp<RootStackParamList, 'AIChat'>;
 
 interface IProps {
   navigation: AIChatScreenNavigationProp;
@@ -59,7 +62,23 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
   const [isSending, setIsSending] = useState(false);
   const [groupId, setGroupId] = useState<string | null>(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+
+  // Keyboard listeners
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   // Initialize chat session
   useEffect(() => {
@@ -93,7 +112,7 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
           senderId: msg.senderId,
           type: msg.type,
           content: msg.content,
-          ts: new Date(msg.createTime).getTime(),
+          ts: !isNaN(Number(msg.createTime)) ? Number(msg.createTime) : new Date(msg.createTime).getTime(),
         }));
         setMessages(convertedMessages);
       }
@@ -152,7 +171,7 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
                 imageUrl: res.data.imageUrl,
               })
             : res.data.content,
-          ts: res.data.timestamp || Date.now(),
+          ts: Number(res.data.timestamp) || Date.now(),
         };
         setMessages((prev) => [...prev, aiMsg]);
       } else {
@@ -260,40 +279,44 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
         <View style={styles.quickActions}>
           <TouchableOpacity
             style={styles.quickBtn}
+            activeOpacity={0.8}
             onPress={() => sendMessage('What insurance plans do you offer?')}
           >
             <View style={styles.iconWrapper}>
-              <Text style={styles.iconText}>📄</Text>
+              <Ionicons name="shield-checkmark" size={24} color="#FDB813" />
             </View>
             <Text style={styles.quickBtnText}>Insurance Plans</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.quickBtn}
+            activeOpacity={0.8}
             onPress={() => sendMessage('How do I earn HAPPICoins?')}
           >
             <View style={styles.iconWrapper}>
-              <Text style={styles.iconText}>$</Text>
+              <Ionicons name="wallet" size={24} color="#FDB813" />
             </View>
             <Text style={styles.quickBtnText}>HAPPICoins</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.quickBtn}
+            activeOpacity={0.8}
             onPress={() => sendMessage('What membership benefits are available?')}
           >
             <View style={styles.iconWrapper}>
-              <Text style={styles.iconText}>⭐</Text>
+              <Ionicons name="star" size={24} color="#FDB813" />
             </View>
             <Text style={styles.quickBtnText}>Membership</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.quickBtn}
+            activeOpacity={0.8}
             onPress={() => sendMessage('How do I make a claim?')}
           >
             <View style={styles.iconWrapper}>
-              <Text style={styles.iconText}>💬</Text>
+              <Ionicons name="chatbubbles" size={24} color="#FDB813" />
             </View>
             <Text style={styles.quickBtnText}>Chat with AI</Text>
           </TouchableOpacity>
@@ -363,11 +386,12 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#FDB813" />
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={keyboardVisible ? 0 : -50}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -406,7 +430,7 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
         {showMenu && (
           <View style={styles.menuPopup}>
             <TouchableOpacity style={styles.menuItem} onPress={handleClearChat}>
-              <Text style={styles.menuItemText}>🔄 Start Fresh</Text>
+              <Text style={styles.menuItemText}>Refresh</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.menuItem} onPress={() => setShowMenu(false)}>
               <Text style={styles.menuItemText}>✕ Close</Text>
@@ -477,7 +501,7 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
           </View>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -491,7 +515,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 50,
+    paddingBottom: 16,
     backgroundColor: '#FDB813',
   },
   headerButton: {
@@ -501,7 +526,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backIcon: {
-    fontSize: 24,
+    fontSize: 28,
+    fontWeight: 'bold',
     color: '#FFFFFF',
   },
   menuIcon: {
@@ -622,38 +648,24 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 18,
     alignItems: 'center',
-    backgroundColor: '#FBE487',
-    shadowColor: '#FDB813',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 4,
+    backgroundColor: '#FDB813',
+    overflow: 'hidden',
   },
   iconWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  iconText: {
-    fontSize: 25,
+    marginBottom: 12,
+    overflow: 'hidden',
   },
   quickBtnText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
   },
   dateSeparator: {
     alignItems: 'center',

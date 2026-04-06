@@ -28,6 +28,8 @@ export interface UpdateCustomerRequest {
   birthday?: string;
   gender?: string;
   address?: string;
+  occupation?: string;
+  maritalStatus?: string;
 }
 
 export interface ChangePasswordRequest {

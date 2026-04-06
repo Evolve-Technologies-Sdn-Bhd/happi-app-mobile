@@ -1,179 +1,310 @@
 /**
  * Change Password Screen
+ * Mirrors happi-app-customer/src/views/profile/privacy-security/password/password/change.vue
  */
 
 import React, { useState } from 'react';
 import {
   View,
+  Text,
   StyleSheet,
   ScrollView,
+  TextInput,
+  TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTranslation } from 'react-i18next';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Header, Card, Button, Input } from '../../../shared/components';
-import { Colors } from '../../../shared/constants/colors';
-import { Spacing, Shadows } from '../../../shared/constants/styles';
+import { Ionicons } from '@expo/vector-icons';
+import { Header } from '../../../shared/components';
+import customerApi from '../../../api/customer';
 
-const changePasswordSchema = z
-  .object({
-    currentPassword: z.string().min(1, 'Current password is required'),
-    newPassword: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-      .regex(/[0-9]/, 'Password must contain at least one number'),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
+const REQUIREMENTS = [
+  { label: 'At least 8 characters',          test: (p: string) => p.length >= 8 },
+  { label: 'At least 1 uppercase letter(A-Z)', test: (p: string) => /[A-Z]/.test(p) },
+  { label: 'At least 1 number(0-9)',           test: (p: string) => /[0-9]/.test(p) },
+  { label: 'At least 1 special symbol(e.g. !@#$%^)', test: (p: string) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p) },
+];
 
-type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
+interface PasswordField {
+  value: string;
+  show: boolean;
+}
 
 export const ChangePasswordScreen: React.FC = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
-  
-  const [isLoading, setIsLoading] = useState(false);
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<ChangePasswordFormData>({
-    resolver: zodResolver(changePasswordSchema),
-    defaultValues: {
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    },
-  });
+  const [current, setCurrent] = useState<PasswordField>({ value: '', show: false });
+  const [newPwd, setNewPwd]     = useState<PasswordField>({ value: '', show: false });
+  const [confirm, setConfirm]   = useState<PasswordField>({ value: '', show: false });
+  const [saving, setSaving] = useState(false);
 
-  const onSubmit = async (data: ChangePasswordFormData) => {
-    setIsLoading(true);
+  const isReqMet = (index: number) => REQUIREMENTS[index].test(newPwd.value);
+
+  const onSave = async () => {
+    if (!current.value) { Alert.alert('', 'Please key-in your current password'); return; }
+    if (!newPwd.value)  { Alert.alert('', 'Please key-in your new password'); return; }
+    if (newPwd.value !== confirm.value) { Alert.alert('', 'New password and confirm password do not match'); return; }
+    if (!REQUIREMENTS.every((r) => r.test(newPwd.value))) {
+      Alert.alert('', 'New password does not meet the requirements'); return;
+    }
+    setSaving(true);
     try {
-      // TODO: Call API to change password
-      console.log('Password change:', data);
-      
-      setTimeout(() => {
-        setIsLoading(false);
-        Alert.alert(
-          t('common.success'),
-          t('profile.passwordChanged'),
-          [{ text: t('common.ok'), onPress: () => navigation.goBack() }]
-        );
-      }, 1500);
-    } catch (error) {
-      setIsLoading(false);
-      Alert.alert(t('common.error'), t('error.somethingWentWrong'));
+      const res = await customerApi.changePassword({
+        oldPassword: current.value,
+        newPassword: newPwd.value,
+      });
+      if ((res as any)?.success) {
+        Alert.alert('', 'Password changed successfully', [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+      } else {
+        Alert.alert('', (res as any)?.msg || 'Failed to change password');
+      }
+    } catch {
+      Alert.alert('Error', 'Failed to change password. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Header title={t('profile.changePassword')} showBack />
+      <Header title="Change Password" showBack />
 
       <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + 100 },
-        ]}
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 120 }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Card>
-          <Controller
-            control={control}
-            name="currentPassword"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <Input
-                label={t('profile.currentPassword')}
-                placeholder={t('profile.enterCurrentPassword')}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={errors.currentPassword?.message}
-                leftIcon="lock-closed-outline"
-                secureTextEntry
+        {/* Current Password */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>
+            Enter your current password <Text style={styles.star}>*</Text>
+          </Text>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              value={current.value}
+              onChangeText={(v) => setCurrent((p) => ({ ...p, value: v }))}
+              secureTextEntry={!current.show}
+              placeholder=""
+              placeholderTextColor="#999"
+              underlineColorAndroid="transparent"
+            />
+            <TouchableOpacity
+              style={styles.eyeBtn}
+              onPress={() => setCurrent((p) => ({ ...p, show: !p.show }))}
+            >
+              <Ionicons
+                name={current.show ? 'eye-outline' : 'eye-off-outline'}
+                size={20}
+                color="#808080"
               />
-            )}
-          />
+            </TouchableOpacity>
+          </View>
+        </View>
 
-          <Controller
-            control={control}
-            name="newPassword"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <Input
-                label={t('profile.newPassword')}
-                placeholder={t('profile.enterNewPassword')}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={errors.newPassword?.message}
-                leftIcon="lock-open-outline"
-                secureTextEntry
-                hint={t('auth.passwordRequirements')}
+        {/* New Password */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>
+            Enter your new password <Text style={styles.star}>*</Text>
+          </Text>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              value={newPwd.value}
+              onChangeText={(v) => setNewPwd((p) => ({ ...p, value: v }))}
+              secureTextEntry={!newPwd.show}
+              placeholder=""
+              placeholderTextColor="#999"
+              underlineColorAndroid="transparent"
+            />
+            <TouchableOpacity
+              style={styles.eyeBtn}
+              onPress={() => setNewPwd((p) => ({ ...p, show: !p.show }))}
+            >
+              <Ionicons
+                name={newPwd.show ? 'eye-outline' : 'eye-off-outline'}
+                size={20}
+                color="#808080"
               />
-            )}
-          />
+            </TouchableOpacity>
+          </View>
+        </View>
 
-          <Controller
-            control={control}
-            name="confirmPassword"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <Input
-                label={t('profile.confirmNewPassword')}
-                placeholder={t('profile.enterConfirmPassword')}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={errors.confirmPassword?.message}
-                leftIcon="checkmark-circle-outline"
-                secureTextEntry
+        {/* Confirm Password */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>
+            Confirm your new password <Text style={styles.star}>*</Text>
+          </Text>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              value={confirm.value}
+              onChangeText={(v) => setConfirm((p) => ({ ...p, value: v }))}
+              secureTextEntry={!confirm.show}
+              placeholder=""
+              placeholderTextColor="#999"
+              underlineColorAndroid="transparent"
+            />
+            <TouchableOpacity
+              style={styles.eyeBtn}
+              onPress={() => setConfirm((p) => ({ ...p, show: !p.show }))}
+            >
+              <Ionicons
+                name={confirm.show ? 'eye-outline' : 'eye-off-outline'}
+                size={20}
+                color="#808080"
               />
-            )}
-          />
-        </Card>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Password Requirements */}
+        <View style={styles.requirementsSection}>
+          {REQUIREMENTS.map((req, i) => {
+            const met = isReqMet(i);
+            return (
+              <View key={i} style={styles.requirementItem}>
+                <Text style={[styles.bullet, met && styles.bulletValid]}>
+                  {met ? '✓' : '✗'}
+                </Text>
+                <Text style={[styles.requirementText, met && styles.requirementTextValid]}>
+                  {req.label}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
       </ScrollView>
 
       {/* Save Button */}
-      <View style={[styles.bottomBar, { paddingBottom: insets.bottom || Spacing.base }]}>
-        <Button
-          title={t('profile.updatePassword')}
-          onPress={handleSubmit(onSubmit)}
-          loading={isLoading}
-        />
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 8 }]}>
+        <TouchableOpacity
+          style={[styles.saveBtn, saving && styles.btnDisabled]}
+          onPress={onSave}
+          disabled={saving}
+        >
+          {saving
+            ? <ActivityIndicator size="small" color="#ffffff" />
+            : <Text style={styles.saveBtnText}>Save Password</Text>
+          }
+        </TouchableOpacity>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.backgroundGrey,
+  container: { flex: 1, backgroundColor: '#ffffff' },
+
+  content: {
+    paddingHorizontal: 30,
+    paddingTop: 30,
   },
 
-  scrollContent: {
-    padding: Spacing.base,
+  inputGroup: {
+    marginBottom: 24,
+  },
+
+  inputLabel: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#343434',
+    lineHeight: 18,
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+
+  star: {
+    color: '#e74c3c',
+    fontWeight: 'bold',
+  },
+
+  inputWrapper: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    height: 47,
+    backgroundColor: '#ffffff',
+  },
+
+  input: {
+    flex: 1,
+    height: 47,
+    paddingHorizontal: 12,
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#808080',
+  },
+
+  eyeBtn: {
+    paddingHorizontal: 12,
+    height: 47,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  requirementsSection: {
+    marginTop: 8,
+    paddingLeft: 4,
+  },
+
+  requirementItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+
+  bullet: {
+    fontSize: 12,
+    color: '#e74c3c',
+    lineHeight: 18,
+    marginRight: 8,
+    minWidth: 12,
+    fontWeight: '500',
+  },
+
+  bulletValid: {
+    color: '#00c503',
+  },
+
+  requirementText: {
+    fontSize: 12,
+    color: '#e74c3c',
+    lineHeight: 18,
+    flex: 1,
+  },
+
+  requirementTextValid: {
+    color: '#00c503',
   },
 
   bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: Colors.background,
-    padding: Spacing.base,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    ...Shadows.md,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    backgroundColor: '#ffffff',
   },
+
+  saveBtn: {
+    backgroundColor: '#FDB813',
+    borderRadius: 30,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+
+  saveBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+
+  btnDisabled: { opacity: 0.6 },
 });
+

@@ -1,6 +1,7 @@
 /**
  * Sign Up Screen
- * New user registration
+ * Ported from happi-app-customer/src/views/public/sign-up/index.vue
+ * New user registration with Malaysian/Non-Malaysian options
  */
 
 import React, { useState } from 'react';
@@ -13,19 +14,21 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  TextInput,
+  ImageBackground,
+  StatusBar,
+  Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { AuthStackParamList } from '../../../app/navigation/types';
-import { Header, Button, Input } from '../../../shared/components';
 import { Colors } from '../../../shared/constants/colors';
-import { Spacing, Typography } from '../../../shared/constants/styles';
-import { registerSchema, RegisterFormData } from '../../../shared/utils/validation';
-import { authApi } from '../api/authApi';
+import { useAuthStore } from '../../../store/authStore';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, 'SignUp'>;
 
@@ -33,54 +36,117 @@ export const SignUpScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const setGuestMode = useAuthStore((state) => state.setGuestMode);
+  
+  // Form state
+  const [isMalaysian, setIsMalaysian] = useState(true);
+  const [fullName, setFullName] = useState('');
+  const [nric, setNric] = useState('');
+  const [nationality, setNationality] = useState('');
+  const [passport, setPassport] = useState('');
+  const [workPermit, setWorkPermit] = useState('');
+  const [workPermitExpiry, setWorkPermitExpiry] = useState('');
+  const [gender, setGender] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [countryCode, setCountryCode] = useState('60');
+  const [mobile, setMobile] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [referralCode, setReferralCode] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    getValues,
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      name: '',
-      phone: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-      referralCode: '',
-    },
-  });
-
-  const onSubmit = async (data: RegisterFormData) => {
-    try {
-      setLoading(true);
-      
-      // First, send OTP
-      const otpResponse = await authApi.sendOtp(data.phone, 'signup');
-      
-      if (otpResponse.code === 200) {
-        // Navigate to OTP screen with registration data
-        navigation.navigate('OTP', { phone: data.phone, type: 'signup' });
-      } else {
-        Alert.alert(t('error.error'), otpResponse.message || t('error.unknown'));
-      }
-    } catch (error: any) {
-      Alert.alert(
-        t('error.error'),
-        error.response?.data?.message || t('error.network')
-      );
-    } finally {
-      setLoading(false);
+  const handleSignUp = () => {
+    // Validation
+    if (!fullName.trim()) {
+      Alert.alert('Error', 'Please enter your full name');
+      return;
     }
+    
+    if (isMalaysian && !nric.trim()) {
+      Alert.alert('Error', 'Please enter your NRIC');
+      return;
+    }
+    
+    if (!isMalaysian) {
+      if (!nationality.trim()) {
+        Alert.alert('Error', 'Please select your nationality');
+        return;
+      }
+      if (!passport.trim()) {
+        Alert.alert('Error', 'Please enter your passport number');
+        return;
+      }
+      if (!workPermit.trim()) {
+        Alert.alert('Error', 'Please enter your work permit number');
+        return;
+      }
+      if (!workPermitExpiry) {
+        Alert.alert('Error', 'Please select work permit expiry date');
+        return;
+      }
+    }
+    
+    if (!gender) {
+      Alert.alert('Error', 'Please select your gender');
+      return;
+    }
+    
+    if (!dateOfBirth) {
+      Alert.alert('Error', 'Please select your date of birth');
+      return;
+    }
+    
+    if (!mobile.trim()) {
+      Alert.alert('Error', 'Please enter your mobile number');
+      return;
+    }
+    
+    if (!password) {
+      Alert.alert('Error', 'Please enter your password');
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+
+    // TODO: Navigate to OTP screen
+    Alert.alert('Success', 'OTP sent to your mobile number');
+  };
+
+  const handleSkip = () => {
+    setGuestMode(true);
+  };
+
+  const handleContactUs = () => {
+    // TODO: Navigate to contact us screen
+    Alert.alert('Contact Us', 'Support feature coming soon');
   };
 
   return (
     <View style={styles.container}>
-      <Header title={t('auth.signUp')} />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
       
+      {/* Header with Background Image */}
+      <ImageBackground
+        source={require('../../../../assets/images/sign-up-header.png')}
+        style={[styles.header, { paddingTop: insets.top + 10 }]}
+        resizeMode="cover"
+      >
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Fill in your details below.</Text>
+      </ImageBackground>
+
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
       >
         <ScrollView
@@ -91,144 +157,327 @@ export const SignUpScreen: React.FC = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Header Text */}
-          <View style={styles.headerSection}>
-            <Text style={styles.headerTitle}>Create Account</Text>
-            <Text style={styles.headerSubtitle}>
-              Fill in your details to get started
+          {/* Malaysian / Non-Malaysian Toggle */}
+          <View style={styles.toggleContainer}>
+            <TouchableOpacity
+              style={[
+                styles.toggleButton,
+                isMalaysian && styles.toggleButtonActive,
+              ]}
+              onPress={() => setIsMalaysian(true)}
+            >
+              <Text
+                style={[
+                  styles.toggleButtonText,
+                  isMalaysian && styles.toggleButtonTextActive,
+                ]}
+              >
+                Malaysian
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.toggleButton,
+                !isMalaysian && styles.toggleButtonActive,
+              ]}
+              onPress={() => setIsMalaysian(false)}
+            >
+              <Text
+                style={[
+                  styles.toggleButtonText,
+                  !isMalaysian && styles.toggleButtonTextActive,
+                ]}
+              >
+                Non-Malaysian
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Full Name */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>
+              Full Name <Text style={styles.required}>*</Text>
             </Text>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.input}
+                value={fullName}
+                onChangeText={setFullName}
+                placeholder=" "
+                placeholderTextColor="#808080"
+                autoCapitalize="words"
+              />
+            </View>
           </View>
 
-          {/* Form */}
-          <View style={styles.formSection}>
-            <Controller
-              control={control}
-              name="name"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  label={t('auth.name')}
-                  placeholder={t('auth.namePlaceholder')}
-                  leftIcon="person-outline"
-                  value={value}
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  error={errors.name?.message}
-                  autoCapitalize="words"
+          {/* Malaysian Fields */}
+          {isMalaysian ? (
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>
+                NRIC <Text style={styles.required}>*</Text>
+              </Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  value={nric}
+                  onChangeText={setNric}
+                  placeholder=" "
+                  placeholderTextColor="#808080"
+                  maxLength={14}
                 />
-              )}
-            />
+              </View>
+            </View>
+          ) : (
+            <>
+              {/* Nationality */}
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>
+                  Nationality <Text style={styles.required}>*</Text>
+                </Text>
+                <TouchableOpacity style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.input}
+                    value={nationality}
+                    onChangeText={setNationality}
+                    placeholder=" "
+                    placeholderTextColor="#808080"
+                    editable={false}
+                  />
+                  <Ionicons
+                    name="chevron-down"
+                    size={20}
+                    color="#808080"
+                    style={styles.inputIcon}
+                  />
+                </TouchableOpacity>
+              </View>
 
-            <Controller
-              control={control}
-              name="phone"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  label={t('auth.phone')}
-                  placeholder={t('auth.phonePlaceholder')}
+              {/* Passport */}
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>
+                  Passport <Text style={styles.required}>*</Text>
+                </Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.input}
+                    value={passport}
+                    onChangeText={setPassport}
+                    placeholder=" "
+                    placeholderTextColor="#808080"
+                    maxLength={14}
+                  />
+                </View>
+              </View>
+
+              {/* Work Permit No. */}
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>
+                  Work Permit No. <Text style={styles.required}>*</Text>
+                </Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.input}
+                    value={workPermit}
+                    onChangeText={setWorkPermit}
+                    placeholder=" "
+                    placeholderTextColor="#808080"
+                    maxLength={16}
+                  />
+                </View>
+              </View>
+
+              {/* Work Permit Expiry Date */}
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>
+                  Work Permit Expiry Date <Text style={styles.required}>*</Text>
+                </Text>
+                <TouchableOpacity style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.input}
+                    value={workPermitExpiry}
+                    placeholder=" "
+                    placeholderTextColor="#808080"
+                    editable={false}
+                  />
+                  <Ionicons
+                    name="calendar-outline"
+                    size={20}
+                    color="#808080"
+                    style={styles.inputIcon}
+                  />
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+
+          {/* Gender */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>
+              Gender <Text style={styles.required}>*</Text>
+            </Text>
+            <TouchableOpacity style={styles.inputWrapper}>
+              <TextInput
+                style={styles.input}
+                value={gender}
+                placeholder=" "
+                placeholderTextColor="#808080"
+                editable={false}
+              />
+              <Ionicons
+                name="chevron-down"
+                size={20}
+                color="#808080"
+                style={styles.inputIcon}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Date of Birth */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>
+              Date of Birth <Text style={styles.required}>*</Text>
+            </Text>
+            <TouchableOpacity style={styles.inputWrapper}>
+              <TextInput
+                style={styles.input}
+                value={dateOfBirth}
+                placeholder=" "
+                placeholderTextColor="#808080"
+                editable={false}
+              />
+              <Ionicons
+                name="calendar-outline"
+                size={20}
+                color="#808080"
+                style={styles.inputIcon}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Mobile Number */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>
+              Mobile Number <Text style={styles.required}>*</Text>
+            </Text>
+            <View style={styles.inputWrapper}>
+              <View style={styles.mobileInputContainer}>
+                <Text style={styles.countryCode}>+{countryCode}</Text>
+                <TextInput
+                  style={[styles.input, styles.mobileInput]}
+                  value={mobile}
+                  onChangeText={setMobile}
+                  placeholder=" "
+                  placeholderTextColor="#808080"
                   keyboardType="phone-pad"
-                  leftIcon="call-outline"
-                  value={value}
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  error={errors.phone?.message}
                 />
-              )}
-            />
-
-            <Controller
-              control={control}
-              name="email"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  label={t('auth.email')}
-                  placeholder={t('auth.emailPlaceholder')}
-                  keyboardType="email-address"
-                  leftIcon="mail-outline"
-                  value={value}
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  error={errors.email?.message}
-                  autoCapitalize="none"
-                />
-              )}
-            />
-
-            <Controller
-              control={control}
-              name="password"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  label={t('auth.password')}
-                  placeholder={t('auth.passwordPlaceholder')}
-                  secureTextEntry
-                  leftIcon="lock-closed-outline"
-                  value={value}
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  error={errors.password?.message}
-                  hint="Min 8 characters with uppercase, lowercase, and number"
-                />
-              )}
-            />
-
-            <Controller
-              control={control}
-              name="confirmPassword"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  label={t('auth.confirmPassword')}
-                  placeholder={t('auth.confirmPasswordPlaceholder')}
-                  secureTextEntry
-                  leftIcon="lock-closed-outline"
-                  value={value}
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  error={errors.confirmPassword?.message}
-                />
-              )}
-            />
-
-            <Controller
-              control={control}
-              name="referralCode"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  label={t('auth.referralCode')}
-                  placeholder={t('auth.referralCodePlaceholder')}
-                  leftIcon="gift-outline"
-                  value={value}
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  error={errors.referralCode?.message}
-                  autoCapitalize="characters"
-                />
-              )}
-            />
+              </View>
+            </View>
           </View>
 
-          {/* Terms */}
-          <Text style={styles.termsText}>
-            {t('auth.agreeToTerms')}{' '}
-            <Text style={styles.termsLink}>{t('auth.termsAndConditions')}</Text>
-            {' '}{t('auth.and')}{' '}
-            <Text style={styles.termsLink}>{t('auth.privacyPolicy')}</Text>
-          </Text>
+          {/* Password */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>
+              Password <Text style={styles.required}>*</Text>
+            </Text>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={[styles.input, styles.passwordInput]}
+                value={password}
+                onChangeText={setPassword}
+                placeholder=" "
+                placeholderTextColor="#808080"
+                secureTextEntry={!showPassword}
+                maxLength={20}
+              />
+              <TouchableOpacity
+                style={styles.eyeButton}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Ionicons
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={22}
+                  color="#808080"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
 
-          {/* Submit Button */}
-          <Button
-            title={t('auth.signUp')}
-            onPress={handleSubmit(onSubmit)}
-            loading={loading}
-            size="lg"
-            fullWidth
-            style={styles.submitButton}
-          />
+          {/* Confirm Password */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>
+              Confirm Password <Text style={styles.required}>*</Text>
+            </Text>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={[styles.input, styles.passwordInput]}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder=" "
+                placeholderTextColor="#808080"
+                secureTextEntry={!showConfirmPassword}
+                maxLength={20}
+              />
+              <TouchableOpacity
+                style={styles.eyeButton}
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                <Ionicons
+                  name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={22}
+                  color="#808080"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
 
-          {/* Sign In Link */}
-          <View style={styles.signInSection}>
-            <Text style={styles.signInText}>{t('auth.alreadyHaveAccount')} </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('SignIn')}>
-              <Text style={styles.signInLink}>{t('auth.signIn')}</Text>
+          {/* Referral Code */}
+          <View style={styles.fieldContainer}>
+            <View style={styles.labelRow}>
+              <Text style={styles.label}>Referral Code</Text>
+              <TouchableOpacity>
+                <Ionicons name="information-circle-outline" size={20} color="#FDB813" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.inputWrapper}>
+              <View style={styles.referralContainer}>
+                <TextInput
+                  style={[styles.input, styles.referralInput]}
+                  value={referralCode}
+                  onChangeText={setReferralCode}
+                  placeholder=" "
+                  placeholderTextColor="#808080"
+                  maxLength={20}
+                />
+                <TouchableOpacity style={styles.qrButton}>
+                  <Ionicons name="scan" size={24} color="#FDB813" />
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.charCounter}>{referralCode.length}/20</Text>
+            </View>
+          </View>
+
+          {/* Sign Up Button */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.signUpButton}
+              onPress={handleSignUp}
+              disabled={loading}
+            >
+              <Text style={styles.signUpButtonText}>Sign Up</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Skip Link */}
+          <TouchableOpacity onPress={handleSkip} style={styles.skipContainer}>
+            <Text style={styles.skipText}>Skip</Text>
+          </TouchableOpacity>
+
+          {/* Contact Us */}
+          <View style={styles.contactContainer}>
+            <Text style={styles.contactText}>Have questions? </Text>
+            <TouchableOpacity onPress={handleContactUs}>
+              <Text style={styles.contactLink}>Contact Us</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -240,7 +489,28 @@ export const SignUpScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#FDFDFD',
+  },
+  
+  header: {
+    paddingHorizontal: 12,
+    paddingBottom: 26,
+    paddingTop: 56,
+  },
+  
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  
+  headerTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    marginLeft: 4,
   },
   
   keyboardView: {
@@ -248,61 +518,201 @@ const styles = StyleSheet.create({
   },
   
   scrollContent: {
-    flexGrow: 1,
-    padding: Spacing.xl,
+    paddingHorizontal: 30,
+    paddingTop: 40,
   },
   
-  headerSection: {
-    marginBottom: Spacing.xl,
+  toggleContainer: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 40,
   },
   
-  headerTitle: {
-    fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.xs,
+  toggleButton: {
+    flex: 1,
+    height: 46,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#DDDDDD',
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   
-  headerSubtitle: {
-    fontSize: Typography.size.base,
-    color: Colors.textSecondary,
+  toggleButtonActive: {
+    backgroundColor: '#FDB813',
+    borderColor: '#FDB813',
   },
   
-  formSection: {
-    marginBottom: Spacing.lg,
+  toggleButtonText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#808080',
   },
   
-  termsText: {
-    fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 20,
+  toggleButtonTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   
-  termsLink: {
-    color: Colors.primary,
-    fontWeight: Typography.weight.medium,
+  fieldContainer: {
+    marginBottom: 20,
   },
   
-  submitButton: {
-    marginTop: Spacing.lg,
+  label: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#343434',
+    marginBottom: 10,
+    marginLeft: 6,
   },
   
-  signInSection: {
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10,
+    marginLeft: 6,
+  },
+  
+  required: {
+    color: '#E74C3C',
+    fontWeight: 'bold',
+  },
+  
+  inputWrapper: {
+    position: 'relative',
+  },
+  
+  input: {
+    height: 50,
+    borderWidth: 2,
+    borderColor: '#DDDDDD',
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#808080',
+  },
+  
+  inputIcon: {
+    position: 'absolute',
+    right: 15,
+    top: 15,
+  },
+  
+  mobileInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#DDDDDD',
+    borderRadius: 8,
+    height: 50,
+    paddingHorizontal: 15,
+  },
+  
+  countryCode: {
+    fontSize: 17,
+    fontWeight: '500',
+    color: '#FDB813',
+    marginRight: 12,
+    borderRightWidth: 1,
+    borderRightColor: '#DDDDDD',
+    paddingRight: 12,
+  },
+  
+  mobileInput: {
+    flex: 1,
+    borderWidth: 0,
+    paddingHorizontal: 0,
+    height: 'auto',
+  },
+  
+  passwordInput: {
+    paddingRight: 50,
+  },
+  
+  eyeButton: {
+    position: 'absolute',
+    right: 15,
+    top: 14,
+    padding: 5,
+  },
+  
+  referralContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+  },
+  
+  referralInput: {
+    flex: 1,
+  },
+  
+  qrButton: {
+    width: 50,
+    height: 50,
+    borderWidth: 2,
+    borderColor: '#FDB813',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  
+  charCounter: {
+    fontSize: 12,
+    color: '#999999',
+    textAlign: 'right',
+    marginTop: 5,
+  },
+  
+  buttonContainer: {
+    alignItems: 'center',
+    marginTop: 30,
+    marginBottom: 20,
+  },
+  
+  signUpButton: {
+    backgroundColor: '#FDB813',
+    borderRadius: 30,
+    paddingVertical: 15,
+    width: 250,
+    alignItems: 'center',
+  },
+  
+  signUpButtonText: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  
+  skipContainer: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  
+  skipText: {
+    fontSize: 15,
+    color: '#FDB813',
+    fontWeight: '500',
+  },
+  
+  contactContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: Spacing.xl,
+    paddingVertical: 20,
   },
   
-  signInText: {
-    fontSize: Typography.size.base,
-    color: Colors.textSecondary,
+  contactText: {
+    fontSize: 15,
+    color: '#808080',
   },
   
-  signInLink: {
-    fontSize: Typography.size.base,
-    color: Colors.primary,
-    fontWeight: Typography.weight.semiBold,
+  contactLink: {
+    fontSize: 15,
+    color: '#FDB813',
+    fontWeight: '500',
   },
 });

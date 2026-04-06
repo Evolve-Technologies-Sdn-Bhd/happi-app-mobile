@@ -1,9 +1,9 @@
 /**
  * Profile Index Screen
- * User profile and settings
+ * UI matches happi-app-customer/src/views/profile/index.vue
  */
 
-import React from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -11,278 +11,255 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Image,
+  ImageBackground,
+  Clipboard,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
+import Constants from 'expo-constants';
 import { ProfileStackParamList } from '../../../app/navigation/types';
-import { Card } from '../../../shared/components';
-import { Colors } from '../../../shared/constants/colors';
-import { Spacing, Typography, BorderRadius, Shadows } from '../../../shared/constants/styles';
 import { useAuthStore } from '../../../store/authStore';
-import { useAppStore } from '../../../store/appStore';
+import { useUserStore } from '../../../store/userStore';
+import { getOssImg } from '../../../api';
+
+// SVG icons
+import AIIconSvg from '../../../../assets/images/profile/profile-ai-icon.svg';
+import NotifDotSvg from '../../../../assets/images/profile/profile-notification-dot.svg';
+import NotifIconSvg from '../../../../assets/images/profile/profile-notification-icon.svg';
+
+// PNG assets
+const imgBg        = require('../../../../assets/images/profile/profile-header-bg.png');
+const imgQr        = require('../../../../assets/images/profile/profile-qr-icon.png');
+const imgCopy      = require('../../../../assets/images/profile/profile-copy-icon.png');
+const imgPersonal  = require('../../../../assets/images/profile/profile-personal-icon.png');
+const imgInsurance = require('../../../../assets/images/profile/profile-insurance-icon.png');
+const imgPrivacy   = require('../../../../assets/images/profile/profile-privacy-icon.png');
+const imgHelp      = require('../../../../assets/images/profile/profile-help-icon.png');
+const imgFamily    = require('../../../../assets/images/profile/profile-family-icon.png');
+const imgChevron   = require('../../../../assets/images/profile/profile-chevron-icon.png');
 
 type NavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'ProfileIndex'>;
-
-interface MenuItem {
-  id: string;
-  icon: string;
-  label: string;
-  screen?: keyof ProfileStackParamList;
-  action?: () => void;
-  showChevron?: boolean;
-  badge?: string;
-}
 
 export const ProfileIndexScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
-  const { t, i18n } = useTranslation();
   const { user, logout } = useAuthStore();
-  const { language, setLanguage } = useAppStore();
+  const userInfo = useUserStore((state) => state.info);
+  const purchaseMembershipList = useUserStore((state) => state.purchaseMembershipList);
+  const logoutAction = useUserStore((state) => state.logoutAction);
+  const getUserInfoAction = useUserStore((state) => state.getUserInfoAction);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  const getTierGradient = (tier: string): readonly [string, string] => {
-    switch (tier?.toLowerCase()) {
-      case 'gold':
-        return [Colors.tierGold, '#FFC107'] as const;
-      case 'silver':
-        return [Colors.tierSilver, '#9E9E9E'] as const;
-      default:
-        return [Colors.tierBronze, '#CD7F32'] as const;
+  // Display name – matches Vue displayName computed
+  const displayName = useMemo(() => {
+    const name = String((userInfo as any)?.name || userInfo?.realname || user?.name || '');
+    if (!name) return '';
+    const maxLength = 25;
+    if (name.length <= maxLength) return name;
+    const cutPatterns = [/\s+bin\s+/i, /\s+binti\s+/i, /\s+a\/l\s+/i, /\s+a\/p\s+/i];
+    let cutIndex = -1;
+    for (const pattern of cutPatterns) {
+      const match = name.match(pattern);
+      if (match?.index !== undefined && (cutIndex === -1 || match.index < cutIndex)) {
+        cutIndex = match.index;
+      }
     }
-  };
+    const trimmed = cutIndex !== -1 ? name.substring(0, cutIndex).trim() : name;
+    return trimmed.length > maxLength ? trimmed.substring(0, maxLength) + '...' : trimmed;
+  }, [userInfo, user?.name]);
 
-  const handleLogout = () => {
-    Alert.alert(
-      t('profile.logout'),
-      t('profile.logoutConfirm'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('profile.logout'),
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-          },
-        },
-      ]
-    );
-  };
+  const isMember = !!(purchaseMembershipList && purchaseMembershipList.length > 0);
+  const invitationCode = (userInfo as any)?.invitationCode || userInfo?.referralCode || user?.referralCode;
+  const uniqueId = userInfo?.uniqueId;
+  const avatarUri = userInfo?.avatar ? getOssImg(userInfo.avatar) : user?.avatar || null;
+  const fallbackLetter = ((userInfo as any)?.realname || displayName || '?').charAt(0).toUpperCase();
 
-  const handleLanguageChange = () => {
-    Alert.alert(
-      t('profile.selectLanguage'),
-      undefined,
-      [
-        {
-          text: 'English',
-          onPress: () => {
-            setLanguage('en');
-            i18n.changeLanguage('en');
-          },
-        },
-        {
-          text: 'Bahasa Melayu',
-          onPress: () => {
-            setLanguage('ms');
-            i18n.changeLanguage('ms');
-          },
-        },
-        { text: t('common.cancel'), style: 'cancel' },
-      ]
-    );
-  };
-
-  const accountMenuItems: MenuItem[] = [
-    {
-      id: 'edit-profile',
-      icon: 'person-outline',
-      label: t('profile.editProfile'),
-      screen: 'EditProfile',
-      showChevron: true,
-    },
-    {
-      id: 'change-password',
-      icon: 'lock-closed-outline',
-      label: t('profile.changePassword'),
-      screen: 'ChangePassword',
-      showChevron: true,
-    },
-    {
-      id: 'referral',
-      icon: 'share-social-outline',
-      label: t('profile.referral'),
-      screen: 'Referral',
-      showChevron: true,
-    },
-  ];
-
-  const settingsMenuItems: MenuItem[] = [
-    {
-      id: 'language',
-      icon: 'language-outline',
-      label: t('profile.language'),
-      action: handleLanguageChange,
-      showChevron: true,
-      badge: language === 'en' ? 'EN' : 'BM',
-    },
-    {
-      id: 'notifications',
-      icon: 'notifications-outline',
-      label: t('profile.notificationSettings'),
-      screen: 'NotificationSettings',
-      showChevron: true,
-    },
-    {
-      id: 'privacy',
-      icon: 'shield-checkmark-outline',
-      label: t('profile.privacyPolicy'),
-      screen: 'PrivacyPolicy',
-      showChevron: true,
-    },
-    {
-      id: 'terms',
-      icon: 'document-text-outline',
-      label: t('profile.termsOfService'),
-      screen: 'TermsOfService',
-      showChevron: true,
-    },
-    {
-      id: 'about',
-      icon: 'information-circle-outline',
-      label: t('profile.about'),
-      screen: 'About',
-      showChevron: true,
-    },
-  ];
-
-  const supportMenuItems: MenuItem[] = [
-    {
-      id: 'help',
-      icon: 'help-circle-outline',
-      label: t('profile.helpCenter'),
-      screen: 'HelpCenter',
-      showChevron: true,
-    },
-    {
-      id: 'contact',
-      icon: 'chatbubble-outline',
-      label: t('profile.contactUs'),
-      screen: 'ContactUs',
-      showChevron: true,
-    },
-  ];
-
-  const renderMenuItem = (item: MenuItem) => (
-    <TouchableOpacity
-      key={item.id}
-      style={styles.menuItem}
-      onPress={() => {
-        if (item.action) {
-          item.action();
-        } else if (item.screen) {
-          navigation.navigate(item.screen as any);
-        }
-      }}
-    >
-      <View style={styles.menuItemLeft}>
-        <View style={styles.menuIcon}>
-          <Ionicons name={item.icon as any} size={20} color={Colors.textSecondary} />
-        </View>
-        <Text style={styles.menuLabel}>{item.label}</Text>
-      </View>
-      <View style={styles.menuItemRight}>
-        {item.badge && (
-          <View style={styles.badgeContainer}>
-            <Text style={styles.badgeText}>{item.badge}</Text>
-          </View>
-        )}
-        {item.showChevron && (
-          <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
-        )}
-      </View>
-    </TouchableOpacity>
+  useFocusEffect(
+    useCallback(() => {
+      getUserInfoAction();
+    }, [getUserInfoAction])
   );
 
-  const membershipTier = user?.membershipTier || 'Bronze';
+  const handleLogout = () => {
+    Alert.alert('Reminder', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          logoutAction();
+          await logout();
+        },
+      },
+    ]);
+  };
+
+  const copyText = (text: string) => {
+    Clipboard.setString(text);
+    Alert.alert('Copied', '');
+  };
+
+  const menuRows = [
+    {
+      icon: imgPersonal,
+      iconStyle: styles.img6,
+      label: 'Personal Details',
+      onPress: () => navigation.navigate('PersonalInfo'),
+    },
+    {
+      icon: imgInsurance,
+      iconStyle: styles.img8,
+      label: 'Insurance Management',
+      onPress: () => navigation.getParent()?.navigate('Products' as never),
+    },
+    {
+      icon: imgPrivacy,
+      iconStyle: styles.img9,
+      label: 'Privacy & Security',
+      onPress: () => navigation.navigate('PrivacySecurity'),
+    },
+    {
+      icon: imgHelp,
+      iconStyle: styles.img9,
+      label: 'Help Center',
+      onPress: () => navigation.navigate('Support'),
+    },
+    {
+      icon: imgFamily,
+      iconStyle: styles.img11,
+      label: 'My Family & Assets',
+      onPress: () => navigation.navigate('FamilyAssets'),
+    },
+  ];
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingTop: insets.top, paddingBottom: insets.bottom + 20 },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Profile Header */}
-        <LinearGradient
-          colors={getTierGradient(membershipTier)}
-          style={styles.profileCard}
+      <ScrollView showsVerticalScrollIndicator={false}>
+
+        {/* Header section – same background image as Vue */}
+        <ImageBackground
+          source={imgBg}
+          style={[styles.section, { paddingTop: insets.top + 14 }]}
+          resizeMode="stretch"
         >
-          <View style={styles.avatar}>
-            <Ionicons name="person" size={40} color={Colors.primary} />
+          {/* Top bar: back | invisible spacer | AI + notification */}
+          <View style={styles.topRow}>
+            <TouchableOpacity onPress={() => navigation.canGoBack() && navigation.goBack()}>
+              <Ionicons name="arrow-back" size={22} color="#ffffff" />
+            </TouchableOpacity>
+
+            {/* visibility:hidden spacer – matches Vue layout */}
+            <Text style={styles.hiddenText}>EN | BM | ZH</Text>
+
+            <View style={styles.rightIcons}>
+              <TouchableOpacity
+                onPress={() => navigation.getParent()?.navigate('AIChat' as never)}
+              >
+                <AIIconSvg width={26.5} height={21} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.ml13}
+                onPress={() => navigation.getParent()?.navigate('Notification' as never)}
+              >
+                {unreadCount > 0 ? (
+                  <NotifDotSvg width={28} height={27.5} />
+                ) : (
+                  <NotifIconSvg width={28} height={27.5} />
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
-          <Text style={styles.userName}>{user?.name || 'User'}</Text>
-          <Text style={styles.userPhone}>{user?.phone || ''}</Text>
-          <View style={styles.tierBadge}>
-            <Ionicons name="shield" size={14} color={Colors.textWhite} />
-            <Text style={styles.tierText}>{membershipTier} Member</Text>
+
+          {/* Avatar block */}
+          <View style={styles.avatarBlock}>
+            <View style={styles.section2} />
+            {avatarUri ? (
+              <Image source={{ uri: avatarUri }} style={[styles.image3, styles.pos]} />
+            ) : (
+              <View style={[styles.image3, styles.pos, styles.fallbackAvatar]}>
+                <Text style={styles.fallbackText}>{fallbackLetter}</Text>
+              </View>
+            )}
+            <TouchableOpacity onPress={() => navigation.navigate('QRCode')} style={styles.pos2}>
+              <Image source={imgQr} style={styles.image4} />
+            </TouchableOpacity>
           </View>
-        </LinearGradient>
 
-        {/* Account Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('profile.account')}</Text>
-          <Card padding="none">
-            {accountMenuItems.map((item, index) => (
-              <React.Fragment key={item.id}>
-                {renderMenuItem(item)}
-                {index < accountMenuItems.length - 1 && <View style={styles.menuDivider} />}
-              </React.Fragment>
-            ))}
-          </Card>
+          <Text style={styles.text2} numberOfLines={1}>
+            {displayName.toUpperCase() || 'USER'}
+          </Text>
+
+          {!!uniqueId && (
+            <View style={styles.uidWrapper}>
+              <Text style={styles.text3}>User ID : {uniqueId}</Text>
+            </View>
+          )}
+
+          {!!invitationCode && (
+            <TouchableOpacity
+              style={styles.referralWrapper}
+              onPress={() => navigation.navigate('QRCode')}
+            >
+              <Text style={styles.text3}>Referral Code : {invitationCode}</Text>
+              <TouchableOpacity onPress={() => copyText(invitationCode)}>
+                <Image source={imgCopy} style={styles.image5} />
+              </TouchableOpacity>
+            </TouchableOpacity>
+          )}
+
+          {!isMember && (
+            <TouchableOpacity
+              style={styles.textWrapper}
+              onPress={() => navigation.getParent()?.navigate('Membership' as never)}
+            >
+              <Text style={styles.text4}>Be a member</Text>
+            </TouchableOpacity>
+          )}
+        </ImageBackground>
+
+        {/* White menu card – overlaps header with negative margin */}
+        <View style={styles.section3}>
+
+          <TouchableOpacity style={styles.menuRow} onPress={menuRows[0].onPress}>
+            <View style={styles.menuLeft}>
+              <Image source={menuRows[0].icon} style={menuRows[0].iconStyle} />
+              <Text style={styles.text5}>{menuRows[0].label}</Text>
+            </View>
+            <Image source={imgChevron} style={styles.image7} />
+          </TouchableOpacity>
+
+          {menuRows.slice(1).map((row) => (
+            <TouchableOpacity
+              key={row.label}
+              style={[styles.menuRow, styles.group2]}
+              onPress={row.onPress}
+            >
+              <View style={styles.menuLeft}>
+                <Image source={row.icon} style={row.iconStyle} />
+                <Text style={styles.text6}>{row.label}</Text>
+              </View>
+              <Image source={imgChevron} style={styles.image7} />
+            </TouchableOpacity>
+          ))}
+
+          <View style={styles.btnWrapper}>
+            <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+              <Text style={styles.logoutText}>Log Out</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Settings Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('profile.settings')}</Text>
-          <Card padding="none">
-            {settingsMenuItems.map((item, index) => (
-              <React.Fragment key={item.id}>
-                {renderMenuItem(item)}
-                {index < settingsMenuItems.length - 1 && <View style={styles.menuDivider} />}
-              </React.Fragment>
-            ))}
-          </Card>
+        {/* Version */}
+        <View style={styles.versionWrapper}>
+          <Text style={styles.versionText}>
+            v{Constants.expoConfig?.version ?? '1.0.0'}
+          </Text>
         </View>
 
-        {/* Support Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('profile.support')}</Text>
-          <Card padding="none">
-            {supportMenuItems.map((item, index) => (
-              <React.Fragment key={item.id}>
-                {renderMenuItem(item)}
-                {index < supportMenuItems.length - 1 && <View style={styles.menuDivider} />}
-              </React.Fragment>
-            ))}
-          </Card>
-        </View>
-
-        {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={20} color={Colors.error} />
-          <Text style={styles.logoutText}>{t('profile.logout')}</Text>
-        </TouchableOpacity>
-
-        {/* App Version */}
-        <Text style={styles.versionText}>
-          HappiSafe v1.0.0
-        </Text>
+        <View style={{ height: insets.bottom + 20 }} />
       </ScrollView>
     </View>
   );
@@ -291,149 +268,230 @@ export const ProfileIndexScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroundGrey,
-  },
-
-  scrollContent: {
-    padding: Spacing.base,
-  },
-
-  profileCard: {
-    alignItems: 'center',
-    padding: Spacing.xl,
-    borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.base,
-    ...Shadows.md,
-  },
-
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.textWhite,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.md,
-  },
-
-  userName: {
-    fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold,
-    color: Colors.textWhite,
-    marginBottom: 4,
-  },
-
-  userPhone: {
-    fontSize: Typography.size.sm,
-    color: 'rgba(255,255,255,0.8)',
-    marginBottom: Spacing.md,
-  },
-
-  tierBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
-    gap: Spacing.xs,
-  },
-
-  tierText: {
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semiBold,
-    color: Colors.textWhite,
+    backgroundColor: '#fdfdfd',
   },
 
   section: {
-    marginBottom: Spacing.base,
-  },
-
-  sectionTitle: {
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semiBold,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.sm,
-    marginLeft: Spacing.sm,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-
-  menuItem: {
-    flexDirection: 'row',
+    paddingHorizontal: 14,
+    paddingBottom: 156,
     alignItems: 'center',
+  },
+
+  topRow: {
+    width: '100%',
+    flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.base,
+    alignItems: 'center',
   },
 
-  menuItemLeft: {
+  hiddenText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '700',
+    opacity: 0,
+  },
+
+  rightIcons: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
   },
 
-  menuIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Colors.backgroundGrey,
+  ml13: {
+    marginLeft: 13,
+  },
+
+  avatarBlock: {
+    marginTop: 32,
+    width: 110,
+    height: 110,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
-  menuLabel: {
-    fontSize: Typography.size.base,
-    color: Colors.textPrimary,
+  section2: {
+    position: 'absolute',
+    backgroundColor: '#ff9a02',
+    borderRadius: 55,
+    width: 110,
+    height: 110,
   },
 
-  menuItemRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
+  image3: {
+    borderRadius: 55,
+    width: 110,
+    height: 110,
+    borderWidth: 2,
+    borderColor: '#f7cb06',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.75,
+    shadowRadius: 6,
+    elevation: 6,
   },
 
-  badgeContainer: {
-    backgroundColor: Colors.primaryLight,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.sm,
+  pos: {
+    position: 'absolute',
   },
 
-  badgeText: {
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semiBold,
-    color: Colors.primary,
-  },
-
-  menuDivider: {
-    height: 1,
-    backgroundColor: Colors.border,
-    marginLeft: 56 + Spacing.base,
-  },
-
-  logoutButton: {
-    flexDirection: 'row',
+  fallbackAvatar: {
+    backgroundColor: '#ff9a02',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.background,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.md,
-    gap: Spacing.sm,
-    marginTop: Spacing.md,
-    ...Shadows.sm,
+  },
+
+  fallbackText: {
+    color: '#ffffff',
+    fontSize: 48,
+    fontWeight: '700',
+  },
+
+  image4: {
+    width: 28.5,
+    height: 28.5,
+  },
+
+  pos2: {
+    position: 'absolute',
+    bottom: '15%',
+    right: -20,
+  },
+
+  text2: {
+    marginTop: 16,
+    color: '#ffffff',
+    fontSize: 25.5,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    maxWidth: '90%',
+    textAlign: 'center',
+  },
+
+  uidWrapper: {
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  referralWrapper: {
+    marginTop: 6,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+
+  text3: {
+    marginRight: 8,
+    color: '#ffffff',
+    fontSize: 18.5,
+    fontWeight: '700',
+    lineHeight: 20,
+  },
+
+  image5: {
+    width: 15,
+    height: 19,
+  },
+
+  textWrapper: {
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    backgroundColor: '#f3dbb6',
+    borderRadius: 30,
+    alignItems: 'center',
+    width: 96,
+  },
+
+  text4: {
+    color: '#6a3b11',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+
+  section3: {
+    marginTop: -122,
+    paddingTop: 42,
+    paddingHorizontal: 46,
+    paddingBottom: 23,
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 64,
+    borderTopRightRadius: 64,
+  },
+
+  menuRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  menuLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  group2: {
+    marginTop: 32,
+  },
+
+  img6:  { width: 21, height: 13, resizeMode: 'contain' },
+  img8:  { width: 21, height: 15, resizeMode: 'contain' },
+  img9:  { width: 20, height: 21, resizeMode: 'contain' },
+  img11: { width: 24, height: 18, resizeMode: 'contain' },
+
+  text5: {
+    marginLeft: 18,
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#808080',
+    lineHeight: 20,
+  },
+
+  text6: {
+    marginLeft: 19,
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#808080',
+    lineHeight: 20,
+  },
+
+  image7: {
+    width: 6,
+    height: 10,
+    resizeMode: 'contain',
+  },
+
+  btnWrapper: {
+    alignItems: 'center',
+    marginTop: 19,
+  },
+
+  logoutBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 36,
+    backgroundColor: '#f3dbb6',
+    borderRadius: 30,
+    alignItems: 'center',
   },
 
   logoutText: {
-    fontSize: Typography.size.base,
-    fontWeight: Typography.weight.semiBold,
-    color: Colors.error,
+    color: '#6a3b11',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+
+  versionWrapper: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    backgroundColor: '#ffffff',
   },
 
   versionText: {
-    textAlign: 'center',
-    fontSize: Typography.size.xs,
-    color: Colors.textLight,
-    marginTop: Spacing.lg,
+    color: '#b0b0b0',
+    fontSize: 12,
+    fontWeight: '400',
   },
 });

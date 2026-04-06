@@ -10,13 +10,14 @@ import {
   StyleSheet,
   TouchableOpacity,
   StatusBar,
-  Platform,
+  ImageBackground,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../constants/colors';
-import { Spacing, Typography } from '../../constants/styles';
+import { FontFamily } from '../../constants/fonts';
+
+const navBarBg = require('../../../../assets/images/nav-header-bg.png');
 
 interface HeaderProps {
   title?: string;
@@ -42,8 +43,6 @@ export const Header: React.FC<HeaderProps> = ({
   onRightPress,
   rightComponent,
   transparent = false,
-  light = false,
-  centerTitle = true,
 }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -56,131 +55,132 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const iconColor = light ? Colors.textWhite : Colors.textPrimary;
-  const textColor = light ? Colors.textWhite : Colors.textPrimary;
+  const navRow = (
+    <View style={styles.navRow}>
+      <View style={styles.left}>
+        {showBack && navigation.canGoBack() && (
+          <TouchableOpacity
+            onPress={handleBackPress}
+            style={styles.backButton}
+            hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+          >
+            <Ionicons name="arrow-back" size={16} color="#ffffff" />
+            <Text style={styles.backText}>Back</Text>
+          </TouchableOpacity>
+        )}
+        {leftIcon && (
+          <TouchableOpacity
+            onPress={onLeftPress}
+            hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+          >
+            <Ionicons name={leftIcon} size={20} color="#ffffff" />
+          </TouchableOpacity>
+        )}
+      </View>
+      <View style={styles.right}>
+        {rightIcon && (
+          <TouchableOpacity
+            onPress={onRightPress}
+            hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+          >
+            <Ionicons name={rightIcon} size={20} color="#ffffff" />
+          </TouchableOpacity>
+        )}
+        {rightComponent}
+      </View>
+    </View>
+  );
+
+  if (transparent) {
+    return (
+      <>
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+        <View style={[styles.transparentContainer, { paddingTop: insets.top }]}>
+          {navRow}
+          {title && <Text style={styles.title}>{title}</Text>}
+        </View>
+      </>
+    );
+  }
 
   return (
     <>
-      <StatusBar
-        barStyle={light ? 'light-content' : 'dark-content'}
-        backgroundColor={transparent ? 'transparent' : Colors.background}
-        translucent={transparent}
-      />
-      <View
-        style={[
-          styles.container,
-          { paddingTop: insets.top },
-          transparent && styles.transparent,
-        ]}
+      <StatusBar barStyle="light-content" backgroundColor="#FDB813" translucent={false} />
+      {/* Status bar placeholder – solid yellow (#FDB813), matches Vue happi-status-bar */}
+      <View style={[styles.statusBarFill, { height: insets.top }]} />
+      {/* Nav content – background image stretched over nav row + title */}
+      <ImageBackground
+        source={navBarBg}
+        style={styles.container}
+        resizeMode="stretch"
       >
-        <View style={styles.content}>
-          {/* Left */}
-          <View style={styles.left}>
-            {showBack && navigation.canGoBack() && (
-              <TouchableOpacity
-                onPress={handleBackPress}
-                style={styles.iconButton}
-                hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
-              >
-                <Ionicons name="chevron-back" size={24} color={iconColor} />
-              </TouchableOpacity>
-            )}
-            {leftIcon && (
-              <TouchableOpacity
-                onPress={onLeftPress}
-                style={styles.iconButton}
-                hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
-              >
-                <Ionicons name={leftIcon} size={24} color={iconColor} />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Title */}
-          {title && (
-            <View style={[styles.titleContainer, centerTitle && styles.titleCenter]}>
-              <Text
-                style={[styles.title, { color: textColor }]}
-                numberOfLines={1}
-              >
-                {title}
-              </Text>
-            </View>
-          )}
-
-          {/* Right */}
-          <View style={styles.right}>
-            {rightIcon && (
-              <TouchableOpacity
-                onPress={onRightPress}
-                style={styles.iconButton}
-                hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
-              >
-                <Ionicons name={rightIcon} size={24} color={iconColor} />
-              </TouchableOpacity>
-            )}
-            {rightComponent}
-          </View>
-        </View>
-      </View>
+        {navRow}
+        {title && <Text style={styles.title}>{title}</Text>}
+      </ImageBackground>
     </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: Colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
+  statusBarFill: {
+    backgroundColor: '#FDB813',
+    width: '100%',
   },
-  
-  transparent: {
+
+  container: {
+    paddingTop: 10,
+    paddingHorizontal: 12,
+    paddingBottom: 26,
+  },
+
+  transparentContainer: {
     backgroundColor: 'transparent',
-    borderBottomWidth: 0,
+    paddingHorizontal: 12,
+    paddingBottom: 26,
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     zIndex: 100,
   },
-  
-  content: {
+
+  navRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    height: 56,
-    paddingHorizontal: Spacing.base,
+    height: 28,
   },
-  
+
   left: {
     flexDirection: 'row',
     alignItems: 'center',
-    minWidth: 48,
   },
-  
+
   right: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    minWidth: 48,
   },
-  
-  iconButton: {
-    padding: Spacing.xs,
-  },
-  
-  titleContainer: {
-    flex: 1,
-    marginHorizontal: Spacing.md,
-  },
-  
-  titleCenter: {
+
+  backButton: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  
+
+  backText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontFamily: FontFamily.bold,
+    marginLeft: 4,
+    lineHeight: 20,
+  },
+
   title: {
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.semiBold,
-    color: Colors.textPrimary,
+    marginTop: 8,
+    marginLeft: 6,
+    color: '#ffffff',
+    fontSize: 22,
+    fontFamily: FontFamily.bold,
+    lineHeight: 32,
   },
 });
+

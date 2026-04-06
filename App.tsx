@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useCallback } from 'react';
-import { StatusBar, StyleSheet } from 'react-native';
+import { StatusBar, StyleSheet, LogBox } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -26,6 +26,9 @@ import './src/i18n';
 
 // Keep splash screen visible while loading resources
 SplashScreen.preventAutoHideAsync();
+
+// Suppress development error/warning overlay (LogBox banners)
+LogBox.ignoreAllLogs();
 
 // Create React Query client
 const queryClient = new QueryClient({

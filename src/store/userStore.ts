@@ -25,6 +25,7 @@ export interface UserInfo {
   nationality?: string;
   birthday?: string;
   gender?: number;
+  uniqueId?: string;
 }
 
 // Sign up info interface (matches Vue app exactly)

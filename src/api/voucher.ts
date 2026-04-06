@@ -37,6 +37,8 @@ export interface VoucherListParams {
   limit?: number;
   category?: string;
   status?: string;
+  mode?: number;
+  tabCode?: number;
 }
 
 const voucherApi = {
@@ -94,12 +96,33 @@ const voucherApi = {
 
   /**
    * Start voucher usage - called when user clicks "Use Now"
-   * Begins the countdown timer
+   * Returns countdown data for the CountdownScreen
    */
   startUsage(voucherItemId: string) {
-    return httpRequest<{ success: boolean; data: { countdownTime: number; voucher: UserVoucher } }>({
+    return httpRequest<{
+      success: boolean;
+      data: {
+        mode: number;
+        voucherCode: string;
+        voucherName: string;
+        countdownTime: number;
+        remainingSeconds: number;
+        merchantId?: string;
+      };
+    }>({
       method: 'POST',
       url: `/v1/voucher/app/start-usage/${voucherItemId}`,
+    });
+  },
+
+  /**
+   * Verify 4-digit PIN before redeeming
+   */
+  pinVerify(pin: string) {
+    return httpRequest<{ success: boolean; msg?: string }>({
+      method: 'POST',
+      url: '/v1/pin/verify',
+      data: { pin },
     });
   },
 

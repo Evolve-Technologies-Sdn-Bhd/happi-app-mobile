@@ -8,6 +8,7 @@ type Environment = 'development' | 'staging' | 'production';
 interface Config {
   env: Environment;
   apiBaseUrl: string;
+  imgBaseUrl: string;
   appName: string;
   appVersion: string;
   buildNumber: string;
@@ -20,7 +21,8 @@ const ENV: Environment = (__DEV__ ? 'development' : 'production') as Environment
 const configs: Record<Environment, Config> = {
   development: {
     env: 'development',
-    apiBaseUrl: 'http://localhost:9030/api',
+    apiBaseUrl: 'https://test-admin.happi.com.my/api',
+    imgBaseUrl: 'https://happi-app-res-test.s3.ap-southeast-5.amazonaws.com',
     appName: 'Happi Dev',
     appVersion: '1.0.0',
     buildNumber: '1',
@@ -30,6 +32,7 @@ const configs: Record<Environment, Config> = {
   staging: {
     env: 'staging',
     apiBaseUrl: 'https://test-admin.happi.com.my/api',
+    imgBaseUrl: 'https://happi-app-res-test.s3.ap-southeast-5.amazonaws.com',
     appName: 'Happi Staging',
     appVersion: '1.0.0',
     buildNumber: '1',
@@ -39,6 +42,7 @@ const configs: Record<Environment, Config> = {
   production: {
     env: 'production',
     apiBaseUrl: 'https://admin.happi.com.my/api',
+    imgBaseUrl: 'https://happi-app-res-prod.s3.ap-southeast-5.amazonaws.com',
     appName: 'Happi',
     appVersion: '1.0.0',
     buildNumber: '1',
@@ -67,11 +71,11 @@ export const Endpoints = {
   AUTH: {
     LOGIN: '/pub/customer/login',
     REGISTER: '/pub/customer/mobile/register',
-    SEND_OTP: '/pub/customer/mobile/code',
-    VERIFY_OTP: '/pub/customer/mobile/verify',
+    SEND_OTP: '/v1/otp/msg',
+    VERIFY_OTP: '/v1/otp/verify',
     REFRESH_TOKEN: '/pub/customer/refresh-token',
     LOGOUT: '/customer/logout',
-    RESET_PASSWORD: '/pub/customer/reset-password',
+    RESET_PASSWORD: '/v1/auth/reset-password',
     CHANGE_PASSWORD: '/customer/change-password',
   },
   

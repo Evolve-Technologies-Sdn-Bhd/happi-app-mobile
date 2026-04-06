@@ -2,6 +2,7 @@
  * Onboarding Screen
  * Modern multi-page onboarding with smooth scroll animations
  * Uses native ScrollView paging for smooth transitions
+ * Supports skip to home (guest mode)
  */
 
 import React, { useRef, useState, useCallback } from 'react';
@@ -23,6 +24,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthStackParamList } from '../../../app/navigation/types';
 import { FontFamily } from '../../../shared/constants';
+import { useAuthStore } from '../../../store/authStore';
+import { useAppStore } from '../../../store/appStore';
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Onboarding'>;
 
@@ -218,10 +221,14 @@ export const OnboardingScreen: React.FC = () => {
   const scrollViewRef = useRef<ScrollView | null>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const [currentPage, setCurrentPage] = useState(0);
+  const setGuestMode = useAuthStore((state) => state.setGuestMode);
+  const setOnboardingCompleted = useAppStore((state) => state.setOnboardingCompleted);
 
-  const handleClose = useCallback(() => {
-    navigation.navigate('SignIn');
-  }, [navigation]);
+  const handleClose = useCallback(async () => {
+    // Mark onboarding as done so it is never shown again (even after logout)
+    await setOnboardingCompleted(true);
+    setGuestMode(true);
+  }, [setGuestMode, setOnboardingCompleted]);
 
   const handleIndicatorPress = useCallback((index: number) => {
     scrollViewRef.current?.scrollTo({

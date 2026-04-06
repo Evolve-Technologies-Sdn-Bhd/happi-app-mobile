@@ -26,12 +26,18 @@ export const AuthStack: React.FC = () => {
       initialRouteName="Startup"
       screenOptions={{
         headerShown: false,
-        animation: 'slide_from_right',
+        animation: 'fade', // Smooth fade transition instead of slide
       }}
     >
       <Stack.Screen name="Startup" component={StartupScreen} />
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-      <Stack.Screen name="SignIn" component={SignInScreen} />
+      <Stack.Screen 
+        name="SignIn" 
+        component={SignInScreen}
+        options={{
+          animation: 'none', // Disable animation for seamless logo transition from splash
+        }}
+      />
       <Stack.Screen name="SignUp" component={SignUpScreen} />
       <Stack.Screen name="OTP" component={OtpScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
