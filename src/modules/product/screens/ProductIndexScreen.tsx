@@ -111,7 +111,7 @@ export const ProductIndexScreen: React.FC = () => {
             {/* Insurance Plans */}
             <TouchableOpacity
               style={styles.quickActionItem}
-              onPress={() => {}}
+              onPress={() => navigation.navigate('InsurancePlans', {})}
               activeOpacity={0.7}
             >
               <Image

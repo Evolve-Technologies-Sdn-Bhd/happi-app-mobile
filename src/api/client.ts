@@ -91,8 +91,6 @@ apiClient.interceptors.response.use(
       const publicEndpoints = [
         '/v1/membership/app/list',
         '/v1/membership/app/info/',
-        '/v1/policy/app/list',
-        '/v1/policy/app/info/',
         '/v1/product/app/company/list/',
         '/v1/product/app/list/',
         '/v1/product/app/category/list',

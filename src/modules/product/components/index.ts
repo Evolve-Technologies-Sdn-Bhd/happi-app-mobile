@@ -3,3 +3,4 @@
  */
 
 export { PolicyCardSlider } from './PolicyCardSlider';
+export { PolicyCard } from './PolicyCard';
