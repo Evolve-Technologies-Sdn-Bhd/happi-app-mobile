@@ -39,9 +39,11 @@ export interface Faq {
 
 export interface Tac {
   id: string;
+  name: string;
   title: string;
   content: string;
   type: number;
+  docUrl?: string;
 }
 
 export interface Misc {
@@ -142,10 +144,10 @@ export const getFaqListByCategoryId = (categoryId: string) => {
 export const getTacList = (membershipFlag?: boolean, insuranceFlag?: boolean) => {
   const params: Record<string, any> = { type: 2, targetType: 0 };
   if (membershipFlag) {
-    params.membershipFlag = membershipFlag;
+    params.membershipFlag = 1;
   }
   if (insuranceFlag) {
-    params.insuranceFlag = insuranceFlag;
+    params.insuranceFlag = 1;
   }
   return httpRequest<Tac[]>({
     method: 'GET',

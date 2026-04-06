@@ -1,260 +1,618 @@
-/**
+﻿/**
  * Edit Profile Screen
- * Update user profile information
+ * Mirrors Vue happi-app-customer personal-info component
+ * - Loads data from API on mount
+ * - Auto-saves on change
+ * - Dict-based bottom-sheet pickers for choice fields
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
   TouchableOpacity,
-  Alert,
+  View,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Header, Card, Button, Input } from '../../../shared/components';
-import { Colors } from '../../../shared/constants/colors';
-import { Spacing, Typography, BorderRadius, Shadows } from '../../../shared/constants/styles';
-import { profileSchema, ProfileFormData } from '../../../shared/utils/validation';
+import dayjs from 'dayjs';
+import { Header } from '../../../shared/components';
 import { useAuthStore } from '../../../store/authStore';
+import customerApi from '../../../api/customer';
+import { getDicList, DicItem } from '../../../api/pub';
+import { getOssImg } from '../../../api/client';
+
+interface ProfileState {
+  id: string;
+  realname: string;
+  nationality: string;
+  gender: string;
+  address: string;
+  idNumber: string;
+  countryCode: string;
+  mobile: string;
+  email: string;
+  birthday: string;
+  occupation: string;
+  maritalStatus: string;
+  membershipTier: string;
+  avatar: string;
+}
+
+const EMPTY: ProfileState = {
+  id: '',
+  realname: '',
+  nationality: '',
+  gender: '',
+  address: '',
+  idNumber: '',
+  countryCode: '60',
+  mobile: '',
+  email: '',
+  birthday: '',
+  occupation: '',
+  maritalStatus: '',
+  membershipTier: '',
+  avatar: '',
+};
+
+// Dict codes that need pre-loading for label resolution
+const PRELOAD_DICTS = ['GENDER', 'NATIONALITY', 'OCCUPATION', 'MARITAL_STATUS'];
+
+// Dict codes -> field keys
+const DICT_FIELDS: { field: keyof ProfileState; dictCode: string; title: string }[] = [
+  { field: 'gender', dictCode: 'GENDER', title: 'Select Gender' },
+  { field: 'nationality', dictCode: 'NATIONALITY', title: 'Select Nationality' },
+  { field: 'occupation', dictCode: 'OCCUPATION', title: 'Select Occupation' },
+  { field: 'maritalStatus', dictCode: 'MARITAL_STATUS', title: 'Select Marital Status' },
+];
+
+interface PickerSheet {
+  visible: boolean;
+  title: string;
+  field: keyof ProfileState;
+  options: DicItem[];
+  loading: boolean;
+}
+
+interface DateSheet {
+  visible: boolean;
+  inputValue: string;
+}
 
 export const EditProfileScreen: React.FC = () => {
-  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
   const { user } = useAuthStore();
-  
-  const [isLoading, setIsLoading] = useState(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isDirty },
-  } = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      name: user?.name || '',
-      email: user?.email || '',
-      phone: user?.phone || '',
-      address: '',
-      icNumber: '',
-    },
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<ProfileState>({ ...EMPTY });
+  const [dictCache, setDictCache] = useState<Record<string, DicItem[]>>({});
+
+  const [picker, setPicker] = useState<PickerSheet>({
+    visible: false,
+    title: '',
+    field: 'gender',
+    options: [],
+    loading: false,
   });
 
-  const onSubmit = async (data: ProfileFormData) => {
-    setIsLoading(true);
-    try {
-      // TODO: Call API to update profile
-      console.log('Profile data:', data);
-      
-      setTimeout(() => {
-        setIsLoading(false);
-        Alert.alert(
-          t('common.success'),
-          t('profile.profileUpdated'),
-          [{ text: t('common.ok'), onPress: () => navigation.goBack() }]
+  const [dateSheet, setDateSheet] = useState<DateSheet>({
+    visible: false,
+    inputValue: '',
+  });
+
+  // ── Load dicts + profile from API on mount ────────────────────────────────
+  useEffect(() => {
+    (async () => {
+      try {
+        // Pre-load all dict lists in parallel so labels can be resolved
+        const dictResults = await Promise.allSettled(
+          PRELOAD_DICTS.map((code) =>
+            getDicList(code).then((res) => ({
+              code,
+              items: (Array.isArray((res as any)?.data) ? (res as any).data : []) as DicItem[],
+            }))
+          )
         );
-      }, 1500);
-    } catch (error) {
-      setIsLoading(false);
-      Alert.alert(t('common.error'), t('error.somethingWentWrong'));
+        const cache: Record<string, DicItem[]> = {};
+        dictResults.forEach((r) => {
+          if (r.status === 'fulfilled') {
+            cache[r.value.code] = r.value.items;
+          }
+        });
+        setDictCache(cache);
+
+        const res = await customerApi.getCustomerInfo();
+        const info = (res as any)?.data ?? (res as any);
+        if (info) {
+          setProfile({
+            id: info.id ?? '',
+            realname: info.realname ?? info.name ?? '',
+            nationality: String(info.nationality ?? ''),
+            gender: String(info.gender ?? ''),
+            address: info.address ?? '',
+            idNumber: info.idNumber ?? '',
+            countryCode: info.countryCode ?? '60',
+            mobile: info.mobile ?? user?.phone ?? '',
+            email: info.email ?? user?.email ?? '',
+            birthday: info.birthday
+              ? dayjs(info.birthday).format('YYYY-MM-DD')
+              : '',
+            occupation: String(info.occupation ?? ''),
+            maritalStatus: String(info.maritalStatus ?? ''),
+            membershipTier:
+              info.membershipPurchase?.name ??
+              info.membershipTier ??
+              user?.membershipTier ??
+              '',
+            avatar: getOssImg(info.avatar ?? ''),
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to load profile', e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  // Resolve a stored code to its display name using the cached dict list
+  const getLabel = (dictCode: string, code: string): string => {
+    if (!code) return '';
+    const items = dictCache[dictCode] ?? [];
+    const found = items.find((i) => String(i.code) === String(code));
+    return found ? found.name : code;
+  };
+
+  // ── Auto-save ───────────────────────────────────────────────────────────────
+  const triggerAutoSave = (updated: ProfileState) => {
+    if (!updated.id) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      try {
+        await customerApi.updateCustomerInfo({
+          avatar: updated.avatar,
+          realname: updated.realname,
+          email: updated.email,
+          birthday: updated.birthday,
+          gender: updated.gender,
+          address: updated.address,
+          occupation: updated.occupation,
+          maritalStatus: updated.maritalStatus,
+        });
+      } catch (e) {
+        console.warn('Auto-save failed', e);
+      }
+    }, 800);
+  };
+
+  const update = (key: keyof ProfileState, value: string) => {
+    const updated = { ...profile, [key]: value };
+    setProfile(updated);
+    triggerAutoSave(updated);
+  };
+
+  // ── Dict picker ─────────────────────────────────────────────────────────────
+  const openPicker = async (field: keyof ProfileState, dictCode: string, title: string) => {
+    setPicker({ visible: true, title, field, options: [], loading: true });
+    try {
+      const res = await getDicList(dictCode);
+      const items: DicItem[] = Array.isArray((res as any)?.data) ? (res as any).data : [];
+      setPicker((prev) => ({ ...prev, options: items, loading: false }));
+    } catch {
+      setPicker((prev) => ({ ...prev, loading: false }));
     }
   };
 
+  const selectOption = (item: DicItem) => {
+    // Cache the new item immediately so label resolves before next dict fetch
+    setDictCache((prev) => {
+      const existing = prev[picker.field] ?? [];
+      if (!existing.find((i) => i.code === item.code)) {
+        return { ...prev, [picker.field]: [...existing, item] };
+      }
+      return prev;
+    });
+    update(picker.field, item.code);
+    setPicker((prev) => ({ ...prev, visible: false }));
+  };
+
+  // ── Date of birth picker ────────────────────────────────────────────────────
+  const openDateSheet = () => {
+    setDateSheet({ visible: true, inputValue: profile.birthday });
+  };
+
+  const confirmDate = () => {
+    const d = dateSheet.inputValue.trim();
+    if (d && dayjs(d, 'YYYY-MM-DD', true).isValid()) {
+      update('birthday', d);
+    }
+    setDateSheet({ visible: false, inputValue: '' });
+  };
+
+  // ── Render ──────────────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Header title="Personal Details" showBack />
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#FDB813" />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <Header title={t('profile.editProfile')} showBack />
+      <Header title="Personal Details" showBack />
 
       <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + 100 },
-        ]}
+        style={styles.scroll}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 64 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Avatar Section */}
-        <View style={styles.avatarSection}>
-          <View style={styles.avatar}>
-            <Ionicons name="person" size={48} color={Colors.primary} />
+        <View style={styles.form}>
+
+          {/* Profile Photo */}
+          <View style={styles.row}>
+            <Text style={styles.label}>Profile Photo</Text>
+            <TouchableOpacity style={styles.avatarContainer}>
+              {profile.avatar ? (
+                <Image source={{ uri: profile.avatar }} style={styles.avatarImage} />
+              ) : (
+                <View style={styles.avatarEmpty}>
+                  <Ionicons name="camera-outline" size={26} color="#D3D4D6" />
+                </View>
+              )}
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.changeAvatarBtn}>
-            <Ionicons name="camera" size={14} color={Colors.textWhite} />
+
+          {/* Membership Tier */}
+          <View style={styles.row}>
+            <Text style={styles.label}>Membership Tier</Text>
+            <Text style={styles.value}>
+              {profile.membershipTier || 'No membership'}
+            </Text>
+          </View>
+
+          {/* Full Name — readonly */}
+          <View style={styles.row}>
+            <Text style={styles.label}>Full Name</Text>
+            <Text style={styles.value}>{profile.realname}</Text>
+          </View>
+
+          {/* Nationality — picker */}
+          <TouchableOpacity
+            style={styles.row}
+            onPress={() => openPicker('nationality', 'NATIONALITY', 'Select Nationality')}
+          >
+            <Text style={styles.label}>Nationality</Text>
+            <View style={styles.rowRight}>
+              <Text style={styles.value}>{getLabel('NATIONALITY', profile.nationality)}</Text>
+              <Ionicons name="chevron-forward" size={16} color="#D3D4D6" />
+            </View>
           </TouchableOpacity>
-          <Text style={styles.changePhotoText}>{t('profile.changePhoto')}</Text>
+
+          {/* Gender — picker */}
+          <TouchableOpacity
+            style={styles.row}
+            onPress={() => openPicker('gender', 'GENDER', 'Select Gender')}
+          >
+            <Text style={styles.label}>Gender</Text>
+            <View style={styles.rowRight}>
+              <Text style={styles.value}>{getLabel('GENDER', profile.gender)}</Text>
+              <Ionicons name="chevron-forward" size={16} color="#D3D4D6" />
+            </View>
+          </TouchableOpacity>
+
+          {/* Address — editable */}
+          <View style={[styles.row, styles.rowAlignTop]}>
+            <Text style={styles.label}>Address</Text>
+            <TextInput
+              style={[styles.input, styles.inputMultiline]}
+              value={profile.address}
+              onChangeText={(v) => update('address', v)}
+              placeholderTextColor="#D3D4D6"
+              multiline
+              textAlign="right"
+              textAlignVertical="top"
+              underlineColorAndroid="transparent"
+            />
+          </View>
+
+          {/* NRIC — readonly */}
+          <View style={styles.row}>
+            <Text style={styles.label}>NRIC</Text>
+            <Text style={styles.value}>{profile.idNumber}</Text>
+          </View>
+
+          {/* Mobile Number — readonly, display with country code prefix */}
+          <View style={styles.row}>
+            <Text style={styles.label}>Mobile Number</Text>
+            <Text style={styles.value}>
+              {profile.mobile
+                ? `+${profile.countryCode} ${profile.mobile}`
+                : ''}
+            </Text>
+          </View>
+
+          {/* Email — editable */}
+          <View style={styles.row}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              value={profile.email}
+              onChangeText={(v) => update('email', v)}
+              placeholderTextColor="#D3D4D6"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              textAlign="right"
+              underlineColorAndroid="transparent"
+            />
+          </View>
+
+          {/* Date of Birth — date picker */}
+          <TouchableOpacity style={styles.row} onPress={openDateSheet}>
+            <Text style={styles.label}>Date of Birth</Text>
+            <View style={styles.rowRight}>
+              <Text style={styles.value}>{profile.birthday}</Text>
+              <Ionicons name="chevron-forward" size={16} color="#D3D4D6" />
+            </View>
+          </TouchableOpacity>
+
+          {/* Occupation — picker */}
+          <TouchableOpacity
+            style={styles.row}
+            onPress={() => openPicker('occupation', 'OCCUPATION', 'Select Occupation')}
+          >
+            <Text style={styles.label}>Occupation</Text>
+            <View style={styles.rowRight}>
+              <Text style={styles.value}>{getLabel('OCCUPATION', profile.occupation)}</Text>
+              <Ionicons name="chevron-forward" size={16} color="#D3D4D6" />
+            </View>
+          </TouchableOpacity>
+
+          {/* Marital Status — picker, last row */}
+          <TouchableOpacity
+            style={[styles.row, styles.rowLast]}
+            onPress={() => openPicker('maritalStatus', 'MARITAL_STATUS', 'Select Marital Status')}
+          >
+            <Text style={styles.label}>Marital Status</Text>
+            <View style={styles.rowRight}>
+              <Text style={styles.value}>{getLabel('MARITAL_STATUS', profile.maritalStatus)}</Text>
+              <Ionicons name="chevron-forward" size={16} color="#D3D4D6" />
+            </View>
+          </TouchableOpacity>
+
         </View>
-
-        {/* Form */}
-        <Card>
-          <Controller
-            control={control}
-            name="name"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <Input
-                label={t('common.name')}
-                placeholder={t('profile.enterName')}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={errors.name?.message}
-                leftIcon="person-outline"
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <Input
-                label={t('common.email')}
-                placeholder={t('profile.enterEmail')}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={errors.email?.message}
-                leftIcon="mail-outline"
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="phone"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <Input
-                label={t('common.phone')}
-                placeholder={t('profile.enterPhone')}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={errors.phone?.message}
-                leftIcon="call-outline"
-                keyboardType="phone-pad"
-                editable={false}
-                hint={t('profile.phoneNotEditable')}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="icNumber"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <Input
-                label={t('common.icNumber')}
-                placeholder={t('profile.enterIcNumber')}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={errors.icNumber?.message}
-                leftIcon="card-outline"
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="address"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <Input
-                label={t('profile.address')}
-                placeholder={t('profile.enterAddress')}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={errors.address?.message}
-                leftIcon="location-outline"
-                multiline
-                numberOfLines={3}
-                style={styles.addressInput}
-              />
-            )}
-          />
-        </Card>
       </ScrollView>
 
-      {/* Save Button */}
-      <View style={[styles.bottomBar, { paddingBottom: insets.bottom || Spacing.base }]}>
-        <Button
-          title={t('common.save')}
-          onPress={handleSubmit(onSubmit)}
-          loading={isLoading}
-          disabled={!isDirty}
+      {/* ── Dict Picker Bottom Sheet ── */}
+      <Modal
+        visible={picker.visible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setPicker((p) => ({ ...p, visible: false }))}
+      >
+        <TouchableOpacity
+          style={styles.overlay}
+          activeOpacity={1}
+          onPress={() => setPicker((p) => ({ ...p, visible: false }))}
         />
-      </View>
+        <View style={[styles.sheet, { paddingBottom: insets.bottom + 8 }]}>
+          <View style={styles.sheetHeader}>
+            <Text style={styles.sheetTitle}>{picker.title}</Text>
+            <TouchableOpacity onPress={() => setPicker((p) => ({ ...p, visible: false }))}>
+              <Ionicons name="close" size={22} color="#010101" />
+            </TouchableOpacity>
+          </View>
+          {picker.loading ? (
+            <View style={styles.sheetLoader}>
+              <ActivityIndicator color="#FDB813" />
+            </View>
+          ) : (
+            <FlatList
+              data={picker.options}
+              keyExtractor={(item) => item.code}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.sheetItem,
+                    (profile[picker.field] as string) === item.code && styles.sheetItemSelected,
+                  ]}
+                  onPress={() => selectOption(item)}
+                >
+                  <Text
+                    style={[
+                      styles.sheetItemText,
+                      (profile[picker.field] as string) === item.code &&
+                        styles.sheetItemTextSelected,
+                    ]}
+                  >
+                    {item.name}
+                  </Text>
+                  {(profile[picker.field] as string) === item.code && (
+                    <Ionicons name="checkmark" size={18} color="#FDB813" />
+                  )}
+                </TouchableOpacity>
+              )}
+              style={styles.sheetList}
+            />
+          )}
+        </View>
+      </Modal>
+
+      {/* ── Date of Birth Picker ── */}
+      <Modal
+        visible={dateSheet.visible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setDateSheet({ visible: false, inputValue: '' })}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1 }}
+        >
+          <TouchableOpacity
+            style={styles.overlay}
+            activeOpacity={1}
+            onPress={() => setDateSheet({ visible: false, inputValue: '' })}
+          />
+          <View style={[styles.sheet, { paddingBottom: insets.bottom + 8 }]}>
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>Date of Birth</Text>
+              <TouchableOpacity onPress={() => setDateSheet({ visible: false, inputValue: '' })}>
+                <Ionicons name="close" size={22} color="#010101" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.dateInputWrapper}>
+              <TextInput
+                style={styles.dateInput}
+                value={dateSheet.inputValue}
+                onChangeText={(v) => setDateSheet((d) => ({ ...d, inputValue: v }))}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#D3D4D6"
+                keyboardType="numbers-and-punctuation"
+                maxLength={10}
+                autoFocus
+                underlineColorAndroid="transparent"
+              />
+            </View>
+            <TouchableOpacity style={styles.confirmBtn} onPress={confirmDate}>
+              <Text style={styles.confirmBtnText}>Confirm</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  container: { flex: 1, backgroundColor: '#ffffff' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  scroll: { flex: 1 },
+
+  form: {
+    paddingHorizontal: 16,
+    backgroundColor: '#ffffff',
+  },
+
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(59,64,86,0.3)',
+    minHeight: 52,
+  },
+  rowAlignTop: { alignItems: 'flex-start', paddingTop: 16 },
+  rowLast: { borderBottomWidth: 0 },
+  rowRight: {
     flex: 1,
-    backgroundColor: Colors.backgroundGrey,
-  },
-
-  scrollContent: {
-    padding: Spacing.base,
-  },
-
-  avatarSection: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.xl,
+    justifyContent: 'flex-end',
+    gap: 2,
   },
 
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: Colors.primaryLight,
+  label: { width: 120, fontSize: 15, color: '#010101' },
+
+  value: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#808080',
+    textAlign: 'right',
+  },
+
+  input: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#808080',
+    padding: 0,
+    textAlign: 'right',
+  },
+  inputMultiline: { minHeight: 60, textAlignVertical: 'top' },
+
+  avatarContainer: { marginLeft: 'auto' as any },
+  avatarImage: { width: 75, height: 75, borderRadius: 37.5 },
+  avatarEmpty: {
+    width: 75,
+    height: 75,
+    borderRadius: 37.5,
+    backgroundColor: '#f7f7f7',
     alignItems: 'center',
     justifyContent: 'center',
-    ...Shadows.md,
   },
 
-  changeAvatarBtn: {
-    position: 'absolute',
-    right: '35%',
-    bottom: 24,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: Colors.primary,
+  // Bottom sheet
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  sheet: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    maxHeight: '60%',
+  },
+  sheetHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: Colors.background,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(59,64,86,0.2)',
   },
+  sheetTitle: { fontSize: 16, fontWeight: '600', color: '#010101' },
+  sheetLoader: { padding: 32, alignItems: 'center' },
+  sheetList: { flexGrow: 0 },
+  sheetItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(59,64,86,0.1)',
+  },
+  sheetItemSelected: { backgroundColor: '#FFFBF0' },
+  sheetItemText: { fontSize: 15, color: '#333333' },
+  sheetItemTextSelected: { color: '#FDB813', fontWeight: '600' },
 
-  changePhotoText: {
-    marginTop: Spacing.sm,
-    fontSize: Typography.size.sm,
-    color: Colors.primary,
-    fontWeight: Typography.weight.medium,
+  // Date sheet
+  dateInputWrapper: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
-
-  addressInput: {
-    minHeight: 80,
-    textAlignVertical: 'top',
+  dateInput: {
+    borderWidth: 1,
+    borderColor: 'rgba(59,64,86,0.3)',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 15,
+    color: '#333333',
   },
-
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: Colors.background,
-    padding: Spacing.base,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    ...Shadows.md,
+  confirmBtn: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    backgroundColor: '#FDB813',
+    borderRadius: 10,
+    paddingVertical: 13,
+    alignItems: 'center',
   },
+  confirmBtnText: { fontSize: 15, fontWeight: '600', color: '#ffffff' },
 });

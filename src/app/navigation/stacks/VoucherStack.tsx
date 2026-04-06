@@ -6,11 +6,14 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { VoucherStackParamList } from '../types';
 
-// Import screens from voucher module
 import {
   VoucherIndexScreen,
+  MyVoucherScreen,
   VoucherDetailScreen,
+  CountdownScreen,
   RedeemVoucherScreen,
+  RedeemSuccessScreen,
+  CoinHistoryScreen,
 } from '../../../modules/voucher/screens';
 
 const Stack = createNativeStackNavigator<VoucherStackParamList>();
@@ -24,10 +27,12 @@ export const VoucherStack: React.FC = () => {
       }}
     >
       <Stack.Screen name="VoucherIndex" component={VoucherIndexScreen} />
-      <Stack.Screen name="VoucherList" component={VoucherIndexScreen} />
+      <Stack.Screen name="VoucherMy" component={MyVoucherScreen} />
       <Stack.Screen name="VoucherDetail" component={VoucherDetailScreen} />
+      <Stack.Screen name="VoucherCountdown" component={CountdownScreen} options={{ animation: 'fade', gestureEnabled: false }} />
       <Stack.Screen name="VoucherRedeem" component={RedeemVoucherScreen} />
-      <Stack.Screen name="VoucherMy" component={VoucherIndexScreen} />
+      <Stack.Screen name="RedeemSuccess" component={RedeemSuccessScreen} options={{ gestureEnabled: false }} />
+      <Stack.Screen name="CoinHistory" component={CoinHistoryScreen} />
     </Stack.Navigator>
   );
 };

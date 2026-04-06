@@ -13,10 +13,18 @@ import { useUserStore } from '../../store/userStore';
 import { useAppStore } from '../../store/appStore';
 import { ScreenLoading } from '../../shared/components/Loading';
 
+// Import modal screens
+import NotificationScreen from '../../modules/notification/screens/NotificationScreen';
+import NotificationDetailScreen from '../../modules/notification/screens/NotificationDetailScreen';
+import AIChatScreen from '../../modules/chat/screens/AIChatScreen';
+import { MyMembershipListScreen } from '../../modules/membership/screens';
+import { VoucherStack } from './stacks';
+import WebViewScreen from '../../shared/screens/WebViewScreen';
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const RootNavigator: React.FC = () => {
-  const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { isAuthenticated, isGuestMode, isLoading, checkAuth } = useAuthStore();
   const { loadAppSettings } = useAppStore();
   const checkUserAuth = useUserStore((state) => state.checkAuth);
 
@@ -37,10 +45,67 @@ export const RootNavigator: React.FC = () => {
     return <ScreenLoading text="Loading..." />;
   }
 
+  // Show main app if authenticated OR in guest mode
+  const showMainApp = isAuthenticated || isGuestMode;
+
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {isAuthenticated ? (
-        <Stack.Screen name="Main" component={MainTabs} />
+    <Stack.Navigator screenOptions={{ 
+      headerShown: false,
+      animation: 'fade', // Smooth fade transition between auth and main
+    }}>
+      {showMainApp ? (
+        <>
+          <Stack.Screen name="Main" component={MainTabs} />
+          {/* Modal screens - these overlay tabs and hide tab bar */}
+          <Stack.Screen 
+            name="Notification" 
+            component={NotificationScreen}
+            options={{
+              presentation: 'card',
+              animation: 'fade',
+            }}
+          />
+          <Stack.Screen 
+            name="NotificationDetail" 
+            component={NotificationDetailScreen}
+            options={{
+              presentation: 'card',
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="AIChat" 
+            component={AIChatScreen}
+            options={{
+              presentation: 'card',
+              animation: 'fade',
+            }}
+          />
+          <Stack.Screen 
+            name="MembershipPurchaseList" 
+            component={MyMembershipListScreen}
+            options={{
+              presentation: 'card',
+              animation: 'fade',
+            }}
+          />
+          <Stack.Screen 
+            name="Voucher" 
+            component={VoucherStack}
+            options={{
+              presentation: 'card',
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="WebView"
+            component={WebViewScreen}
+            options={{
+              presentation: 'card',
+              animation: 'slide_from_right',
+            }}
+          />
+        </>
       ) : (
         <Stack.Screen name="Auth" component={AuthStack} />
       )}

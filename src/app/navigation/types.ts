@@ -10,17 +10,32 @@ export type RootStackParamList = {
   // Main App Stack
   Main: undefined;
   
+  // Modal screens (overlay tab bar)
+  Notification: undefined;
+  NotificationDetail: {
+    notificationId: string;
+    title: string;
+    description: string;
+    createTime: number;
+    notificationType?: string;
+  };
+  AIChat: undefined;
+  MembershipPurchaseList: undefined;
+  
   // Modals
   WebView: { url: string; title?: string };
+  
+  // Voucher (full-screen stack)
+  Voucher: { screen?: string } | undefined;
 };
 
 export type AuthStackParamList = {
   Startup: undefined;
   Onboarding: undefined;
-  SignIn: undefined;
+  SignIn: { fromSplash?: boolean } | undefined;
   SignUp: undefined;
-  OTP: { phone: string; type: 'signup' | 'reset' };
-  ResetPassword: { phone: string };
+  OTP: { phone: string; type: 'signup' | 'reset'; countryCode?: string };
+  ResetPassword: { phone: string; countryCode?: string };
   ForgotPassword: undefined;
 };
 
@@ -37,22 +52,19 @@ export type HomeStackParamList = {
   ProductDetail: { productId: string };
   ServiceList: undefined;
   ServiceDetail: { serviceId: string };
-  Notification: undefined;
   NotificationDetail: { notificationId: string };
-  AIChat: undefined;
 };
 
 export type MembershipStackParamList = {
   MembershipIndex: undefined;
   MembershipList: undefined;
   MembershipDetail: { membershipId: string };
-  MembershipPurchaseList: undefined;
-  MembershipPurchaseConfirm: { membershipId: string; tier?: string };
-  MembershipPurchaseSubmit: { orderId: string };
+  MembershipPurchaseConfirm: { membershipId: string; tier?: string; addedNominee?: any };
+  MembershipPurchaseSubmit: { membershipId: string; nominees?: any[] };
   MembershipCompletion: { orderId: string };
   // Additional screens for family/vehicles
   PolicyDetail: { policyId: string };
-  FamilyMembers: undefined;
+  FamilyMembers: { fromNominee?: boolean; membershipId?: string } | undefined;
   AddEditFamilyMember: { memberId?: string };
   Vehicles: undefined;
   AddEditVehicle: { vehicleId?: string };
@@ -74,12 +86,20 @@ export type ServiceStackParamList = {
 
 export type VoucherStackParamList = {
   VoucherIndex: undefined;
-  VoucherList: undefined;
-  VoucherDetail: { voucherId: string };
   VoucherMy: undefined;
+  VoucherDetail: { voucherItemId: string };
+  CoinHistory: undefined;
+  VoucherCountdown: {
+    voucherItemId: string;
+    mode: number;
+    voucherCode: string;
+    voucherName: string;
+    countdownTime: number;
+    remainingSeconds: number;
+    merchantId?: string;
+  };
   VoucherRedeem: { voucherId: string };
-  VoucherUse: { voucherId: string };
-  RedeemVoucher: undefined;
+  RedeemSuccess: { voucherId: string; voucherItemId: string };
 };
 
 export type ProfileStackParamList = {
@@ -95,7 +115,11 @@ export type ProfileStackParamList = {
   HomeAssetList: undefined;
   HomeAssetEdit: { homeId?: string };
   PrivacySecurity: undefined;
+  PasswordSettings: undefined;
   ChangePassword: undefined;
+  PinEnter: undefined;
+  PinNew: undefined;
+  PinConfirm: { newPin: string };
   Support: undefined;
   QRCode: undefined;
   Coins: undefined;
@@ -106,6 +130,8 @@ export type ProfileStackParamList = {
   TermsOfService: undefined;
   HelpCenter: undefined;
   ContactUs: undefined;
+  CallService: undefined;
+  OurLocation: undefined;
 };
 
 export type PaymentStackParamList = {

@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { getFocusedRouteNameFromRoute, CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from './types';
 import { Colors } from '../../shared/constants/colors';
@@ -55,32 +56,28 @@ export const MainTabs: React.FC = () => {
       <Tab.Screen
         name="Home"
         component={HomeStack}
-        options={({ route }) => ({
-          tabBarLabel: 'Home',
-          tabBarStyle: ((route) => {
-            const routeName = route.state
-              ? route.state.routes[route.state.index].name
-              : 'HomeIndex';
-            
-            // Hide tab bar on Notification and AIChat screens
-            if (routeName === 'Notification' || routeName === 'AIChat') {
-              return { display: 'none' };
-            }
-            
-            return {
+        options={{ tabBarLabel: 'Home' }}
+      />
+      <Tab.Screen
+        name="Membership"
+        component={MembershipStack}
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route);
+          // Hide tab bar on MembershipDetail, PurchaseConfirm and PurchaseSubmit
+          const hideTabBar = routeName === 'MembershipDetail' ||
+            routeName === 'MembershipPurchaseConfirm' ||
+            routeName === 'MembershipPurchaseSubmit';
+          return {
+            tabBarLabel: 'Membership',
+            tabBarStyle: hideTabBar ? { display: 'none' } : {
               backgroundColor: Colors.background,
               borderTopColor: Colors.borderLight,
               paddingTop: 4,
               height: 60,
               paddingBottom: 8,
-            };
-          })(route),
-        })}
-      />
-      <Tab.Screen
-        name="Membership"
-        component={MembershipStack}
-        options={{ tabBarLabel: 'Membership' }}
+            },
+          };
+        }}
       />
       <Tab.Screen
         name="Products"
@@ -88,9 +85,27 @@ export const MainTabs: React.FC = () => {
         options={{ tabBarLabel: 'Products' }}
       />
       <Tab.Screen
-        name="Service"
-        component={ServiceStack}
-        options={{ tabBarLabel: 'Service' }}
+        name="Profile"
+        component={ProfileStack}
+        options={{ tabBarLabel: 'Profile' }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            const state = navigation.getState();
+            navigation.dispatch(
+              CommonActions.reset({
+                ...state,
+                // Strip the nested state from the Profile route so it resets to ProfileIndex
+                routes: state.routes.map((route) =>
+                  route.name === 'Profile'
+                    ? { name: 'Profile', key: route.key }
+                    : route
+                ),
+                index: state.routes.findIndex((r) => r.name === 'Profile'),
+              })
+            );
+          },
+        })}
       />
     </Tab.Navigator>
   );

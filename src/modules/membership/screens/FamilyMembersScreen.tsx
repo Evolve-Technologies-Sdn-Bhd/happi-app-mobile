@@ -1,219 +1,331 @@
 /**
- * Family Members Screen
- * Manage family members under the policy
+ * Family Members Screen (Membership stack)
+ * When route.params.fromNominee === true, shows "Select" button per member
+ * and navigates back to MembershipPurchaseConfirm with the selected nominee.
+ *
+ * Mirrors happi-app-customer/src/views/profile/family-assets/family/index.vue
+ * (with from=membership&section=true param behaviour)
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
+  ScrollView,
   TouchableOpacity,
-  Alert,
+  ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
+import dayjs from 'dayjs';
 import { MembershipStackParamList } from '../../../app/navigation/types';
-import { Header, Card, Button, EmptyState } from '../../../shared/components';
-import { Colors } from '../../../shared/constants/colors';
-import { Spacing, Typography, BorderRadius, Shadows } from '../../../shared/constants/styles';
+import { getFamilyMemberList, FamilyMember } from '../../../api/family';
+import { FontFamily } from '../../../shared/constants/fonts';
+import { Header } from '../../../shared/components';
 
+type RouteProps = RouteProp<MembershipStackParamList, 'FamilyMembers'>;
 type NavigationProp = NativeStackNavigationProp<MembershipStackParamList, 'FamilyMembers'>;
 
-interface FamilyMember {
-  id: string;
-  name: string;
-  relationship: string;
-  icNumber: string;
-  phone?: string;
-}
-
-// Mock data
-const mockFamilyMembers: FamilyMember[] = [
-  {
-    id: '1',
-    name: 'Jane Doe',
-    relationship: 'Spouse',
-    icNumber: '901231-01-5678',
-    phone: '+60123456781',
-  },
-  {
-    id: '2',
-    name: 'John Doe Jr',
-    relationship: 'Child',
-    icNumber: '150515-01-1234',
-  },
-];
+const InfoRow: React.FC<{ label: string; value?: string }> = ({ label, value }) => (
+  <View style={styles.infoRow}>
+    <Text style={styles.infoLabel}>{label}</Text>
+    <Text style={styles.infoValue}>{value || ''}</Text>
+  </View>
+);
 
 export const FamilyMembersScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { t } = useTranslation();
-  
-  const [familyMembers, setFamilyMembers] = useState(mockFamilyMembers);
+  const route = useRoute<RouteProps>();
+  const insets = useSafeAreaInsets();
 
-  const handleDelete = (id: string) => {
-    Alert.alert(
-      t('common.confirm'),
-      t('membership.deleteFamilyMemberConfirm'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.delete'),
-          style: 'destructive',
-          onPress: () => {
-            setFamilyMembers((prev) => prev.filter((m) => m.id !== id));
-          },
-        },
-      ]
-    );
+  const fromNominee = route.params?.fromNominee === true;
+  const membershipId = route.params?.membershipId;
+
+  const [list, setList] = useState<FamilyMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const load = async () => {
+    try {
+      setLoading(true);
+      const res = await getFamilyMemberList({ page: 1, limit: 100 });
+      const raw = (res as any)?.data;
+      const records = raw?.records;
+      const items: FamilyMember[] = Array.isArray(records)
+        ? records
+        : Array.isArray(raw)
+        ? raw
+        : [];
+      setList(items);
+    } catch (e) {
+      console.warn('Failed to load family list', e);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const renderMember = ({ item }: { item: FamilyMember }) => (
-    <Card style={styles.memberCard}>
-      <View style={styles.memberContent}>
-        <View style={styles.memberAvatar}>
-          <Ionicons name="person" size={24} color={Colors.primary} />
-        </View>
-        <View style={styles.memberInfo}>
-          <Text style={styles.memberName}>{item.name}</Text>
-          <Text style={styles.memberRelation}>{item.relationship}</Text>
-          <Text style={styles.memberIC}>IC: {item.icNumber}</Text>
-          {item.phone && (
-            <Text style={styles.memberPhone}>{item.phone}</Text>
-          )}
-        </View>
-        <View style={styles.memberActions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('AddEditFamilyMember', { memberId: item.id })}
-          >
-            <Ionicons name="pencil" size={18} color={Colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleDelete(item.id)}
-          >
-            <Ionicons name="trash-outline" size={18} color={Colors.error} />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Card>
-  );
+  useFocusEffect(useCallback(() => { load(); }, []));
+
+  const toggleExpand = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const formatBirthday = (dob?: string) =>
+    dob ? dayjs(dob).format('DD MMM YYYY') : '';
+
+  const formatMobile = (countryCode?: string, mobile?: string) => {
+    if (!mobile) return '';
+    const clean = mobile.replace(/^[0+\s]+/, '');
+    if (countryCode) {
+      if (clean.startsWith(countryCode)) return `+${clean}`;
+      return `+${countryCode}${clean}`;
+    }
+    return mobile;
+  };
+
+  const getCardTitle = (item: FamilyMember) => {
+    const rel = item.relationship
+      ? item.relationship.charAt(0).toUpperCase() + item.relationship.slice(1)
+      : '';
+    const name = item.name
+      ? item.name.length > 30
+        ? item.name.slice(0, 30) + '...'
+        : item.name
+      : '';
+    return rel ? `${name} - ${rel}` : name || 'Family Member';
+  };
+
+  const handleSelect = (item: FamilyMember) => {
+    navigation.navigate('MembershipPurchaseConfirm', {
+      membershipId: membershipId || '',
+      addedNominee: item,
+    });
+  };
+
+  const title = fromNominee ? 'Select Nominee' : 'Family Members';
 
   return (
     <View style={styles.container}>
-      <Header
-        title={t('membership.familyMembers')}
-        showBack
-        rightIcon="add"
-        onRightPress={() => navigation.navigate('AddEditFamilyMember', {})}
-      />
+      {/* Header */}
+      <Header title={title} showBack />
 
-      <FlatList
-        data={familyMembers}
-        keyExtractor={(item) => item.id}
-        renderItem={renderMember}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <EmptyState
-            icon="people-outline"
-            title={t('membership.noFamilyMembers')}
-            description={t('membership.noFamilyMembersDescription')}
-            actionLabel={t('membership.addFamilyMember')}
-            onAction={() => navigation.navigate('AddEditFamilyMember', {})}
-          />
-        }
-        ListFooterComponent={
-          familyMembers.length > 0 ? (
-            <Button
-              title={t('membership.addFamilyMember')}
-              variant="outline"
-              icon="add"
-              onPress={() => navigation.navigate('AddEditFamilyMember', {})}
-              style={styles.addButton}
-            />
-          ) : null
-        }
-      />
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#FDB813" />
+        </View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 24,
+            paddingBottom: insets.bottom + 24,
+            gap: 20,
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          {list.length === 0 ? (
+            <View style={styles.empty}>
+              <Ionicons name="people-outline" size={48} color="#C0C0C0" />
+              <Text style={styles.emptyText}>No family members found.</Text>
+              {fromNominee && (
+                <Text style={styles.emptySubText}>
+                  Add family members from your Profile first, then come back here to select nominees.
+                </Text>
+              )}
+            </View>
+          ) : (
+            list.map((item) => {
+              const expanded = expandedIds.has(item.id);
+              const isMalaysian =
+                !item.nationality ||
+                item.nationality === 'Malaysian' ||
+                item.nationality === 'Malaysia';
+
+              return (
+                <View key={item.id} style={styles.card}>
+                  {/* Card header row */}
+                  <TouchableOpacity
+                    style={styles.cardHeader}
+                    onPress={() => toggleExpand(item.id)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.cardTitle}>{getCardTitle(item)}</Text>
+                    <View style={styles.cardHeaderRight}>
+                      {fromNominee ? (
+                        <TouchableOpacity
+                          style={styles.selectBtn}
+                          onPress={() => handleSelect(item)}
+                          activeOpacity={0.85}
+                        >
+                          <Text style={styles.selectBtnText}>Select</Text>
+                        </TouchableOpacity>
+                      ) : (
+                        <TouchableOpacity
+                          style={styles.editBtn}
+                          onPress={() => navigation.navigate('AddEditFamilyMember', { memberId: item.id })}
+                          activeOpacity={0.85}
+                        >
+                          <Text style={styles.editBtnText}>Edit</Text>
+                        </TouchableOpacity>
+                      )}
+                      <Ionicons
+                        name={expanded ? 'chevron-up' : 'chevron-down'}
+                        size={16}
+                        color="#808080"
+                        style={{ marginLeft: fromNominee ? 8 : 0 }}
+                      />
+                    </View>
+                  </TouchableOpacity>
+
+                  {/* Expandable detail rows */}
+                  {expanded && (
+                    <View style={styles.cardBody}>
+                      <InfoRow label="Name" value={item.name} />
+                      <View style={styles.divider} />
+                      {isMalaysian ? (
+                        <>
+                          <InfoRow label="NRIC" value={item.idNumber} />
+                          <View style={styles.divider} />
+                        </>
+                      ) : (
+                        <>
+                          <InfoRow label="Passport" value={item.passportNumber} />
+                          <View style={styles.divider} />
+                        </>
+                      )}
+                      <InfoRow
+                        label="Relationship"
+                        value={
+                          item.relationship
+                            ? item.relationship.charAt(0).toUpperCase() +
+                              item.relationship.slice(1)
+                            : ''
+                        }
+                      />
+                      <View style={styles.divider} />
+                      <InfoRow label="Nationality" value={item.nationality} />
+                      <View style={styles.divider} />
+                      <InfoRow label="Date of Birth" value={formatBirthday(item.birthday)} />
+                      <View style={styles.divider} />
+                      <InfoRow
+                        label="Mobile"
+                        value={formatMobile(item.countryCode, item.mobile)}
+                      />
+                    </View>
+                  )}
+                </View>
+              );
+            })
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.backgroundGrey,
-  },
+  container: { flex: 1, backgroundColor: '#fdfdfd' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
-  listContent: {
-    padding: Spacing.base,
-    flexGrow: 1,
+  // Card
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 2,
   },
-
-  memberCard: {
-    marginBottom: Spacing.sm,
-  },
-
-  memberContent: {
+  cardHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-
-  memberAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.primaryLight,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Spacing.md,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  cardTitle: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: FontFamily.bold,
+    fontWeight: '700',
+    color: '#343434',
+  },
+  cardHeaderRight: { flexDirection: 'row', alignItems: 'center', marginLeft: 8 },
+  cardBody: { paddingHorizontal: 16, paddingBottom: 12 },
+
+  // Select button (nominee mode)
+  selectBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    backgroundColor: '#FDB813',
+    borderRadius: 20,
+  },
+  selectBtnText: {
+    fontSize: 12,
+    fontFamily: FontFamily.bold,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 
-  memberInfo: {
+  // Edit button (normal mode) — matches HomeAssetListScreen
+  editBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: '#FDB813',
+    borderRadius: 20,
+  },
+  editBtnText: {
+    fontSize: 13,
+    color: '#FDB813',
+    fontWeight: '600',
+  },
+
+  // Info rows
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+  },
+  infoLabel: {
+    fontSize: 12,
+    color: '#808080',
+    fontFamily: FontFamily.regular,
     flex: 1,
   },
-
-  memberName: {
-    fontSize: Typography.size.base,
-    fontWeight: Typography.weight.semiBold,
-    color: Colors.textPrimary,
+  infoValue: {
+    fontSize: 12,
+    color: '#343434',
+    fontFamily: FontFamily.regular,
+    flex: 1.5,
+    textAlign: 'right',
   },
+  divider: { height: 0.5, backgroundColor: '#E0E0E0' },
 
-  memberRelation: {
-    fontSize: Typography.size.sm,
-    color: Colors.primary,
-    marginBottom: Spacing.xs,
+  // Empty state
+  empty: { marginTop: 60, alignItems: 'center', paddingHorizontal: 32 },
+  emptyText: {
+    fontSize: 16,
+    color: '#808080',
+    fontFamily: FontFamily.regular,
+    marginTop: 12,
+    textAlign: 'center',
   },
-
-  memberIC: {
-    fontSize: Typography.size.xs,
-    color: Colors.textSecondary,
-  },
-
-  memberPhone: {
-    fontSize: Typography.size.xs,
-    color: Colors.textSecondary,
-  },
-
-  memberActions: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-
-  actionButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.backgroundGrey,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  addButton: {
-    marginTop: Spacing.md,
+  emptySubText: {
+    fontSize: 13,
+    color: '#B0B0B0',
+    fontFamily: FontFamily.regular,
+    marginTop: 8,
+    textAlign: 'center',
+    lineHeight: 18,
   },
 });

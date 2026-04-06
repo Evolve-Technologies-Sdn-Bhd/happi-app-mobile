@@ -24,6 +24,7 @@ export interface User {
 interface AuthState {
   // State
   isAuthenticated: boolean;
+  isGuestMode: boolean;
   isLoading: boolean;
   user: User | null;
   token: string | null;
@@ -35,11 +36,13 @@ interface AuthState {
   logout: () => Promise<void>;
   checkAuth: () => Promise<boolean>;
   setLoading: (loading: boolean) => void;
+  setGuestMode: (isGuest: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   // Initial state
   isAuthenticated: false,
+  isGuestMode: false,
   isLoading: true,
   user: null,
   token: null,
@@ -78,12 +81,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   
   // Logout
   logout: async () => {
+    // Only remove auth-specific keys — keep PRIVACY_AGREED and ONBOARDING_COMPLETED
+    // so the user doesn't see the privacy notice or onboarding again after logout
     await storage.remove(StorageKeys.AUTH_TOKEN);
     await storage.remove(StorageKeys.REFRESH_TOKEN);
     await storage.remove(StorageKeys.USER_DATA);
     
     set({
       isAuthenticated: false,
+      isGuestMode: false,
       user: null,
       token: null,
       isLoading: false,
@@ -118,5 +124,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   
   // Set loading state
+  
+  // Set guest mode (allow browsing without login)
+  setGuestMode: (isGuest) => set({ isGuestMode: isGuest, isLoading: false }),
   setLoading: (loading) => set({ isLoading: loading }),
 }));

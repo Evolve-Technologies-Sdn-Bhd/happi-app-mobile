@@ -17,11 +17,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  StatusBar,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
-import { HomeStackParamList } from '../../../app/navigation/types';
+import { RootStackParamList } from '../../../app/navigation/types';
 import {
   initChat,
   getChatMsgList,
@@ -30,8 +33,8 @@ import {
 } from '../../../api/msg';
 import { useUserStore } from '../../../store/userStore';
 
-type AIChatScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'AIChat'>;
-type AIChatScreenRouteProp = RouteProp<HomeStackParamList, 'AIChat'>;
+type AIChatScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AIChat'>;
+type AIChatScreenRouteProp = RouteProp<RootStackParamList, 'AIChat'>;
 
 interface IProps {
   navigation: AIChatScreenNavigationProp;
@@ -51,6 +54,96 @@ interface IAIContent {
   imageUrl?: string;
 }
 
+// ─── Topic tree (mirrors Vue `topics` data) ────────────────────────────────
+
+interface ITopic {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  intro: string;
+  questions: string[];
+}
+
+const TOPICS: Record<string, ITopic> = {
+  membership: {
+    icon: 'star',
+    label: 'Membership',
+    intro: "Here's what you can explore about HAPPI membership 👇",
+    questions: [
+      'What is HAPPI membership?',
+      'What benefits do I get as a HAPPI member?',
+      'How do I renew my membership?',
+      'What happens if my membership expires or is cancelled?',
+      'Can I upgrade or change my membership plan?',
+      'Other membership questions',
+    ],
+  },
+  insurance: {
+    icon: 'document-text',
+    label: 'Insurance',
+    intro: 'Here are some common questions about insurance on HAPPI 👇',
+    questions: [
+      'What insurance products are available on HAPPI?',
+      'How do I view my insurance coverage in the app?',
+      'Are digital insurance policies legally valid?',
+      'How do I make or check an insurance claim?',
+      'What happens if an insurer rejects my claim?',
+      'Other insurance questions',
+    ],
+  },
+  happicoins: {
+    icon: 'cash',
+    label: 'HAPPIcoin',
+    intro: "Here's what you can learn about HAPPIcoins 👇",
+    questions: [
+      'What are HAPPIcoins?',
+      'How do I earn HAPPIcoins?',
+      'Where can I check my HAPPIcoin balance and history?',
+      'Do HAPPIcoins expire?',
+      'Can HAPPIcoins be used to pay for insurance?',
+      'Other HAPPIcoin questions',
+    ],
+  },
+  merchant: {
+    icon: 'storefront',
+    label: 'HAPPI Merchant',
+    intro: 'Here are some common questions about HAPPI merchants and redemptions 👇',
+    questions: [
+      'How do I find merchants that accept HAPPIcoins?',
+      'How do I redeem a voucher with a merchant?',
+      'What if a merchant refuses to accept my voucher?',
+      'Are offline redemptions supported?',
+      'Do different vouchers require different coin amounts?',
+      'Other merchant questions',
+    ],
+  },
+  services: {
+    icon: 'construct',
+    label: 'HAPPI Services',
+    intro: "Here's what you can find out about HAPPI services 👇",
+    questions: [
+      'What are HAPPI Services?',
+      'How do I access services through HAPPI?',
+      'What should I do if there is an issue with a service?',
+      'Are services refundable or reversible?',
+      'Who should I contact for service-related support?',
+      'Other service questions',
+    ],
+  },
+  support: {
+    icon: 'chatbubbles',
+    label: 'Help & Support',
+    intro: "I'm here to help. Choose a topic below or ask me anything 👇",
+    questions: [
+      'How do I contact HAPPI customer support?',
+      "What should I do if I can't log into my account?",
+      'What should I do if my coins or rewards are not reflected?',
+      'How do I report an app issue or bug?',
+      'How do I submit feedback or suggestions?',
+      'Other questions',
+    ],
+  },
+};
+
 const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
   const userInfo = useUserStore((state) => state.info);
   const [messageInput, setMessageInput] = useState('');
@@ -59,7 +152,25 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
   const [isSending, setIsSending] = useState(false);
   const [groupId, setGroupId] = useState<string | null>(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [activeTopic, setActiveTopic] = useState<string | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(true);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+
+  // Keyboard listeners
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   // Initialize chat session
   useEffect(() => {
@@ -93,7 +204,7 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
           senderId: msg.senderId,
           type: msg.type,
           content: msg.content,
-          ts: new Date(msg.createTime).getTime(),
+          ts: !isNaN(Number(msg.createTime)) ? Number(msg.createTime) : new Date(msg.createTime).getTime(),
         }));
         setMessages(convertedMessages);
       }
@@ -110,6 +221,8 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
       setMessageInput('');
     }
     setIsSending(true);
+    setShowSuggestions(false);
+    setActiveTopic(null);
 
     // Add user message
     const userMsg: IMessage = {
@@ -152,7 +265,7 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
                 imageUrl: res.data.imageUrl,
               })
             : res.data.content,
-          ts: res.data.timestamp || Date.now(),
+          ts: Number(res.data.timestamp) || Date.now(),
         };
         setMessages((prev) => [...prev, aiMsg]);
       } else {
@@ -193,6 +306,13 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
     } catch (error) {
       console.error('Clear chat error:', error);
     }
+  };
+
+  const selectTopic = (key: string) => setActiveTopic(key);
+
+  const sendQuickMessage = (content: string) => {
+    setActiveTopic(null);
+    sendMessage(content);
   };
 
   const parseAIContent = (content: string): IAIContent => {
@@ -244,6 +364,8 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
 
   // Render welcome screen when no messages
   const renderWelcomeScreen = () => {
+    const topic = activeTopic ? TOPICS[activeTopic] : null;
+
     return (
       <View style={styles.welcomeSection}>
         <Image
@@ -251,53 +373,60 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
           style={styles.welcomeAvatar}
         />
         <Text style={styles.welcomeTitle}>Hi! I'm Creamy 👋</Text>
-        <Text style={styles.welcomeSubtitle}>Your HAPPI Insurance Assistant</Text>
-        <Text style={styles.welcomeDesc}>
-          I can help you with insurance plans, HAPPICoins, rewards, and more!
-        </Text>
+        <Text style={styles.welcomeSubtitle}>Your HAPPI Assistant</Text>
 
-        {/* Quick Action Buttons */}
-        <View style={styles.quickActions}>
-          <TouchableOpacity
-            style={styles.quickBtn}
-            onPress={() => sendMessage('What insurance plans do you offer?')}
-          >
-            <View style={styles.iconWrapper}>
-              <Text style={styles.iconText}>📄</Text>
-            </View>
-            <Text style={styles.quickBtnText}>Insurance Plans</Text>
-          </TouchableOpacity>
+        {!topic ? (
+          /* ── Level 1: Topic picker ── */
+          <>
+            <Text style={styles.welcomeDesc}>I'm here to help you with</Text>
+            <Text style={styles.welcomeDesc}>memberships, insurance, rewards,</Text>
+            <Text style={styles.welcomeDesc}>and everyday HAPPI questions.</Text>
 
-          <TouchableOpacity
-            style={styles.quickBtn}
-            onPress={() => sendMessage('How do I earn HAPPICoins?')}
-          >
-            <View style={styles.iconWrapper}>
-              <Text style={styles.iconText}>$</Text>
+            <View style={styles.quickActions}>
+              {Object.entries(TOPICS).map(([key, t]) => (
+                <TouchableOpacity
+                  key={key}
+                  style={styles.quickBtn}
+                  activeOpacity={0.8}
+                  onPress={() => selectTopic(key)}
+                >
+                  <View style={styles.iconWrapper}>
+                    <Ionicons name={t.icon} size={28} color="#704214" />
+                  </View>
+                  <Text style={styles.quickBtnText}>{t.label}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
-            <Text style={styles.quickBtnText}>HAPPICoins</Text>
-          </TouchableOpacity>
+          </>
+        ) : (
+          /* ── Level 2: Sub-questions for selected topic ── */
+          <>
+            <TouchableOpacity
+              style={styles.topicBack}
+              onPress={() => setActiveTopic(null)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="arrow-back" size={16} color="#704214" />
+              <Text style={styles.topicBackText}>Back</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.quickBtn}
-            onPress={() => sendMessage('What membership benefits are available?')}
-          >
-            <View style={styles.iconWrapper}>
-              <Text style={styles.iconText}>⭐</Text>
-            </View>
-            <Text style={styles.quickBtnText}>Membership</Text>
-          </TouchableOpacity>
+            <Text style={styles.topicIntro}>{topic.intro}</Text>
 
-          <TouchableOpacity
-            style={styles.quickBtn}
-            onPress={() => sendMessage('How do I make a claim?')}
-          >
-            <View style={styles.iconWrapper}>
-              <Text style={styles.iconText}>💬</Text>
+            <View style={styles.subQuestions}>
+              {topic.questions.map((q, qi) => (
+                <TouchableOpacity
+                  key={qi}
+                  style={styles.subQuestionBtn}
+                  onPress={() => sendQuickMessage(q)}
+                  activeOpacity={0.75}
+                >
+                  <Text style={styles.subQuestionText}>{q}</Text>
+                  <Ionicons name="arrow-forward" size={14} color="#704214" />
+                </TouchableOpacity>
+              ))}
             </View>
-            <Text style={styles.quickBtnText}>Chat with AI</Text>
-          </TouchableOpacity>
-        </View>
+          </>
+        )}
       </View>
     );
   };
@@ -363,11 +492,12 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#FDB813" />
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={keyboardVisible ? 0 : -50}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -406,7 +536,7 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
         {showMenu && (
           <View style={styles.menuPopup}>
             <TouchableOpacity style={styles.menuItem} onPress={handleClearChat}>
-              <Text style={styles.menuItemText}>🔄 Start Fresh</Text>
+              <Text style={styles.menuItemText}>Refresh</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.menuItem} onPress={() => setShowMenu(false)}>
               <Text style={styles.menuItemText}>✕ Close</Text>
@@ -447,6 +577,19 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
           </ScrollView>
         </ImageBackground>
 
+        {/* Quick Suggestions bar (shown after first message) */}
+        {messages.length > 0 && showSuggestions && (
+          <View style={styles.suggestionsBar}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.suggestionsContent}>
+              {['Tell me more', 'What are the prices?', 'How to purchase?'].map((s) => (
+                <TouchableOpacity key={s} style={styles.suggestionChip} onPress={() => sendQuickMessage(s)} activeOpacity={0.75}>
+                  <Text style={styles.suggestionChipText}>{s}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
         {/* Input Area */}
         <View style={styles.inputArea}>
           <View style={styles.inputContainer}>
@@ -477,7 +620,7 @@ const AIChatScreen: React.FC<IProps> = ({ navigation, route }) => {
           </View>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -491,7 +634,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 50,
+    paddingBottom: 16,
     backgroundColor: '#FDB813',
   },
   headerButton: {
@@ -501,7 +645,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backIcon: {
-    fontSize: 24,
+    fontSize: 28,
+    fontWeight: 'bold',
     color: '#FFFFFF',
   },
   menuIcon: {
@@ -602,10 +747,10 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   welcomeDesc: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#666666',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
     maxWidth: 280,
   },
   quickActions: {
@@ -618,42 +763,106 @@ const styles = StyleSheet.create({
     maxWidth: 320,
   },
   quickBtn: {
-    width: '48%',
+    width: '44%',
     borderRadius: 16,
-    padding: 18,
+    padding: 16,
     alignItems: 'center',
-    backgroundColor: '#FBE487',
-    shadowColor: '#FDB813',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 4,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   iconWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#FFF8E6',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  iconText: {
-    fontSize: 25,
   },
   quickBtnText: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#343434',
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+  },
+
+  // ── Topic sub-questions ──
+  topicBack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 8,
+    marginBottom: 12,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 4,
+  },
+  topicBackText: {
+    fontSize: 14,
+    color: '#704214',
+    fontWeight: '600',
+  },
+  topicIntro: {
+    fontSize: 13,
+    color: '#666666',
+    textAlign: 'center',
+    marginBottom: 14,
+    lineHeight: 20,
+    maxWidth: 300,
+  },
+  subQuestions: {
+    width: '100%',
+    maxWidth: 320,
+    gap: 8,
+  },
+  subQuestionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  subQuestionText: {
+    fontSize: 13,
+    color: '#343434',
+    flex: 1,
+    marginRight: 8,
+  },
+
+  // ── Suggestions bar ──
+  suggestionsBar: {
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    paddingVertical: 8,
+  },
+  suggestionsContent: {
+    paddingHorizontal: 16,
+    gap: 8,
+    flexDirection: 'row',
+  },
+  suggestionChip: {
+    backgroundColor: '#FFF8E6',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#FDB813',
+  },
+  suggestionChipText: {
+    fontSize: 13,
+    color: '#704214',
+    fontWeight: '500',
   },
   dateSeparator: {
     alignItems: 'center',
