@@ -4,23 +4,36 @@
  */
 
 import React from 'react';
+import { View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { getFocusedRouteNameFromRoute, CommonActions } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import { StackActions } from '@react-navigation/native';
 import { MainTabParamList } from './types';
 import { Colors } from '../../shared/constants/colors';
 import { Typography } from '../../shared/constants/styles';
 
 // Import tab stacks
-import { HomeStack, MembershipStack, ProductStack, ServiceStack } from './stacks';
+import { HomeStack, MembershipStack, ProductStack, ServiceStack, ProfileStack } from './stacks';
+
+// Tab bar SVG icons
+import HomeFill from '../../../assets/svg/tabbar/Home fill.svg';
+import HomeStroke from '../../../assets/svg/tabbar/Home stroke.svg';
+import MembershipFill from '../../../assets/svg/tabbar/Membership fill.svg';
+import MembershipStroke from '../../../assets/svg/tabbar/Membership stroke.svg';
+import ProductFill from '../../../assets/svg/tabbar/Product fill.svg';
+import ProductStroke from '../../../assets/svg/tabbar/Product stroke.svg';
+import ServiceFill from '../../../assets/svg/tabbar/Footer_Service fill.svg';
+import ServiceStroke from '../../../assets/svg/tabbar/Footer_Service.svg';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-const tabIcons: Record<keyof MainTabParamList, { focused: keyof typeof Ionicons.glyphMap; default: keyof typeof Ionicons.glyphMap }> = {
-  Home: { focused: 'home', default: 'home-outline' },
-  Membership: { focused: 'card', default: 'card-outline' },
-  Products: { focused: 'grid', default: 'grid-outline' },
-  Service: { focused: 'briefcase', default: 'briefcase-outline' },
+const TAB_ICON_SIZE = 30;
+
+const tabSvgIcons: Record<keyof MainTabParamList, { Fill: React.FC<any>; Stroke: React.FC<any> }> = {
+  Home: { Fill: HomeFill, Stroke: HomeStroke },
+  Membership: { Fill: MembershipFill, Stroke: MembershipStroke },
+  Products: { Fill: ProductFill, Stroke: ProductStroke },
+  Service: { Fill: ServiceFill, Stroke: ServiceStroke },
 };
 
 export const MainTabs: React.FC = () => {
@@ -28,14 +41,14 @@ export const MainTabs: React.FC = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarIcon: ({ focused, color, size }) => {
-          const icon = tabIcons[route.name];
+        tabBarIcon: ({ focused }) => {
+          const icons = tabSvgIcons[route.name as keyof MainTabParamList];
+          if (!icons) return null;
+          const Icon = focused ? icons.Fill : icons.Stroke;
           return (
-            <Ionicons
-              name={focused ? icon.focused : icon.default}
-              size={size}
-              color={color}
-            />
+            <View style={{ opacity: focused ? 1 : 0.4 }}>
+              <Icon width={TAB_ICON_SIZE} height={TAB_ICON_SIZE} />
+            </View>
           );
         },
         tabBarActiveTintColor: Colors.primary,
@@ -83,29 +96,24 @@ export const MainTabs: React.FC = () => {
         name="Products"
         component={ProductStack}
         options={{ tabBarLabel: 'Products' }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileStack}
-        options={{ tabBarLabel: 'Profile' }}
         listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            e.preventDefault();
+          tabPress: () => {
             const state = navigation.getState();
-            navigation.dispatch(
-              CommonActions.reset({
-                ...state,
-                // Strip the nested state from the Profile route so it resets to ProfileIndex
-                routes: state.routes.map((route) =>
-                  route.name === 'Profile'
-                    ? { name: 'Profile', key: route.key }
-                    : route
-                ),
-                index: state.routes.findIndex((r) => r.name === 'Profile'),
-              })
-            );
+            const productRoute = state.routes.find((r: any) => r.name === 'Products');
+            const stackKey = productRoute?.state?.key;
+            if (stackKey) {
+              navigation.dispatch({
+                ...StackActions.popToTop(),
+                target: stackKey,
+              });
+            }
           },
         })}
+      />
+      <Tab.Screen
+        name="Service"
+        component={ServiceStack}
+        options={{ tabBarLabel: 'Service' }}
       />
     </Tab.Navigator>
   );

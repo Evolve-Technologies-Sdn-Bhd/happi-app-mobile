@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Startup Screen
  * Ported from happi-app-customer/src/views/startup.vue
  * Shows privacy notice on first launch, splash screen if already agreed
@@ -32,6 +32,7 @@ import { useCommonStore } from '../../../store';
 import { useAppStore } from '../../../store/appStore';
 import { useUserStore } from '../../../store';
 import { Config } from '../../../api/client';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Startup'>;
 
@@ -399,13 +400,13 @@ const styles = StyleSheet.create({
   
   logoTextWhite: {
     fontSize: 32,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: Colors.textWhite,
   },
   
   logoTextPrimary: {
     fontSize: 28,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: Colors.primary,
   },
   
@@ -426,7 +427,7 @@ const styles = StyleSheet.create({
   
   title: {
     fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: Colors.textPrimary,
     marginBottom: Spacing.lg,
   },
@@ -445,7 +446,7 @@ const styles = StyleSheet.create({
   policyLink: {
     fontSize: Typography.size.sm,
     color: Colors.primary,
-    fontWeight: Typography.weight.semiBold as any,
+    fontFamily: FontFamily.medium, fontWeight: '600',
     marginTop: Spacing.sm,
     marginBottom: Spacing.xl,
   },

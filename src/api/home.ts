@@ -5,9 +5,14 @@ import { httpRequest } from './client';
 
 export interface Home {
   id: string;
-  address: string;
+  name?: string;
+  category?: string;
+  address?: string;
+  address1?: string;
+  address2?: string;
   city?: string;
   state?: string;
+  stateName?: string;
   postcode?: string;
   country?: string;
   isDefault?: boolean;

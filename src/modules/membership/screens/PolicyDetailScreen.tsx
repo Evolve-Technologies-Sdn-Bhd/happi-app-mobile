@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Policy Detail Screen
  * View detailed policy information
  */
@@ -19,6 +19,7 @@ import { Header, Card, Button } from '../../../shared/components';
 import { Colors } from '../../../shared/constants/colors';
 import { Spacing, Typography, BorderRadius, Shadows } from '../../../shared/constants/styles';
 import { formatCurrency, formatDate } from '../../../shared/utils/formatting';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type RouteProps = RouteProp<MembershipStackParamList, 'PolicyDetail'>;
 
@@ -241,13 +242,13 @@ const styles = StyleSheet.create({
 
   statusText: {
     fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.medium,
+    fontFamily: FontFamily.medium, fontWeight: '500',
     color: Colors.success,
   },
 
   productName: {
     fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: Colors.textPrimary,
     textAlign: 'center',
     marginBottom: 4,
@@ -274,7 +275,7 @@ const styles = StyleSheet.create({
 
   policyNumberValue: {
     fontSize: Typography.size.base,
-    fontWeight: Typography.weight.semiBold,
+    fontFamily: FontFamily.medium, fontWeight: '600',
     color: Colors.textPrimary,
   },
 
@@ -284,7 +285,7 @@ const styles = StyleSheet.create({
 
   sectionTitle: {
     fontSize: Typography.size.base,
-    fontWeight: Typography.weight.semiBold,
+    fontFamily: FontFamily.medium, fontWeight: '600',
     color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
@@ -304,13 +305,13 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: Typography.size.sm,
     color: Colors.textPrimary,
-    fontWeight: Typography.weight.medium,
+    fontFamily: FontFamily.medium, fontWeight: '500',
   },
 
   infoValueBold: {
     fontSize: Typography.size.lg,
     color: Colors.primary,
-    fontWeight: Typography.weight.bold,
+    fontFamily: FontFamily.bold, fontWeight: '700',
   },
 
   divider: {
@@ -334,7 +335,7 @@ const styles = StyleSheet.create({
 
   benefitAmount: {
     fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semiBold,
+    fontFamily: FontFamily.medium, fontWeight: '600',
     color: Colors.textPrimary,
   },
 
@@ -360,7 +361,7 @@ const styles = StyleSheet.create({
 
   nomineeName: {
     fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.medium,
+    fontFamily: FontFamily.medium, fontWeight: '500',
     color: Colors.textPrimary,
   },
 
@@ -371,7 +372,7 @@ const styles = StyleSheet.create({
 
   nomineePercentage: {
     fontSize: Typography.size.base,
-    fontWeight: Typography.weight.semiBold,
+    fontFamily: FontFamily.medium, fontWeight: '600',
     color: Colors.primary,
   },
 

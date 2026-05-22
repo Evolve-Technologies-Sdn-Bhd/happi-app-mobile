@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Family List Screen
  * Mirrors happi-app-customer/src/views/profile/family-assets/family/index.vue
  */
@@ -20,6 +20,7 @@ import dayjs from 'dayjs';
 import { Header } from '../../../shared/components';
 import { ProfileStackParamList } from '../../../app/navigation/types';
 import { getFamilyMemberList, FamilyMember } from '../../../api/family';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type NavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
 
@@ -214,6 +215,7 @@ const styles = StyleSheet.create({
 
   cardTitle: {
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
     color: '#333333',
     flex: 1,
@@ -256,6 +258,7 @@ const styles = StyleSheet.create({
   infoValue: {
     flex: 1,
     fontSize: 14,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#808080',
     textAlign: 'right',
@@ -277,6 +280,7 @@ const styles = StyleSheet.create({
 
   addBtnText: {
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
     color: '#ffffff',
   },

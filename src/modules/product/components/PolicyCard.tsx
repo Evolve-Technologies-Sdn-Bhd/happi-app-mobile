@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Insurance Policy Card Component
  * Displays individual policy card with all details
  * Includes animations for smooth transitions
@@ -206,6 +206,7 @@ const styles = StyleSheet.create({
     color: '#343434',
     fontFamily: FontFamily.bold,
     fontSize: 18,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     lineHeight: 22,
     maxWidth: 220,
@@ -215,6 +216,7 @@ const styles = StyleSheet.create({
     color: '#343434',
     fontFamily: FontFamily.bold,
     fontSize: 13,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     lineHeight: 16,
     marginTop: 8,
@@ -228,6 +230,7 @@ const styles = StyleSheet.create({
     color: '#343434',
     fontFamily: FontFamily.bold,
     fontSize: 15,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     lineHeight: 18,
   },
@@ -243,6 +246,7 @@ const styles = StyleSheet.create({
     color: '#666666',
     fontFamily: FontFamily.bold,
     fontSize: 14,
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
     zIndex: 10,
   },

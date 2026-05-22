@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Sign In Screen
  * Ported from happi-app-customer/src/views/public/sign-in/index.vue
  * User login with phone and password, with sliding panel design
@@ -36,6 +36,7 @@ import { Spacing, Typography } from '../../../shared/constants/styles';
 import { useUserStore } from '../../../store';
 import { useAuthStore } from '../../../store/authStore';
 import { Config } from '../../../api/client';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, 'SignIn'>;
 type RoutePropType = RouteProp<AuthStackParamList, 'SignIn'>;
@@ -525,6 +526,7 @@ const styles = StyleSheet.create({
   
   countryCode: {
     fontSize: 18,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#FDB813',
   },
@@ -532,6 +534,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 18,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#808080',
     paddingVertical: 0,
@@ -567,6 +570,7 @@ const styles = StyleSheet.create({
   
   signInButtonText: {
     fontSize: 20,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#FFFFFF',
   },
@@ -584,12 +588,14 @@ const styles = StyleSheet.create({
   
   linkText: {
     fontSize: 20,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#FDB813',
   },
   
   linkTextSecondary: {
     fontSize: 18,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#808080',
   },

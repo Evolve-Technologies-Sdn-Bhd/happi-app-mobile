@@ -27,6 +27,9 @@ export type RootStackParamList = {
   
   // Voucher (full-screen stack)
   Voucher: { screen?: string } | undefined;
+
+  // Profile (accessed from Home, not a tab)
+  Profile: undefined;
 };
 
 export type AuthStackParamList = {
@@ -74,9 +77,26 @@ export type MembershipStackParamList = {
 };
 
 export type ProductStackParamList = {
-  ProductIndex: undefined;
+  ProductIndex: { goToPlans?: boolean } | undefined;
   ProductDetail: { productId: string };
+  PurchaseDetail: { productId: string; categoryCode: string; companyId: string };
+  PurchaseStep1: { productId: string; categoryCode: string; companyId: string };
+  PurchaseStep2: { productId: string; categoryCode: string; companyId: string; employmentLocation: number };
+  PurchaseStep3: { productId: string; categoryCode: string; companyId: string; employmentLocation: number };
+  HomeStep2: { productId: string; categoryCode: string; companyId: string; isDamage: number; damageDetail: string };
+  HomeStep3: { productId: string; categoryCode: string; companyId: string; isDamage: number; damageDetail: string; articles: string };
+  HomeSelect: { productId: string; categoryCode: string; companyId: string; isDamage: number; damageDetail: string; articles: string };
+  HomeStep4: { productId: string; categoryCode: string; companyId: string; isDamage: number; damageDetail: string; articles: string; targetHome: string };
+  HomeStep5: { productId: string; categoryCode: string; companyId: string; isDamage: number; damageDetail: string; articles: string; targetHome: string };
+  // Travel
+  TravelStep2: { productId: string; categoryCode: string; companyId: string; tripType: number; coverageType: number; adultCount: number; childCount: number; country: string; zone: string; departDate: string; returnDate: string; addonChecked: boolean; families?: string; addedFamily?: string };
+  TravelFamilySelect: { productId: string; categoryCode: string; companyId: string; tripType: number; coverageType: number; adultCount: number; childCount: number; country: string; zone: string; departDate: string; returnDate: string; addonChecked: boolean; families: string };
+  TravelStep3: { productId: string; categoryCode: string; companyId: string; tripType: number; coverageType: number; adultCount: number; childCount: number; country: string; zone: string; departDate: string; returnDate: string; addonChecked: boolean; families: string };
+  TravelPlanSelect: { productId: string; categoryCode: string; companyId: string; tripType: number; coverageType: number; adultCount: number; childCount: number; country: string; zone: string; departDate: string; returnDate: string; addonChecked: boolean; families: string; offers: string; quoteId: string; quoteStartDate: string; quoteEndDate: string; quoteRegionCode: string };
+  TravelStep4: { productId: string; categoryCode: string; companyId: string; tripType: number; coverageType: number; adultCount: number; childCount: number; country: string; zone: string; departDate: string; returnDate: string; addonChecked: boolean; families: string; offers: string; quoteId: string; quoteStartDate: string; quoteEndDate: string; quoteRegionCode: string; planCode: string; quoteData: string };
+  TravelStep5: { productId: string; categoryCode: string; companyId: string; tripType: number; coverageType: number; adultCount: number; childCount: number; country: string; zone: string; departDate: string; returnDate: string; addonChecked: boolean; families: string; offers: string; quoteId: string; quoteStartDate: string; quoteEndDate: string; quoteRegionCode: string; planCode: string; quoteData: string };
   InsurancePlans: { tabCode?: number; categoryId?: string };
+  PolicyDetail: { policyId: string };
 };
 
 export type ServiceStackParamList = {

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Header Component
  * Custom navigation header matching original app style
  */
@@ -15,7 +15,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { FontFamily } from '../../constants/fonts';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 const navBarBg = require('../../../../assets/images/nav-header-bg.png');
 

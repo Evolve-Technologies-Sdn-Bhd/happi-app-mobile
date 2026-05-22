@@ -32,9 +32,11 @@ export interface City {
 
 export interface Faq {
   id: string;
-  question: string;
-  answer: string;
-  sort: number;
+  question?: string;
+  answer?: string;
+  name?: string;
+  value?: string;
+  sort?: number;
 }
 
 export interface Tac {

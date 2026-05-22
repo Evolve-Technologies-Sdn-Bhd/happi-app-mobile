@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Nominees Screen
  * Manage policy nominees
  */
@@ -20,6 +20,7 @@ import { MembershipStackParamList } from '../../../app/navigation/types';
 import { Header, Card, Button, EmptyState } from '../../../shared/components';
 import { Colors } from '../../../shared/constants/colors';
 import { Spacing, Typography, BorderRadius } from '../../../shared/constants/styles';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type NavigationProp = NativeStackNavigationProp<MembershipStackParamList, 'Nominees'>;
 
@@ -198,7 +199,7 @@ const styles = StyleSheet.create({
 
   percentageBannerText: {
     fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.medium,
+    fontFamily: FontFamily.medium, fontWeight: '500',
     flex: 1,
   },
 
@@ -232,7 +233,7 @@ const styles = StyleSheet.create({
 
   nomineeName: {
     fontSize: Typography.size.base,
-    fontWeight: Typography.weight.semiBold,
+    fontFamily: FontFamily.medium, fontWeight: '600',
     color: Colors.textPrimary,
   },
 
@@ -261,7 +262,7 @@ const styles = StyleSheet.create({
 
   percentageText: {
     fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.bold,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: Colors.textWhite,
   },
 

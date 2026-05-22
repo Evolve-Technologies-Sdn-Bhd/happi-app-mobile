@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Profile Index Screen
  * UI matches happi-app-customer/src/views/profile/index.vue
  */
@@ -10,7 +10,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
+  Modal,
   Image,
   ImageBackground,
   Clipboard,
@@ -24,11 +24,14 @@ import { ProfileStackParamList } from '../../../app/navigation/types';
 import { useAuthStore } from '../../../store/authStore';
 import { useUserStore } from '../../../store/userStore';
 import { getOssImg } from '../../../api';
+import { Toast } from '../../../shared/components';
+import { useToast } from '../../../shared/hooks/useToast';
 
 // SVG icons
 import AIIconSvg from '../../../../assets/images/profile/profile-ai-icon.svg';
 import NotifDotSvg from '../../../../assets/images/profile/profile-notification-dot.svg';
 import NotifIconSvg from '../../../../assets/images/profile/profile-notification-icon.svg';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 // PNG assets
 const imgBg        = require('../../../../assets/images/profile/profile-header-bg.png');
@@ -52,6 +55,8 @@ export const ProfileIndexScreen: React.FC = () => {
   const logoutAction = useUserStore((state) => state.logoutAction);
   const getUserInfoAction = useUserStore((state) => state.getUserInfoAction);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { toast, showToast, hideToast } = useToast();
 
   // Display name – matches Vue displayName computed
   const displayName = useMemo(() => {
@@ -84,22 +89,18 @@ export const ProfileIndexScreen: React.FC = () => {
   );
 
   const handleLogout = () => {
-    Alert.alert('Reminder', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: async () => {
-          logoutAction();
-          await logout();
-        },
-      },
-    ]);
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
+    setShowLogoutModal(false);
+    logoutAction();
+    await logout();
   };
 
   const copyText = (text: string) => {
     Clipboard.setString(text);
-    Alert.alert('Copied', '');
+    showToast('Copied!', 'success');
   };
 
   const menuRows = [
@@ -113,7 +114,7 @@ export const ProfileIndexScreen: React.FC = () => {
       icon: imgInsurance,
       iconStyle: styles.img8,
       label: 'Insurance Management',
-      onPress: () => navigation.getParent()?.navigate('Products' as never),
+      onPress: () => (navigation.getParent() as any)?.navigate('Main', { screen: 'Products' }),
     },
     {
       icon: imgPrivacy,
@@ -213,7 +214,7 @@ export const ProfileIndexScreen: React.FC = () => {
           {!isMember && (
             <TouchableOpacity
               style={styles.textWrapper}
-              onPress={() => navigation.getParent()?.navigate('Membership' as never)}
+              onPress={() => (navigation.getParent() as any)?.navigate('Main', { screen: 'Membership' })}
             >
               <Text style={styles.text4}>Be a member</Text>
             </TouchableOpacity>
@@ -261,6 +262,44 @@ export const ProfileIndexScreen: React.FC = () => {
 
         <View style={{ height: insets.bottom + 20 }} />
       </ScrollView>
+
+      {/* Logout confirmation modal */}
+      <Modal
+        visible={showLogoutModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowLogoutModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Log Out</Text>
+            <Text style={styles.modalMessage}>Are you sure you want to log out?</Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setShowLogoutModal(false)}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalLogoutBtn}
+                onPress={confirmLogout}
+              >
+                <Text style={styles.modalLogoutText}>Log Out</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        duration={toast.duration}
+        position={toast.position}
+        onHide={hideToast}
+      />
     </View>
   );
 };
@@ -287,6 +326,7 @@ const styles = StyleSheet.create({
   hiddenText: {
     color: '#ffffff',
     fontSize: 15,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     opacity: 0,
   },
@@ -342,6 +382,7 @@ const styles = StyleSheet.create({
   fallbackText: {
     color: '#ffffff',
     fontSize: 48,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
   },
 
@@ -360,6 +401,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     color: '#ffffff',
     fontSize: 25.5,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     textTransform: 'uppercase',
     maxWidth: '90%',
@@ -387,6 +429,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
     color: '#ffffff',
     fontSize: 18.5,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     lineHeight: 20,
   },
@@ -408,6 +451,7 @@ const styles = StyleSheet.create({
 
   text4: {
     color: '#6a3b11',
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     fontSize: 12,
   },
@@ -445,6 +489,7 @@ const styles = StyleSheet.create({
   text5: {
     marginLeft: 18,
     fontSize: 14,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#808080',
     lineHeight: 20,
@@ -453,6 +498,7 @@ const styles = StyleSheet.create({
   text6: {
     marginLeft: 19,
     fontSize: 14,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#808080',
     lineHeight: 20,
@@ -479,6 +525,7 @@ const styles = StyleSheet.create({
 
   logoutText: {
     color: '#6a3b11',
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     fontSize: 14,
   },
@@ -492,6 +539,71 @@ const styles = StyleSheet.create({
   versionText: {
     color: '#b0b0b0',
     fontSize: 12,
+    fontFamily: FontFamily.regular,
     fontWeight: '400',
+  },
+
+  // Logout modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 20,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: FontFamily.bold,
+    fontWeight: '700',
+    color: '#343434',
+    marginBottom: 10,
+  },
+  modalMessage: {
+    fontSize: 14,
+    color: '#808080',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  modalCancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 30,
+    borderWidth: 1.5,
+    borderColor: '#E0E0E0',
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: 14,
+    fontFamily: FontFamily.medium,
+    fontWeight: '600',
+    color: '#808080',
+  },
+  modalLogoutBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 30,
+    backgroundColor: '#f3dbb6',
+    alignItems: 'center',
+  },
+  modalLogoutText: {
+    fontSize: 14,
+    fontFamily: FontFamily.bold,
+    fontWeight: '700',
+    color: '#6a3b11',
   },
 });

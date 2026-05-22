@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Notification Detail Screen
  * Ported from happi-app-customer/src/views/public/notification/detail.vue
  * Header + card layout matches MembershipDetailScreen
@@ -22,6 +22,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '../../../app/navigation/types';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type NotificationDetailNavigationProp = NativeStackNavigationProp<RootStackParamList, 'NotificationDetail'>;
 type NotificationDetailRouteProp = RouteProp<RootStackParamList, 'NotificationDetail'>;
@@ -216,6 +217,7 @@ const styles = StyleSheet.create({
   detailTime: {
     color: '#999999',
     fontSize: 12,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     lineHeight: 16,
     textAlign: 'center',
@@ -230,6 +232,7 @@ const styles = StyleSheet.create({
   detailTitle: {
     color: '#343434',
     fontSize: 18,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     lineHeight: 26,
     textAlign: 'center',
@@ -238,6 +241,7 @@ const styles = StyleSheet.create({
   detailDesc: {
     color: '#4A3F35',
     fontSize: 14,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     lineHeight: 22,
     textAlign: 'center',

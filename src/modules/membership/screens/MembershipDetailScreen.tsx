@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Membership Detail Screen
  * Ported from happi-app-customer/src/views/membership/detail.vue
  */
@@ -370,6 +370,7 @@ const styles = StyleSheet.create({
 
   memberIdLabel: {
     fontSize: 12,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#FFFFFF',
     letterSpacing: 0.5,
@@ -378,6 +379,7 @@ const styles = StyleSheet.create({
 
   memberIdValue: {
     fontSize: 14,
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
     color: '#FFFFFF',
     letterSpacing: 1,
@@ -459,6 +461,7 @@ const styles = StyleSheet.create({
     color: '#808080',
     fontFamily: FontFamily.bold,
     fontSize: 15,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     lineHeight: 22,
   },
@@ -519,6 +522,7 @@ const styles = StyleSheet.create({
 
   sheetTitle: {
     fontSize: 20,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#808080',
     marginBottom: 20,
@@ -549,6 +553,7 @@ const styles = StyleSheet.create({
   sheetCloseBtnText: {
     fontSize: 16,
     color: '#fff',
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
   },
 });

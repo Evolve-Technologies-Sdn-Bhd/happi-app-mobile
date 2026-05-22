@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Family Members Screen (Membership stack)
  * When route.params.fromNominee === true, shows "Select" button per member
  * and navigates back to MembershipPurchaseConfirm with the selected nominee.
@@ -287,6 +287,7 @@ const styles = StyleSheet.create({
   editBtnText: {
     fontSize: 13,
     color: '#FDB813',
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
   },
 

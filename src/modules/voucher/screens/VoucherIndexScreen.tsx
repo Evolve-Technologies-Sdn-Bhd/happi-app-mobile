@@ -23,6 +23,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { FontFamily } from '../../../shared/constants/fonts';
 import { VoucherStackParamList } from '../../../app/navigation/types';
 import { Toast, Header } from '../../../shared/components';
 import { useToast } from '../../../shared/hooks/useToast';
@@ -245,8 +246,9 @@ export const VoucherIndexScreen: React.FC = () => {
             <ActivityIndicator color="#FDB813" style={{ marginTop: 8 }} />
           ) : filteredVouchers.length === 0 ? (
             <View style={styles.empty}>
-              <Ionicons name="ticket-outline" size={48} color="#d0d0d0" />
-              <Text style={styles.emptyText}>No vouchers available</Text>
+              <Ionicons name="ticket-outline" size={64} color="#FDB813" style={{ opacity: 0.4 }} />
+              <Text style={styles.emptyTitle}>No Vouchers Available</Text>
+              <Text style={styles.emptyText}>There are no vouchers available{`\n`}in this category yet.</Text>
             </View>
           ) : (
             <View style={styles.gridWrap}>
@@ -452,8 +454,9 @@ const styles = StyleSheet.create({
   gridDate: { fontSize: 14, fontWeight: '600', color: '#343434', textAlign: 'center' },
   gridCoins: { fontSize: 12, fontWeight: '700', color: '#FDB813', textAlign: 'center', marginTop: 6 },
 
-  empty: { alignItems: 'center', marginTop: 60 },
-  emptyText: { fontSize: 15, color: '#bbb', marginTop: 12 },
+  empty: { alignItems: 'center', paddingVertical: 60, gap: 12 },
+  emptyTitle: { fontSize: 16, fontFamily: FontFamily.bold, fontWeight: '700', color: '#343434' },
+  emptyText: { fontSize: 14, fontFamily: FontFamily.regular, color: '#999999', textAlign: 'center', lineHeight: 22 },
 
   // Filter modal
   filterSheet: {

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Insurance Plans Screen
  * Converted from Vue (happi-app-customer/src/views/product/list.vue)
  * Shows insurance plans filtered by categories and status tabs
@@ -22,8 +22,11 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../../shared/constants/colors';
 import { FontFamily } from '../../../shared/constants/fonts';
+import { Ionicons } from '@expo/vector-icons';
+import { Header } from '../../../shared/components';
 import { PolicyCard } from '../components';
 import { Policy, getPolicyPage } from '../../../api/policy';
+import { Category } from '../../../api/product';
 import { useCategoryStore, useAuthStore } from '../../../store';
 import { ProductStackParamList } from '../../../app/navigation/types';
 
@@ -67,7 +70,7 @@ export const InsurancePlansScreen: React.FC = () => {
 
   // Get subsection list with category IDs
   const subsectionList = SUBSECTIONS.map((item) => {
-    const category = categoryList.find((cat) => cat.code === item.code);
+    const category = categoryList.find((cat: Category) => cat.code === item.code);
     return {
       name: item.name,
       id: category ? category.id : null,
@@ -202,7 +205,7 @@ export const InsurancePlansScreen: React.FC = () => {
    * Handle policy card press
    */
   const handlePolicyPress = (policy: Policy) => {
-    navigation.navigate('ProductDetail', { productId: policy.id });
+    navigation.navigate('PolicyDetail', { policyId: policy.id });
   };
 
   // Load categories on mount
@@ -238,10 +241,8 @@ export const InsurancePlansScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Insurance Plans</Text>
-      </View>
+    <View style={styles.container}>
+      <Header title="Insurance Plans" showBack />
 
       <ScrollView
         style={styles.scrollView}
@@ -318,10 +319,9 @@ export const InsurancePlansScreen: React.FC = () => {
         <View style={styles.listContainer}>
           {!isAuthenticated ? (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyTitle}>Please Login</Text>
-              <Text style={styles.emptyText}>
-                You need to login to view your insurance plans
-              </Text>
+              <Ionicons name="lock-closed-outline" size={64} color={Colors.primary} style={{ opacity: 0.4 }} />
+              <Text style={styles.emptyTitle}>Login Required</Text>
+              <Text style={styles.emptyText}>Please login to view your insurance plans</Text>
             </View>
           ) : isLoading ? (
             <View style={styles.loadingContainer}>
@@ -338,12 +338,14 @@ export const InsurancePlansScreen: React.FC = () => {
             ))
           ) : (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No data</Text>
+              <Ionicons name="document-text-outline" size={64} color={Colors.primary} style={{ opacity: 0.4 }} />
+              <Text style={styles.emptyTitle}>No Plans Found</Text>
+              <Text style={styles.emptyText}>You don't have any insurance plans{`\n`}in this category yet.</Text>
             </View>
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -352,26 +354,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FDFDFD',
   },
-  header: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EDEDED',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontFamily: FontFamily.bold,
-    fontWeight: '700',
-    color: '#343434',
-  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingBottom: 32,
   },
-  // Category Tabs
+  // Category Tabs — matches Vue up-subsection (floating pill inside outer border)
   categoryWrapper: {
     paddingHorizontal: 40,
     paddingTop: 20,
@@ -382,25 +371,18 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     borderWidth: 1,
     borderColor: Colors.primary,
-    overflow: 'hidden',
+    backgroundColor: '#fff',
+    padding: 3,
   },
   categoryTab: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRightWidth: 1,
-    borderRightColor: Colors.primary,
+    borderRadius: 20,
   },
-  categoryTabFirst: {
-    borderTopLeftRadius: 24,
-    borderBottomLeftRadius: 24,
-  },
-  categoryTabLast: {
-    borderTopRightRadius: 24,
-    borderBottomRightRadius: 24,
-    borderRightWidth: 0,
-  },
+  categoryTabFirst: {},
+  categoryTabLast: {},
   categoryTabActive: {
     backgroundColor: Colors.primary,
   },
@@ -462,19 +444,20 @@ const styles = StyleSheet.create({
   emptyContainer: {
     paddingVertical: 60,
     alignItems: 'center',
+    gap: 12,
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: FontFamily.bold,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#343434',
-    marginBottom: 8,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: FontFamily.regular,
     color: '#999999',
     textAlign: 'center',
+    lineHeight: 22,
   },
 });
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Password Settings Screen
  * Mirrors happi-app-customer/src/views/profile/privacy-security/password/index.vue
  * Two rows: Change Password + Change 4-digit PIN
@@ -11,6 +11,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../../shared/components';
 import { ProfileStackParamList } from '../../../app/navigation/types';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type NavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
 
@@ -77,6 +78,7 @@ const styles = StyleSheet.create({
 
   label: {
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#808080',
     lineHeight: 20,

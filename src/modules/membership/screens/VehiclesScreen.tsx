@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Vehicles Screen
  * Manage user vehicles under policy
  */
@@ -20,6 +20,7 @@ import { MembershipStackParamList } from '../../../app/navigation/types';
 import { Header, Card, Button, EmptyState } from '../../../shared/components';
 import { Colors } from '../../../shared/constants/colors';
 import { Spacing, Typography, BorderRadius } from '../../../shared/constants/styles';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type NavigationProp = NativeStackNavigationProp<MembershipStackParamList, 'Vehicles'>;
 
@@ -182,7 +183,7 @@ const styles = StyleSheet.create({
 
   plateNumber: {
     fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: Colors.textPrimary,
   },
 

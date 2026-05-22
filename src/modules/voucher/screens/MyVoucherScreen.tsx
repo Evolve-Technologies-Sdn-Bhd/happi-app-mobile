@@ -1,4 +1,4 @@
-/**
+﻿/**
  * My Voucher Screen — Owned vouchers
  * Matches happi-app-customer/src/views/voucher/my.vue exactly
  */
@@ -21,6 +21,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { FontFamily } from '../../../shared/constants/fonts';
 import { VoucherStackParamList } from '../../../app/navigation/types';
 import { Toast, Header } from '../../../shared/components';
 import { useToast } from '../../../shared/hooks/useToast';
@@ -198,8 +199,9 @@ export const MyVoucherScreen: React.FC = () => {
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
               <View style={styles.empty}>
-                <Ionicons name="ticket-outline" size={48} color="#d0d0d0" />
-                <Text style={styles.emptyText}>No vouchers found</Text>
+                <Ionicons name="ticket-outline" size={64} color="#FDB813" style={{ opacity: 0.4 }} />
+                <Text style={styles.emptyTitle}>No Vouchers Found</Text>
+                <Text style={styles.emptyText}>You don't have any vouchers{`\n`}in this category yet.</Text>
               </View>
             }
           />
@@ -299,6 +301,7 @@ const styles = StyleSheet.create({
   gridUseNow: { fontSize: 13, fontWeight: '700', color: '#FDB813', textAlign: 'center', marginTop: 8 },
   gridUseNowExpired: { color: '#aaa' },
 
-  empty: { alignItems: 'center', marginTop: 60 },
-  emptyText: { fontSize: 15, color: '#bbb', marginTop: 12 },
+  empty: { alignItems: 'center', paddingVertical: 60, gap: 12 },
+  emptyTitle: { fontSize: 16, fontFamily: FontFamily.bold, fontWeight: '700', color: '#343434' },
+  emptyText: { fontSize: 14, fontFamily: FontFamily.regular, color: '#999999', textAlign: 'center', lineHeight: 22 },
 });

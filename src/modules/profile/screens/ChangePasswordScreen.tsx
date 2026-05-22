@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Change Password Screen
  * Mirrors happi-app-customer/src/views/profile/privacy-security/password/password/change.vue
  */
@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../../shared/components';
 import customerApi from '../../../api/customer';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 const REQUIREMENTS = [
   { label: 'At least 8 characters',          test: (p: string) => p.length >= 8 },
@@ -212,6 +213,7 @@ const styles = StyleSheet.create({
 
   inputLabel: {
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#343434',
     lineHeight: 18,
@@ -240,6 +242,7 @@ const styles = StyleSheet.create({
     height: 47,
     paddingHorizontal: 12,
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#808080',
   },
@@ -268,6 +271,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginRight: 8,
     minWidth: 12,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
   },
 
@@ -301,6 +305,7 @@ const styles = StyleSheet.create({
 
   saveBtnText: {
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
     color: '#ffffff',
   },

@@ -29,6 +29,7 @@ import { useAuthStore } from '../../../store/authStore';
 import customerApi from '../../../api/customer';
 import { getDicList, DicItem } from '../../../api/pub';
 import { getOssImg } from '../../../api/client';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 interface ProfileState {
   id: string;
@@ -531,6 +532,7 @@ const styles = StyleSheet.create({
   value: {
     flex: 1,
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#808080',
     textAlign: 'right',
@@ -539,6 +541,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#808080',
     padding: 0,

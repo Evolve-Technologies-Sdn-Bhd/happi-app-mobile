@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Home Index Screen
  * Ported from happi-app-customer/src/views/index.vue
  * Main home screen with membership card, coins, products, and announcements
@@ -36,6 +36,7 @@ import { Colors } from '../../../shared/constants/colors';
 import { CategoryCard } from '../components/CategoryCard';
 import { useToast } from '../../../shared/hooks/useToast';
 import { Spacing, Typography, BorderRadius, Shadows } from '../../../shared/constants/styles';
+import { FontFamily } from '../../../shared/constants/fonts';
 import { useUserStore, useAppStore, useAuthStore } from '../../../store';
 import { 
   getOssImg, 
@@ -501,11 +502,24 @@ export const HomeIndexScreen: React.FC = () => {
   };
 
   const toCyber = () => {
-    navigation.navigate('ProductList', { category: 'HAPPI_CYBER' });
+    (navigation.getParent() as any)?.navigate('Products', {
+      screen: 'ProductDetail',
+      params: { productId: 'HAPPI_CYBER' },
+    });
   };
 
   const toHome = () => {
-    navigation.navigate('ProductList', { category: 'HAPPI_HOME' });
+    (navigation.getParent() as any)?.navigate('Products', {
+      screen: 'ProductDetail',
+      params: { productId: 'HAPPI_HOME' },
+    });
+  };
+
+  const toTravel = () => {
+    (navigation.getParent() as any)?.navigate('Products', {
+      screen: 'ProductDetail',
+      params: { productId: 'HAPPI_TRAVEL' },
+    });
   };
 
   const comingSoon = () => {
@@ -525,11 +539,13 @@ export const HomeIndexScreen: React.FC = () => {
   };
 
   const toContactUs = () => {
-    showToast('Contact support@happi.com.my for assistance.', 'info');
+    navigation.navigate('Profile' as any, { screen: 'Support' });
   };
 
   const toFAQ = () => {
-    showToast('FAQ coming soon!', 'info');
+    Linking.openURL('https://happi.com.my/faq').catch(() =>
+      showToast('Could not open FAQ page.', 'error')
+    );
   };
 
   const toMyMembership = () => {
@@ -556,7 +572,7 @@ export const HomeIndexScreen: React.FC = () => {
   const popularItems = [
     { key: 'cyber', Icon: CyberLogo, label: 'Cyber', onPress: toCyber, iconSize: 40 },
     { key: 'home', Icon: HomeLogo, label: 'Home', onPress: toHome, iconSize: 40 },
-    { key: 'travel', Icon: WarrantyLogo, label: 'Travel', onPress: comingSoon, iconSize: 50 },
+    { key: 'travel', Icon: WarrantyLogo, label: 'Travel', onPress: toTravel, iconSize: 50 },
     { key: 'auto', Icon: PetsLogo, label: 'Auto', onPress: comingSoon, iconSize: 50 },
   ];
 
@@ -749,7 +765,7 @@ export const HomeIndexScreen: React.FC = () => {
                 Sign up to start collecting HAPPIcoins and unlock real perks!
               </Text>
             )}
-            {token && topMultiplierIndex < targetLevels.length - 1 && (
+            {!!token && topMultiplierIndex < targetLevels.length - 1 && (
               <Text style={styles.bottomTips}>
                 Reach Platinum to unlock rewards up to x5!
               </Text>
@@ -871,7 +887,7 @@ export const HomeIndexScreen: React.FC = () => {
           console.log('🎨 visiblePartnerLogos:', visiblePartnerLogos);
           return null;
         })()}
-        {companies.length > 0 && (
+        {companies.length > 0 ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle} numberOfLines={1}>Our Partners</Text>
@@ -898,7 +914,7 @@ export const HomeIndexScreen: React.FC = () => {
               )}
             </View>
           </View>
-        )}
+        ) : null}
       </ScrollView>
       
       {/* Toast Notification */}
@@ -946,7 +962,8 @@ const styles = StyleSheet.create({
   
   greeting: {
     fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold,
+    fontWeight: '700',
     color: Colors.textWhite,
   },
   
@@ -985,8 +1002,9 @@ const styles = StyleSheet.create({
   
   loginBtnText: {
     color: Colors.textWhite,
-    fontWeight: Typography.weight.semiBold as any,
-    fontSize: Typography.size.base,
+    fontFamily: FontFamily.bold,
+    fontWeight: '700',
+    fontSize: 12,
   },
   
   userRow: {
@@ -1014,8 +1032,9 @@ const styles = StyleSheet.create({
   userName: {
     flex: 1,
     color: Colors.textWhite,
-    fontSize: Typography.size.base,
-    fontWeight: Typography.weight.medium as any,
+    fontFamily: FontFamily.bold,
+    fontWeight: '700',
+    fontSize: 18,
   },
   
   // Card Row
@@ -1053,8 +1072,9 @@ const styles = StyleSheet.create({
   
   beAMemberText: {
     color: '#FFFFFF',
+    fontFamily: FontFamily.bold,
+    fontWeight: '700',
     fontSize: 10,
-    fontWeight: '700' as any,
     lineHeight: 14,
   },
   
@@ -1128,14 +1148,16 @@ const styles = StyleSheet.create({
   
   coinValue: {
     fontSize: 24,
-    fontWeight: Typography.weight.black as any,
-    color: Colors.textPrimary,
+    fontFamily: FontFamily.black,
+    fontWeight: '900',
+    color: '#343434',
   },
   
   coinLabel: {
     fontSize: 10,
-    fontWeight: Typography.weight.black as any,
-    color: Colors.textSecondary,
+    fontFamily: FontFamily.black,
+    fontWeight: '900',
+    color: '#808080',
   },
   
   coinRight: {
@@ -1158,8 +1180,9 @@ const styles = StyleSheet.create({
   
   redeemText: {
     color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold,
+    fontWeight: '700',
+    fontSize: 14,
   },
   
   historyBtn: {
@@ -1169,8 +1192,9 @@ const styles = StyleSheet.create({
   
   historyText: {
     fontSize: 14,
-    fontWeight: Typography.weight.bold as any,
-    color: Colors.textSecondary,
+    fontFamily: FontFamily.bold,
+    fontWeight: '700',
+    color: '#808080',
   },
   
   historyIcon: {
@@ -1195,7 +1219,8 @@ const styles = StyleSheet.create({
   
   levelTitle: {
     fontSize: 13,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold,
+    fontWeight: '700',
     color: '#343434',
     marginBottom: 10,
   },
@@ -1254,14 +1279,16 @@ const styles = StyleSheet.create({
   
   multiplierText: {
     fontSize: 12,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.inter700,
+    fontWeight: '700',
     color: '#FFFFFF',
     lineHeight: 14,
   },
   
   tierName: {
     fontSize: 10,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold,
+    fontWeight: '700',
     color: '#808080',
     textAlign: 'center',
     marginTop: 8,
@@ -1275,7 +1302,8 @@ const styles = StyleSheet.create({
     color: '#808080',
     textAlign: 'center',
     fontSize: 10,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold,
+    fontWeight: '700',
     marginTop: 0,
     width: 334,
     alignSelf: 'center',
@@ -1294,7 +1322,8 @@ const styles = StyleSheet.create({
   
   sectionTitle: {
     fontSize: 18,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold,
+    fontWeight: '700',
     color: '#343434',
     lineHeight: 20,
   },
@@ -1328,7 +1357,8 @@ const styles = StyleSheet.create({
   
   popularLabel: {
     fontSize: 10,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold,
+    fontWeight: '700',
     color: '#343434',
     textAlign: 'center',
   },
@@ -1375,7 +1405,8 @@ const styles = StyleSheet.create({
   
   helpText: {
     fontSize: 15,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold,
+    fontWeight: '700',
     color: '#000000',
     lineHeight: 18,
     marginTop: 4,

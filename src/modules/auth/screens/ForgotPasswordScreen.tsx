@@ -21,6 +21,7 @@ import { TouchableOpacity, Linking } from 'react-native';
 import { AuthStackParamList } from '../../../app/navigation/types';
 import { Header } from '../../../shared/components';
 import { authApi } from '../api/authApi';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, 'ForgotPassword'>;
 
@@ -151,6 +152,7 @@ const styles = StyleSheet.create({
 
   instructionText: {
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#808080',
     lineHeight: 22,
@@ -179,6 +181,7 @@ const styles = StyleSheet.create({
 
   countryCodeText: {
     fontSize: 17,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#fdb813',
   },
@@ -193,6 +196,7 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#808080',
     paddingVertical: 0,
@@ -208,6 +212,7 @@ const styles = StyleSheet.create({
 
   noteText: {
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#808080',
     lineHeight: 22,
@@ -235,6 +240,7 @@ const styles = StyleSheet.create({
 
   sendOtpText: {
     fontSize: 18,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#ffffff',
   },
@@ -249,12 +255,14 @@ const styles = StyleSheet.create({
   contactLabel: {
     fontSize: 14,
     color: '#808080',
+    fontFamily: FontFamily.regular,
     fontWeight: '400',
   },
 
   contactLink: {
     fontSize: 14,
     color: '#fdb813',
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
   },
 });

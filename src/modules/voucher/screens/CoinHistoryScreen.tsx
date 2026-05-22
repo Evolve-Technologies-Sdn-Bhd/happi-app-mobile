@@ -1,4 +1,4 @@
-/**
+﻿/**
  * HAPPIcoin History Screen
  * Matches happi-app-customer/src/views/profile/coin/index.vue exactly
  */
@@ -19,6 +19,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { FontFamily } from '../../../shared/constants/fonts';
 import dayjs from 'dayjs';
 import { VoucherStackParamList } from '../../../app/navigation/types';
 import { Header } from '../../../shared/components';
@@ -265,7 +266,11 @@ export const CoinHistoryScreen: React.FC = () => {
             </TouchableOpacity>
           }
           ListEmptyComponent={
-            <Text style={styles.emptyText}>No history found</Text>
+            <View style={styles.emptyContainer}>
+              <Ionicons name="time-outline" size={64} color="#FDB813" style={{ opacity: 0.4 }} />
+              <Text style={styles.emptyTitle}>No History Found</Text>
+              <Text style={styles.emptyText}>Your coin history will{`\n`}appear here.</Text>
+            </View>
           }
         />
       )}
@@ -389,7 +394,9 @@ const styles = StyleSheet.create({
   histRow2: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   histNote: { fontSize: 12, color: '#808080', flex: 1, marginRight: 8 },
   histTime: { fontSize: 12, color: '#808080' },
-  emptyText: { textAlign: 'center', color: '#aaa', marginTop: 40, fontSize: 14 },
+  emptyContainer: { alignItems: 'center', paddingVertical: 60, gap: 12 },
+  emptyTitle: { fontSize: 16, fontFamily: FontFamily.bold, fontWeight: '700', color: '#343434' },
+  emptyText: { fontSize: 14, fontFamily: FontFamily.regular, color: '#999999', textAlign: 'center', lineHeight: 22 },
   filterPopup: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 30,

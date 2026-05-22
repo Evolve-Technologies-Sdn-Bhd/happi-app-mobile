@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Service Index Screen
  * Ported from happi-app-customer/src/views/service/index.vue
  * Shows list of services with categories, search, and filter
@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import { ServiceStackParamList } from '../../../app/navigation/types';
 import { Colors } from '../../../shared/constants/colors';
 import { Spacing, Typography, BorderRadius, Shadows } from '../../../shared/constants/styles';
+import { FontFamily } from '../../../shared/constants/fonts';
 import { getOssImg, getServiceCategoryList, getServiceList, ServiceCategory } from '../../../api';
 
 type NavigationProp = NativeStackNavigationProp<ServiceStackParamList, 'ServiceIndex'>;
@@ -182,6 +183,29 @@ export const ServiceIndexScreen: React.FC = () => {
     setSortBy('');
   };
 
+  const decodeHtml = (html: string): string => {
+    return html
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&reg;/g, '\u00ae')
+      .replace(/&trade;/g, '\u2122')
+      .replace(/&copy;/g, '\u00a9')
+      .replace(/&ndash;/g, '\u2013')
+      .replace(/&mdash;/g, '\u2014')
+      .replace(/&lsquo;/g, '\u2018')
+      .replace(/&rsquo;/g, '\u2019')
+      .replace(/&ldquo;/g, '\u201c')
+      .replace(/&rdquo;/g, '\u201d')
+      .replace(/&hellip;/g, '\u2026')
+      .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+      .trim();
+  };
+
   return (
     <View style={styles.container}>
       {/* Header Section with Background */}
@@ -283,7 +307,7 @@ export const ServiceIndexScreen: React.FC = () => {
               <View style={styles.serviceContent}>
                 <Text style={styles.serviceTitle}>{service.name}</Text>
                 <Text style={styles.serviceDesc} numberOfLines={2}>
-                  {getFirstAnswer(service).replace(/<[^>]*>/g, '')}
+                  {decodeHtml(getFirstAnswer(service))}
                 </Text>
               </View>
               <View style={styles.arrowContainer}>
@@ -293,8 +317,9 @@ export const ServiceIndexScreen: React.FC = () => {
           ))
         ) : (
           <View style={styles.emptyContainer}>
-            <Ionicons name="list-outline" size={64} color="#ccc" />
-            <Text style={styles.emptyText}>No services available</Text>
+            <Ionicons name="document-text-outline" size={64} color={Colors.primary} style={{ opacity: 0.4 }} />
+            <Text style={styles.emptyTitle}>No Services Found</Text>
+            <Text style={styles.emptyText}>There are no services available{`\n`}in this category yet.</Text>
           </View>
         )}
       </ScrollView>
@@ -303,71 +328,76 @@ export const ServiceIndexScreen: React.FC = () => {
       <Modal
         visible={showFilter}
         transparent
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setShowFilter(false)}
       >
+        {/* Dimmed backdrop */}
         <TouchableOpacity
-          style={styles.modalOverlay}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)' }}
           activeOpacity={1}
           onPress={() => setShowFilter(false)}
-        >
-          <View style={styles.filterContainer}>
-            <Text style={styles.filterTitle}>Sort by</Text>
-            
-            <View style={styles.filterOptions}>
-              <TouchableOpacity
-                style={styles.radioOption}
-                onPress={() => setSortBy('mostPopular')}
-              >
-                <View style={styles.radioCircle}>
-                  {sortBy === 'mostPopular' && (
-                    <View style={styles.radioSelected} />
-                  )}
-                </View>
-                <Text style={styles.radioLabel}>Most Popular</Text>
-              </TouchableOpacity>
+        />
+        {/* Sheet pinned to bottom */}
+        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
+          <TouchableOpacity activeOpacity={1}>
+            <View style={styles.filterContainer}>
+              <Text style={styles.filterTitle}>Sort by</Text>
 
-              <TouchableOpacity
-                style={styles.radioOption}
-                onPress={() => setSortBy('newest')}
-              >
-                <View style={styles.radioCircle}>
-                  {sortBy === 'newest' && (
-                    <View style={styles.radioSelected} />
-                  )}
-                </View>
-                <Text style={styles.radioLabel}>Newest</Text>
-              </TouchableOpacity>
+              <View style={styles.filterOptions}>
+                <TouchableOpacity
+                  style={styles.radioOption}
+                  onPress={() => setSortBy('mostPopular')}
+                >
+                  <View style={styles.radioCircle}>
+                    {sortBy === 'mostPopular' && (
+                      <View style={styles.radioSelected} />
+                    )}
+                  </View>
+                  <Text style={styles.radioLabel}>Most Popular</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.radioOption}
-                onPress={() => setSortBy('alphabetical')}
-              >
-                <View style={styles.radioCircle}>
-                  {sortBy === 'alphabetical' && (
-                    <View style={styles.radioSelected} />
-                  )}
-                </View>
-                <Text style={styles.radioLabel}>Alphabetical (A-Z)</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.radioOption}
+                  onPress={() => setSortBy('newest')}
+                >
+                  <View style={styles.radioCircle}>
+                    {sortBy === 'newest' && (
+                      <View style={styles.radioSelected} />
+                    )}
+                  </View>
+                  <Text style={styles.radioLabel}>Newest</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.radioOption}
+                  onPress={() => setSortBy('alphabetical')}
+                >
+                  <View style={styles.radioCircle}>
+                    {sortBy === 'alphabetical' && (
+                      <View style={styles.radioSelected} />
+                    )}
+                  </View>
+                  <Text style={styles.radioLabel}>Alphabetical (A-Z)</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.filterButtons}>
+                <TouchableOpacity
+                  style={[styles.filterBtn, styles.filterBtnReset]}
+                  onPress={resetFilter}
+                >
+                  <Text style={styles.filterBtnTextReset}>Reset</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.filterBtn, styles.filterBtnApply]}
+                  onPress={applyFilter}
+                >
+                  <Text style={styles.filterBtnTextApply}>Apply</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-
-            <View style={styles.filterButtons}>
-              <TouchableOpacity
-                style={[styles.filterBtn, styles.filterBtnReset]}
-                onPress={resetFilter}
-              >
-                <Text style={styles.filterBtnTextReset}>Reset</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.filterBtn, styles.filterBtnApply]}
-                onPress={applyFilter}
-              >
-                <Text style={styles.filterBtnTextApply}>Apply</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </View>
       </Modal>
     </View>
   );
@@ -458,7 +488,7 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     color: Colors.primary,
-    fontWeight: Typography.weight.semiBold as any,
+    fontWeight: '600' as any,
   },
   listContainer: {
     flex: 1,
@@ -505,13 +535,13 @@ const styles = StyleSheet.create({
   },
   serviceTitle: {
     fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: Colors.primary,
     lineHeight: 20,
   },
   serviceDesc: {
     fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.medium as any,
+    fontFamily: FontFamily.medium, fontWeight: '500',
     color: Colors.textDark,
     lineHeight: 18,
   },
@@ -521,31 +551,34 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
   },
   emptyContainer: {
-    flex: 1,
+    paddingVertical: 60,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 100,
+    gap: 12,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontFamily: FontFamily.bold,
+    fontWeight: '700',
+    color: '#343434',
   },
   emptyText: {
-    fontSize: Typography.size.md,
-    color: '#999',
-    marginTop: Spacing.md,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    fontSize: 14,
+    fontFamily: FontFamily.regular,
+    color: '#999999',
+    textAlign: 'center',
+    lineHeight: 22,
   },
   filterContainer: {
     backgroundColor: Colors.background,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    padding: Spacing.xl,
+    padding: 40,
+    paddingBottom: 40,
     minHeight: 376,
   },
   filterTitle: {
     fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: '#808080',
     marginBottom: Spacing.lg,
   },
@@ -576,7 +609,7 @@ const styles = StyleSheet.create({
   },
   radioLabel: {
     fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: '#808080',
   },
   filterButtons: {
@@ -598,12 +631,12 @@ const styles = StyleSheet.create({
   },
   filterBtnTextReset: {
     fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold as any,
+    fontWeight: '700',
     color: Colors.primary,
   },
   filterBtnTextApply: {
     fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold as any,
+    fontWeight: '700',
     color: Colors.background,
   },
 });
