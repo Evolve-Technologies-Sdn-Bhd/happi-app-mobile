@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Membership Purchase Confirm Screen
  * Ported from happi-app-customer/src/views/membership/purchase/confirm.vue
  * "Details Confirmation" — member info review, nominees with slider, agreement, then Confirm

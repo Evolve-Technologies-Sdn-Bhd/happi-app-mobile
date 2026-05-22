@@ -21,6 +21,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useAuthStore } from '../../../store/authStore';
 import { useUserStore } from '../../../store/userStore';
 import { getOssImg } from '../../../api';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 // PNG assets (same as profile page)
 const imgBg   = require('../../../../assets/images/profile/profile-header-bg.png');
@@ -171,6 +172,7 @@ const styles = StyleSheet.create({
   hiddenText: {
     color: '#ffffff',
     fontSize: 15,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     opacity: 0,
   },
@@ -217,6 +219,7 @@ const styles = StyleSheet.create({
   fallbackText: {
     color: '#ffffff',
     fontSize: 48,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
   },
 
@@ -224,6 +227,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     color: '#ffffff',
     fontSize: 25.5,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     textTransform: 'uppercase',
     maxWidth: '90%',
@@ -250,6 +254,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
     color: '#ffffff',
     fontSize: 18.5,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     lineHeight: 20,
   },
@@ -273,6 +278,7 @@ const styles = StyleSheet.create({
 
   qrTitle: {
     fontSize: 20,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#333333',
     marginBottom: 24,

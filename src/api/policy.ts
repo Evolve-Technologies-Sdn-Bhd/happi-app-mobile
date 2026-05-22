@@ -36,11 +36,22 @@ export interface Policy {
   customer: {
     id: string;
     realname: string;
+    postcode?: string;
   };
   company: {
     id: string;
     name: string;
     logoUrl: string;
+  };
+  // Detail fields (present on getPolicyInfo response)
+  categoryName?: string;
+  productName?: string;
+  premium?: number;
+  sumInsured?: string | number;
+  addons?: Array<{ name: string; premium: number }>;
+  orderInfo?: {
+    id: string;
+    actualAmount: number;
   };
 }
 
@@ -49,6 +60,7 @@ export interface PolicyPageQuery {
   page?: number;
   limit?: number;
   categoryId?: string;
+  tabCode?: number; // 0=all, 1=active
 }
 
 // Policy page response

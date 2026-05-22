@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Voucher Countdown Screen — Active usage timer
  * Matches happi-app-customer/src/views/voucher/countdown.vue
  */
@@ -22,6 +22,7 @@ import { VoucherStackParamList } from '../../../app/navigation/types';
 import { Toast } from '../../../shared/components';
 import { useToast } from '../../../shared/hooks/useToast';
 import voucherApi from '../../../api/voucher';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type NavigationProp = NativeStackNavigationProp<VoucherStackParamList, 'VoucherCountdown'>;
 type RouteProps = RouteProp<VoucherStackParamList, 'VoucherCountdown'>;
@@ -244,6 +245,7 @@ const styles = StyleSheet.create({
   countdownLabel: { fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 4 },
   voucherName: {
     fontSize: 18,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#fff',
     textAlign: 'center',

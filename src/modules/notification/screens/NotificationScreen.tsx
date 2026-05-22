@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Notification Screen - Unified List with Edit Mode
  * Ported from happi-app-customer/src/views/public/notification/index.vue
  * Features: Edit mode, select all, mark as read, delete notifications
@@ -28,6 +28,7 @@ import {
 } from '../../../api/notification';
 import { useUserStore } from '../../../store/userStore';
 import { Header } from '../../../shared/components';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type NotificationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Notification'>;
 type NotificationScreenRouteProp = RouteProp<RootStackParamList, 'Notification'>;
@@ -441,6 +442,7 @@ const styles = StyleSheet.create({
   selectAllText: {
     fontSize: 16,
     color: '#343434',
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     marginLeft: 12,
   },
@@ -561,6 +563,7 @@ const styles = StyleSheet.create({
   },
   actionButtonTextMarkRead: {
     fontSize: 20,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#FDB813',
     lineHeight: 18,
@@ -580,6 +583,7 @@ const styles = StyleSheet.create({
   },
   actionButtonTextDelete: {
     fontSize: 20,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#FFFFFF',
     lineHeight: 18,

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Membership Purchase Submit Screen
  * Ported from happi-app-customer/src/views/membership/purchase/submit.vue
  * "Confirm & Pay" — readonly summary (member + nominees + checkout + fees + total) then pay

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Purchase History Screen
  * View past purchases and transactions
  */
@@ -17,6 +17,7 @@ import { Header, Card, EmptyState } from '../../../shared/components';
 import { Colors } from '../../../shared/constants/colors';
 import { Spacing, Typography, BorderRadius } from '../../../shared/constants/styles';
 import { formatCurrency, formatDate } from '../../../shared/utils/formatting';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 interface Purchase {
   id: string;
@@ -179,7 +180,7 @@ const styles = StyleSheet.create({
 
   productName: {
     fontSize: Typography.size.base,
-    fontWeight: Typography.weight.semiBold,
+    fontFamily: FontFamily.medium, fontWeight: '600',
     color: Colors.textPrimary,
   },
 
@@ -199,7 +200,7 @@ const styles = StyleSheet.create({
 
   statusText: {
     fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.medium,
+    fontFamily: FontFamily.medium, fontWeight: '500',
   },
 
   divider: {
@@ -226,12 +227,12 @@ const styles = StyleSheet.create({
   detailValue: {
     fontSize: Typography.size.sm,
     color: Colors.textPrimary,
-    fontWeight: Typography.weight.medium,
+    fontFamily: FontFamily.medium, fontWeight: '500',
   },
 
   detailValueSmall: {
     fontSize: Typography.size.xs,
     color: Colors.textPrimary,
-    fontWeight: Typography.weight.medium,
+    fontFamily: FontFamily.medium, fontWeight: '500',
   },
 });

@@ -3,19 +3,17 @@
  * Swipeable category icons matching the Vue version
  */
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   TouchableOpacity,
   FlatList,
   ViewToken,
-  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { HomeStackParamList } from '../../../app/navigation/types';
 import { useUserStore } from '../../../store';
+import { getCategoryList, getPolicyPage } from '../../../api';
 
 // Import SVG icons as components
 import CyberIcon from '../../../../assets/images/categoryicon/Homepage_Cyber.svg';
@@ -31,8 +29,6 @@ import CriticalIllnessUnlockedIcon from '../../../../assets/images/categoryicon/
 import ComingSoonIcon from '../../../../assets/images/categoryicon/Coming_Soon.svg';
 
 const CARD_WIDTH = 248;
-
-type NavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeIndex'>;
 
 interface CategoryItem {
   code: string;
@@ -59,7 +55,6 @@ const categories: CategoryItem[][] = [
       code: 'HAPPI_TRAVEL',
       Icon: TravelIcon,
       IconUnlocked: TravelUnlockedIcon,
-      comingSoon: true,
     },
     {
       code: 'HAPPI_AUTO',
@@ -106,31 +101,79 @@ interface CategoryCardProps {
 }
 
 export const CategoryCard: React.FC<CategoryCardProps> = ({ onComingSoon }) => {
-  const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation<any>();
   const token = useUserStore((state) => state.token);
   const [currentPage, setCurrentPage] = useState(0);
-  const [purchasedCategories, setPurchasedCategories] = useState<Set<string>>(new Set());
+  // Map of category code → boolean (has active policy)
+  const [categoryPurchaseMap, setCategoryPurchaseMap] = useState<Map<string, boolean>>(new Map());
+  // Map of category code → categoryId (for InsurancePlans navigation)
+  const [categoryIdMap, setCategoryIdMap] = useState<Map<string, string>>(new Map());
+
+  // Fetch category list and check active policies for each category
+  const loadCategoryData = useCallback(async () => {
+    try {
+      const res = await getCategoryList();
+      if (!res.success || !res.data) return;
+
+      const codeToId = new Map<string, string>();
+      res.data.forEach((cat) => {
+        if (cat.code) codeToId.set(cat.code, cat.id);
+      });
+      setCategoryIdMap(codeToId);
+
+      if (!token) return;
+
+      const purchaseMap = new Map<string, boolean>();
+      await Promise.all(
+        res.data.map(async (cat) => {
+          try {
+            const policyRes = await getPolicyPage({
+              page: 1,
+              limit: 1,
+              tabCode: 1,
+              categoryId: cat.id,
+            });
+            const hasActive =
+              policyRes.success &&
+              policyRes.data?.records &&
+              policyRes.data.records.length > 0;
+            purchaseMap.set(cat.code, !!hasActive);
+          } catch {
+            purchaseMap.set(cat.code, false);
+          }
+        })
+      );
+      setCategoryPurchaseMap(purchaseMap);
+    } catch (error) {
+      console.error('CategoryCard: failed to load category data', error);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    loadCategoryData();
+  }, [loadCategoryData]);
 
   const handleCategoryPress = (category: CategoryItem) => {
     if (category.comingSoon) {
-      if (onComingSoon) {
-        onComingSoon();
-      } else {
-        Alert.alert('Coming Soon', 'This feature is coming soon!');
-      }
+      if (onComingSoon) onComingSoon();
       return;
     }
 
-    // Navigate based on category code
-    switch (category.code) {
-      case 'HAPPI_CYBER':
-        navigation.navigate('ProductList', { category: 'HAPPI_CYBER' });
-        break;
-      case 'HAPPI_HOME':
-        navigation.navigate('ProductList', { category: 'HAPPI_HOME' });
-        break;
-      default:
-        Alert.alert('Coming Soon', 'This feature is coming soon!');
+    const isPurchased = categoryPurchaseMap.get(category.code);
+    const categoryId = categoryIdMap.get(category.code);
+
+    if (isPurchased && categoryId) {
+      // User has an active policy → go to InsurancePlans (policy list)
+      (navigation.getParent() as any)?.navigate('Products', {
+        screen: 'InsurancePlans',
+        params: { categoryId },
+      });
+    } else {
+      // No active policy → go to product detail to start purchase
+      (navigation.getParent() as any)?.navigate('Products', {
+        screen: 'ProductDetail',
+        params: { productId: category.code },
+      });
     }
   };
 
@@ -150,10 +193,10 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({ onComingSoon }) => {
   const renderPage = ({ item }: { item: CategoryItem[] }) => (
     <View style={styles.pageContainer}>
       {item.map((category, index) => {
-        const isPurchased = purchasedCategories.has(category.code);
+        const isPurchased = categoryPurchaseMap.get(category.code);
         const IconComponent = isPurchased ? category.IconUnlocked : category.Icon;
         const iconSize = category.size || 44;
-        
+
         return (
           <TouchableOpacity
             key={`${category.code}-${index}`}

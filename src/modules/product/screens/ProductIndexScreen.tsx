@@ -1,9 +1,9 @@
-/**
+﻿/**
  * Product Index Screen
  * Main product/insurance page with policy cards and product categories
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors } from '../../../shared/constants/colors';
 import { FontFamily } from '../../../shared/constants/fonts';
@@ -25,6 +25,7 @@ import { ProductStackParamList } from '../../../app/navigation/types';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<ProductStackParamList>;
+type RouteProps = RouteProp<ProductStackParamList, 'ProductIndex'>;
 
 // Product Categories
 const PRODUCT_CATEGORIES = [
@@ -62,6 +63,15 @@ const mockPolicies: Array<{
 
 export const ProductIndexScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<RouteProps>();
+
+  // When navigated here with goToPlans=true (e.g. from Profile Insurance Management),
+  // push InsurancePlans on top so back always returns to ProductIndex.
+  useEffect(() => {
+    if (route.params?.goToPlans) {
+      navigation.navigate('InsurancePlans', {});
+    }
+  }, [route.params?.goToPlans]);
 
   const handleCategoryPress = (categoryId: string) => {
     if (categoryId === 'HAPPI_AUTO') {

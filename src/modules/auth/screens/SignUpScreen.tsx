@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Sign Up Screen
  * Ported from happi-app-customer/src/views/public/sign-up/index.vue
  * New user registration with Malaysian/Non-Malaysian options
@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next';
 import { AuthStackParamList } from '../../../app/navigation/types';
 import { Colors } from '../../../shared/constants/colors';
 import { useAuthStore } from '../../../store/authStore';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -509,6 +510,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: '#FFFFFF',
     fontSize: 16,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     marginLeft: 4,
   },
@@ -546,12 +548,14 @@ const styles = StyleSheet.create({
   
   toggleButtonText: {
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#808080',
   },
   
   toggleButtonTextActive: {
     color: '#FFFFFF',
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
   },
   
@@ -561,6 +565,7 @@ const styles = StyleSheet.create({
   
   label: {
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#343434',
     marginBottom: 10,
@@ -591,6 +596,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 15,
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#808080',
   },
@@ -613,6 +619,7 @@ const styles = StyleSheet.create({
   
   countryCode: {
     fontSize: 17,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#FDB813',
     marginRight: 12,
@@ -684,6 +691,7 @@ const styles = StyleSheet.create({
   signUpButtonText: {
     color: '#FFFFFF',
     fontSize: 20,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
   },
   
@@ -695,6 +703,7 @@ const styles = StyleSheet.create({
   skipText: {
     fontSize: 15,
     color: '#FDB813',
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
   },
   
@@ -713,6 +722,7 @@ const styles = StyleSheet.create({
   contactLink: {
     fontSize: 15,
     color: '#FDB813',
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
   },
 });

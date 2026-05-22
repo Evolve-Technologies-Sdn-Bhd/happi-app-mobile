@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Onboarding Screen
  * Modern multi-page onboarding with smooth scroll animations
  * Uses native ScrollView paging for smooth transitions
@@ -23,7 +23,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthStackParamList } from '../../../app/navigation/types';
-import { FontFamily } from '../../../shared/constants';
+import { FontFamily } from '../../../shared/constants/fonts';
 import { useAuthStore } from '../../../store/authStore';
 import { useAppStore } from '../../../store/appStore';
 
@@ -377,6 +377,7 @@ const styles = StyleSheet.create({
   },
   closeText: {
     fontSize: 28,
+    fontFamily: FontFamily.light,
     fontWeight: '300',
     color: '#2d3436',
   },

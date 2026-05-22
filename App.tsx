@@ -18,6 +18,10 @@ import {
   ZenMaruGothic_700Bold,
   ZenMaruGothic_900Black,
 } from '@expo-google-fonts/zen-maru-gothic';
+import {
+  Inter_400Regular,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 
 import { RootNavigator } from './src/app/navigation/RootNavigator';
 import { useAuthStore } from './src/store/authStore';
@@ -51,6 +55,8 @@ export default function App() {
     ZenMaruGothic_500Medium,
     ZenMaruGothic_700Bold,
     ZenMaruGothic_900Black,
+    Inter_400Regular,
+    Inter_700Bold,
   });
 
   useEffect(() => {

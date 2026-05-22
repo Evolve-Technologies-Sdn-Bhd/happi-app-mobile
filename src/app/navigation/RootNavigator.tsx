@@ -18,7 +18,7 @@ import NotificationScreen from '../../modules/notification/screens/NotificationS
 import NotificationDetailScreen from '../../modules/notification/screens/NotificationDetailScreen';
 import AIChatScreen from '../../modules/chat/screens/AIChatScreen';
 import { MyMembershipListScreen } from '../../modules/membership/screens';
-import { VoucherStack } from './stacks';
+import { VoucherStack, ProfileStack } from './stacks';
 import WebViewScreen from '../../shared/screens/WebViewScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -100,6 +100,14 @@ export const RootNavigator: React.FC = () => {
           <Stack.Screen
             name="WebView"
             component={WebViewScreen}
+            options={{
+              presentation: 'card',
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="Profile"
+            component={ProfileStack}
             options={{
               presentation: 'card',
               animation: 'slide_from_right',

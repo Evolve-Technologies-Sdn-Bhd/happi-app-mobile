@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Policy Card Slider Component
  * Displays insurance policy cards in a horizontal swiper
  * Matches Vue reference design exactly
@@ -22,7 +22,8 @@ import { FontFamily } from '../../../shared/constants/fonts';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_HORIZONTAL_PADDING = 32;
-const CARD_WIDTH = SCREEN_WIDTH - CARD_HORIZONTAL_PADDING * 2;
+// Cap at 400 so the card doesn't stretch across a wide web viewport
+const CARD_WIDTH = Math.min(SCREEN_WIDTH - CARD_HORIZONTAL_PADDING * 2, 400);
 const CARD_HEIGHT = 200;
 const CARD_SPACING = 12;
 
@@ -48,6 +49,7 @@ const MockCard: React.FC = () => (
       source={require('../../../../assets/products/card-bg.png')}
       style={styles.cardBackground}
       imageStyle={styles.cardBackgroundImage}
+      resizeMode="cover"
     >
       <View style={styles.cardContent}>
         {/* Left content */}
@@ -121,6 +123,7 @@ const PolicyCard: React.FC<{
         source={require('../../../../assets/products/card-bg.png')}
         style={styles.cardBackground}
         imageStyle={styles.cardBackgroundImage}
+        resizeMode="cover"
       >
         <View style={styles.cardContent}>
           {/* Left content */}
@@ -254,18 +257,16 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginRight: CARD_SPACING,
-    // drop-shadow equivalent
-    shadowColor: '#C0C0C0',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
     elevation: 5,
   },
   cardBackground: {
-    flex: 1,
+    width: '100%',
+    height: '100%',
   },
   cardBackgroundImage: {
     borderRadius: 16,
+    width: '100%',
+    height: '100%',
   },
 
   // ── Card layout ───────────────────────────────────────────────────────────
@@ -289,6 +290,7 @@ const styles = StyleSheet.create({
   // ── Card text elements ────────────────────────────────────────────────────
   productType: {
     fontSize: 16,
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
     color: '#343434',
     fontFamily: FontFamily.bold,
@@ -297,6 +299,7 @@ const styles = StyleSheet.create({
   },
   cardYear: {
     fontSize: 14,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#666666',
     fontFamily: FontFamily.medium,
@@ -314,6 +317,7 @@ const styles = StyleSheet.create({
   },
   customerName: {
     fontSize: 15,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#343434',
     fontFamily: FontFamily.bold,
@@ -332,6 +336,7 @@ const styles = StyleSheet.create({
   },
   policyNumber: {
     fontSize: 14,
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
     color: '#666666',
     fontFamily: FontFamily.medium,

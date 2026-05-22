@@ -1,4 +1,4 @@
-/**
+﻿/**
  * My Membership List Screen
  * Ported from happi-app-customer/src/views/membership/purchase/list.vue
  * Shows user's purchased membership cards and level progress
@@ -801,7 +801,7 @@ const styles = StyleSheet.create({
   
   userName: {
     fontSize: 19,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: '#333333',
     lineHeight: 14,
   },
@@ -809,7 +809,7 @@ const styles = StyleSheet.create({
   unlockText: {
     marginTop: 16,
     fontSize: 15,
-    fontWeight: Typography.weight.regular as any,
+    fontFamily: FontFamily.regular, fontWeight: '400',
     color: '#343434',
     lineHeight: 14,
   },
@@ -836,14 +836,14 @@ const styles = StyleSheet.create({
   
   multiplierText: {
     fontSize: 16,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: '#FDB813',
     lineHeight: 15.5,
   },
   
   multiplierTextActive: {
     fontSize: 33,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: '#FDB813',
     lineHeight: 27,
   },
@@ -862,7 +862,7 @@ const styles = StyleSheet.create({
   levelDesc: {
     marginTop: 8,
     fontSize: 8,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: '#000000',
     lineHeight: 12,
     textAlign: 'center',
@@ -871,7 +871,7 @@ const styles = StyleSheet.create({
   bottomTip: {
     marginTop: 15,
     fontSize: 10,
-    fontWeight: Typography.weight.regular as any,
+    fontFamily: FontFamily.regular, fontWeight: '400',
     color: '#808080',
     lineHeight: 12,
     textAlign: 'center',
@@ -915,7 +915,7 @@ const styles = StyleSheet.create({
   
   customerName: {
     fontSize: 4.5,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: '#F2F2F2',
     lineHeight: 4.5,
   },
@@ -932,14 +932,14 @@ const styles = StyleSheet.create({
   
   memberIdLabel: {
     fontSize: 2.5,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: '#F2F2F2',
     lineHeight: 2.5,
   },
   
   policyNumber: {
     fontSize: 3,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: '#FFFFFF',
     lineHeight: 3,
   },
@@ -970,7 +970,7 @@ const styles = StyleSheet.create({
   cardDesc: {
     marginTop: 4,
     fontSize: 10,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: '#000000',
     lineHeight: 9,
     textAlign: 'center',
@@ -1000,14 +1000,14 @@ const styles = StyleSheet.create({
   
   sumInsuredLabel: {
     fontSize: 16,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: '#343434',
     lineHeight: 11.5,
   },
   
   sumInsuredValue: {
     fontSize: 20,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: '#FDB813',
     lineHeight: 17.5,
   },
@@ -1052,7 +1052,7 @@ const styles = StyleSheet.create({
   
   modalTitle: {
     fontSize: 18,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: '#343434',
   },
   
@@ -1079,7 +1079,7 @@ const styles = StyleSheet.create({
   
   sumName: {
     fontSize: 16,
-    fontWeight: Typography.weight.medium as any,
+    fontFamily: FontFamily.medium, fontWeight: '500',
     color: '#343434',
     flex: 1,
     paddingRight: 12,
@@ -1087,7 +1087,7 @@ const styles = StyleSheet.create({
   
   sumAmount: {
     fontSize: 16,
-    fontWeight: Typography.weight.medium as any,
+    fontFamily: FontFamily.medium, fontWeight: '500',
     color: '#808080',
     textAlign: 'right',
     minWidth: 160,
@@ -1102,7 +1102,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 28,
     fontFamily: FontFamily.bold,
-    fontWeight: '900' as any,
+    fontWeight: '900',
     marginBottom: 10,
   },
   
@@ -1140,7 +1140,7 @@ const styles = StyleSheet.create({
   
   largeCardCustomerName: {
     fontSize: 8,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: '#F2F2F2',
     lineHeight: 9,
   },
@@ -1157,7 +1157,7 @@ const styles = StyleSheet.create({
   
   largeCardMemberIdLabel: {
     fontSize: 4,
-    fontWeight: Typography.weight.medium as any,
+    fontFamily: FontFamily.medium, fontWeight: '500',
     color: '#FFFFFF',
     lineHeight: 4,
     letterSpacing: 0.5,
@@ -1165,7 +1165,7 @@ const styles = StyleSheet.create({
   
   largeCardPolicyNumber: {
     fontSize: 6,
-    fontWeight: Typography.weight.bold as any,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: '#FFFFFF',
     lineHeight: 6,
   },

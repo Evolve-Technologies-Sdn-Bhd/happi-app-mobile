@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Our Location Screen
  * Matches happi-app-customer/src/views/profile/support/location.vue
  */
@@ -19,6 +19,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { ProfileStackParamList } from '../../../app/navigation/types';
 import { Header } from '../../../shared/components';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 const imgLocation = require('../../../../assets/images/support/location-office-image.jpg');
 
@@ -111,6 +112,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
     color: '#343434',
     fontSize: 20,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     lineHeight: 28,
     textAlign: 'center',
@@ -150,6 +152,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 14,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     lineHeight: 22,
     color: '#343434',

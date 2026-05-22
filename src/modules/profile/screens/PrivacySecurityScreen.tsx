@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Privacy & Security Screen
  * Mirrors happi-app-customer/src/views/profile/privacy-security/index.vue
  */
@@ -10,6 +10,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../../shared/components';
 import { ProfileStackParamList } from '../../../app/navigation/types';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type NavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
 
@@ -67,6 +68,7 @@ const styles = StyleSheet.create({
   label: {
     marginLeft: 19,
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#808080',
     lineHeight: 20,

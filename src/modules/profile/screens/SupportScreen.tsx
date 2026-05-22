@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Support / Help Center Screen
  * Matches happi-app-customer/src/views/profile/support/index.vue
  */
@@ -28,6 +28,7 @@ import { Header } from '../../../shared/components';
 import { useUserStore } from '../../../store/userStore';
 import { initChat } from '../../../api/msg';
 import { sendSupportEmail } from '../../../api/pub';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 const imgAI       = require('../../../../assets/images/support/support-ai-chatbot-icon.png');
 const imgWhatsApp = require('../../../../assets/images/support/support-whatsapp-icon.png');
@@ -260,6 +261,7 @@ const styles = StyleSheet.create({
 
   cardTitle: {
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     lineHeight: 20,
     color: '#FDB813',
@@ -292,6 +294,7 @@ const styles = StyleSheet.create({
 
   popupTitle: {
     fontSize: 18,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#333',
   },
@@ -302,6 +305,7 @@ const styles = StyleSheet.create({
 
   formLabel: {
     fontSize: 14,
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
     color: '#333',
     marginBottom: 6,
@@ -335,6 +339,7 @@ const styles = StyleSheet.create({
   sendBtnText: {
     color: '#fff',
     fontSize: 16,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
   },
 });

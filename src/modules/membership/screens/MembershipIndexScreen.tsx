@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Membership Index Screen
  * Ported from happi-app-customer/src/views/membership/index.vue
  * Main membership page with promotional cards and membership card carousel

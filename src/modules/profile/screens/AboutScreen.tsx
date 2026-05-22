@@ -1,4 +1,4 @@
-/**
+﻿/**
  * About Screen
  * App information and credits
  */
@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { Header, Card } from '../../../shared/components';
 import { Colors } from '../../../shared/constants/colors';
 import { Spacing, Typography, BorderRadius, Shadows } from '../../../shared/constants/styles';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 export const AboutScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -128,7 +129,7 @@ const styles = StyleSheet.create({
 
   appName: {
     fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.bold,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: Colors.textPrimary,
   },
 
@@ -150,7 +151,7 @@ const styles = StyleSheet.create({
 
   aboutTitle: {
     fontSize: Typography.size.base,
-    fontWeight: Typography.weight.semiBold,
+    fontFamily: FontFamily.medium, fontWeight: '600',
     color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
 
   linksTitle: {
     fontSize: Typography.size.base,
-    fontWeight: Typography.weight.semiBold,
+    fontFamily: FontFamily.medium, fontWeight: '600',
     color: Colors.textPrimary,
     marginBottom: Spacing.md,
   },

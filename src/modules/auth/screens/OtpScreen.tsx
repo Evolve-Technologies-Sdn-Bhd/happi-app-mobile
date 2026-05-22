@@ -22,6 +22,7 @@ import { authApi } from '../api/authApi';
 import { useAuthStore } from '../../../store/authStore';
 import { storage } from '../../../shared/utils/storage';
 import { StorageKeys } from '../../../shared/constants/config';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, 'OTP'>;
 type OtpRouteProp = RouteProp<AuthStackParamList, 'OTP'>;
@@ -217,6 +218,7 @@ const styles = StyleSheet.create({
 
   title: {
     fontSize: 24,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#333333',
     marginBottom: 12,
@@ -233,6 +235,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 14,
     color: '#fdb813',
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
   },
 
@@ -250,6 +253,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(128,128,128,0.25)',
     borderRadius: 12,
     fontSize: 22,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#333333',
     backgroundColor: '#fafafa',
@@ -271,6 +275,7 @@ const styles = StyleSheet.create({
   },
 
   resendTimerBold: {
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#333333',
   },
@@ -278,6 +283,7 @@ const styles = StyleSheet.create({
   resendLink: {
     fontSize: 14,
     color: '#fdb813',
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
   },
 
@@ -299,6 +305,7 @@ const styles = StyleSheet.create({
 
   verifyBtnText: {
     fontSize: 18,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#ffffff',
   },

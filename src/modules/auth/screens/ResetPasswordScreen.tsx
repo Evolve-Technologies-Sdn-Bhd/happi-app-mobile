@@ -26,6 +26,7 @@ import { Header } from '../../../shared/components';
 import { authApi } from '../api/authApi';
 import { storage } from '../../../shared/utils/storage';
 import { StorageKeys } from '../../../shared/constants/config';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, 'ResetPassword'>;
 type ResetPasswordRouteProp = RouteProp<AuthStackParamList, 'ResetPassword'>;
@@ -213,6 +214,7 @@ const styles = StyleSheet.create({
 
   label: {
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#808080',
     marginLeft: 6,
@@ -221,6 +223,7 @@ const styles = StyleSheet.create({
 
   star: {
     color: '#e74c3c',
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
   },
 
@@ -243,6 +246,7 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#333333',
     paddingVertical: 0,
@@ -306,6 +310,7 @@ const styles = StyleSheet.create({
 
   resetBtnText: {
     fontSize: 18,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#ffffff',
   },
@@ -320,12 +325,14 @@ const styles = StyleSheet.create({
   contactLabel: {
     fontSize: 14,
     color: '#808080',
+    fontFamily: FontFamily.regular,
     fontWeight: '400',
   },
 
   contactLink: {
     fontSize: 14,
     color: '#fdb813',
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
   },
 });

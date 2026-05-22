@@ -42,6 +42,59 @@ export const checkout = (data: CheckoutData) => {
   });
 };
 
+export interface InsuranceCheckoutData {
+  orderOrigin: number; // 1=app, 2=web
+  orderType: number;   // 2=insurance
+  companyType: number; // 0=default, 1=chubb, 2=pacific
+  categoryType: number; // 1=cyber, 2=home, 3=travel, 4=auto
+  customer?: Record<string, any>;
+  cyber?: {
+    employmentLocation: number;
+    categoryId: string;
+    companyId: string;
+    productId: string;
+  };
+  home?: {
+    articles: Array<{ name: string; serial: string; sumInsured: number }>;
+    targetHome: {
+      name: string;
+      category: string;
+      address1: string;
+      address2: string;
+      stateName: string;
+      postcode: string;
+      damageDetail: string;
+      isDamage: number;
+    };
+    categoryId: string;
+    companyId: string;
+    productId: string;
+  };
+  travel?: {
+    quoteId?: string;
+    policyType: string;
+    coverTypeCode: string;
+    regionCode: string;
+    startDate: string;
+    endDate: string;
+    travelCountries: string[];
+    optionalCovers?: Array<{ Code: string }>;
+    insuredPersons?: Array<{ realname: string; userId?: string; familyId?: string }>;
+    planCode?: string;
+  };
+}
+
+/**
+ * Insurance-specific checkout (cyber/home/travel)
+ */
+export const insuranceCheckout = (data: InsuranceCheckoutData) => {
+  return httpRequest<{ orderGroupId: string }>({
+    method: 'POST',
+    url: '/v1/order/app/checkout',
+    data,
+  });
+};
+
 /**
  * Quote order
  */

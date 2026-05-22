@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Product Detail Screen
  * View product details and purchase
  */
@@ -21,6 +21,7 @@ import { HomeStackParamList, RootStackParamList } from '../../../app/navigation/
 import { Header, Card, Button } from '../../../shared/components';
 import { Colors } from '../../../shared/constants/colors';
 import { Spacing, Typography, BorderRadius, Shadows } from '../../../shared/constants/styles';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type NavigationProp = NativeStackNavigationProp<HomeStackParamList & RootStackParamList, 'ProductDetail'>;
 type RouteProps = RouteProp<HomeStackParamList, 'ProductDetail'>;
@@ -278,7 +279,7 @@ const styles = StyleSheet.create({
 
   productName: {
     fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: Colors.textPrimary,
     marginBottom: Spacing.sm,
     textAlign: 'center',
@@ -297,7 +298,7 @@ const styles = StyleSheet.create({
 
   sectionTitle: {
     fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.semiBold,
+    fontFamily: FontFamily.medium, fontWeight: '600',
     color: Colors.textPrimary,
     marginBottom: Spacing.md,
   },
@@ -328,7 +329,7 @@ const styles = StyleSheet.create({
 
   featureTitle: {
     fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semiBold,
+    fontFamily: FontFamily.medium, fontWeight: '600',
     color: Colors.textPrimary,
     marginBottom: 2,
   },
@@ -381,7 +382,7 @@ const styles = StyleSheet.create({
 
   planName: {
     fontSize: Typography.size.base,
-    fontWeight: Typography.weight.semiBold,
+    fontFamily: FontFamily.medium, fontWeight: '600',
     color: Colors.textPrimary,
   },
 
@@ -396,7 +397,7 @@ const styles = StyleSheet.create({
 
   planPrice: {
     fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: Colors.primary,
   },
 
@@ -450,7 +451,7 @@ const styles = StyleSheet.create({
 
   bottomPrice: {
     fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
+    fontFamily: FontFamily.bold, fontWeight: '700',
     color: Colors.primary,
   },
 

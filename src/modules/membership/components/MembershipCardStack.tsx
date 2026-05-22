@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Membership Card Stack Component
  * Displays membership cards in a stacked 3D layout with drag gestures
  */
@@ -16,6 +16,7 @@ import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { Image } from 'expo-image';
 import { getOssImg } from '../../../api';
 import { Typography } from '../../../shared/constants/styles';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 // Match MembershipDetailScreen exactly: full width minus 24px each side, Vue ratio 382×220
@@ -284,6 +285,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     color: '#FFFFFF',
     fontSize: 16,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     letterSpacing: 1,
   },
@@ -296,6 +298,7 @@ const styles = StyleSheet.create({
 
   memberIdLabel: {
     fontSize: 12,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
     color: '#FFFFFF',
     opacity: 0.9,
@@ -304,6 +307,7 @@ const styles = StyleSheet.create({
 
   memberIdValue: {
     fontSize: 14,
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
     color: '#FFFFFF',
     letterSpacing: 1,

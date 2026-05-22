@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PIN Enter Screen — verify current 4-digit PIN before changing
  * Mirrors happi-app-customer/src/views/profile/privacy-security/password/pin/enter.vue
  */
@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../../../shared/components';
 import { ProfileStackParamList } from '../../../app/navigation/types';
 import authApi from '../../../api/auth';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type NavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
 
@@ -126,6 +127,7 @@ const styles = StyleSheet.create({
 
   title: {
     fontSize: 18,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#010101',
     marginBottom: 20,
@@ -175,6 +177,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FDB813',
     marginTop: 8,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
   },
 
@@ -193,6 +196,7 @@ const styles = StyleSheet.create({
 
   verifyBtnText: {
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
     color: '#ffffff',
   },

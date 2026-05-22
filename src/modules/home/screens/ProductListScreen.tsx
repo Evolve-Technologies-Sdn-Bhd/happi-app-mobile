@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Product List Screen
  * Browse and filter products
  */
@@ -20,6 +20,7 @@ import { HomeStackParamList } from '../../../app/navigation/types';
 import { Header, Card, Loading } from '../../../shared/components';
 import { Colors } from '../../../shared/constants/colors';
 import { Spacing, Typography, BorderRadius } from '../../../shared/constants/styles';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type NavigationProp = NativeStackNavigationProp<HomeStackParamList, 'ProductList'>;
 type RouteProps = RouteProp<HomeStackParamList, 'ProductList'>;
@@ -256,7 +257,7 @@ const styles = StyleSheet.create({
   categoryChipText: {
     fontSize: Typography.size.sm,
     color: Colors.textSecondary,
-    fontWeight: Typography.weight.medium,
+    fontFamily: FontFamily.medium, fontWeight: '500',
   },
 
   categoryChipTextActive: {
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
 
   productName: {
     fontSize: Typography.size.base,
-    fontWeight: Typography.weight.semiBold,
+    fontFamily: FontFamily.medium, fontWeight: '600',
     color: Colors.textPrimary,
     marginBottom: 2,
   },
@@ -307,7 +308,7 @@ const styles = StyleSheet.create({
   productPrice: {
     fontSize: Typography.size.sm,
     color: Colors.primary,
-    fontWeight: Typography.weight.semiBold,
+    fontFamily: FontFamily.medium, fontWeight: '600',
   },
 
   emptyContainer: {

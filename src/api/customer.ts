@@ -8,15 +8,27 @@ import { httpRequest } from './client';
 export interface CustomerInfo {
   id: string;
   realname: string;
+  username?: string;
   mobile: string;
+  countryCode?: string;
   email?: string;
   avatar?: string;
+  foreignerState?: number; // 0=local (NRIC), 1=foreigner (passport)
   idNumber?: string;
+  idType?: number;
+  idStatus?: number;
+  passportNumber?: string;
+  workPermitNumber?: string;
+  workPermitExpiredDate?: string;
   nationality?: string;
   birthday?: string;
   gender?: string;
   address?: string;
+  occupation?: string;
+  maritalStatus?: string;
   membershipTier?: string;
+  membershipPurchase?: { name: string };
+  corporationName?: string;
   coins?: number;
   referralCode?: string;
 }
@@ -30,6 +42,8 @@ export interface UpdateCustomerRequest {
   address?: string;
   occupation?: string;
   maritalStatus?: string;
+  workPermitNumber?: string;
+  workPermitExpiredDate?: string;
 }
 
 export interface ChangePasswordRequest {

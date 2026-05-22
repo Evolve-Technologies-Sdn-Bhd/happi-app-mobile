@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PIN New Screen — enter new 4-digit PIN
  * Mirrors happi-app-customer/src/views/profile/privacy-security/password/pin/new.vue
  */
@@ -17,6 +17,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../../../shared/components';
 import { ProfileStackParamList } from '../../../app/navigation/types';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type NavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
 
@@ -98,6 +99,7 @@ const styles = StyleSheet.create({
 
   title: {
     fontSize: 18,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#010101',
     marginBottom: 14,
@@ -156,6 +158,7 @@ const styles = StyleSheet.create({
 
   continueBtnText: {
     fontSize: 15,
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
     color: '#ffffff',
   },

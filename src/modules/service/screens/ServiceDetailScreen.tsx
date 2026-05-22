@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Service Detail Screen
  * Ported from happi-app-customer/src/views/service/detail.vue
  * Shows detailed information about a service provider
@@ -13,19 +13,19 @@ import {
   TouchableOpacity,
   Alert,
   Linking,
-  ImageBackground,
   Animated,
   Easing,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ServiceStackParamList } from '../../../app/navigation/types';
 import { Colors } from '../../../shared/constants/colors';
-import { Spacing, Typography, BorderRadius, Shadows } from '../../../shared/constants/styles';
+import { Spacing, Typography, BorderRadius } from '../../../shared/constants/styles';
 import { getOssImg, getServiceDetail, recordServiceUsage } from '../../../api';
+import { Header } from '../../../shared/components';
 
 // Import service icons as SVG components
 import CallIcon from '../../../../assets/svg/call_service.svg';
@@ -211,12 +211,32 @@ export const ServiceDetailScreen: React.FC = () => {
   };
 
   const stripHtml = (html: string): string => {
-    return html.replace(/<[^>]*>/g, '');
+    return html
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&reg;/g, '\u00ae')
+      .replace(/&trade;/g, '\u2122')
+      .replace(/&copy;/g, '\u00a9')
+      .replace(/&ndash;/g, '\u2013')
+      .replace(/&mdash;/g, '\u2014')
+      .replace(/&lsquo;/g, '\u2018')
+      .replace(/&rsquo;/g, '\u2019')
+      .replace(/&ldquo;/g, '\u201c')
+      .replace(/&rdquo;/g, '\u201d')
+      .replace(/&hellip;/g, '\u2026')
+      .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+      .trim();
   };
 
   if (loading) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.container}>
+        <Header title="Service Details" showBack />
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
@@ -226,7 +246,8 @@ export const ServiceDetailScreen: React.FC = () => {
 
   if (!serviceDetail) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.container}>
+        <Header title="Service Details" showBack />
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Service not found</Text>
         </View>
@@ -241,29 +262,10 @@ export const ServiceDetailScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header Section with Background */}
-      <View style={styles.headerSection}>
-        <ImageBackground
-          source={require('../../../../assets/products/header-bg.png')}
-          style={styles.headerBackground}
-          resizeMode="cover"
-        >
-          <SafeAreaView edges={['top']} style={styles.headerSafeArea}>
-            <View style={styles.headerContent}>
-              <TouchableOpacity
-                onPress={() => navigation.goBack()}
-                style={styles.backButton}
-              >
-                <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-              </TouchableOpacity>
-              <Text style={styles.headerTitle} numberOfLines={1}>
-                {serviceDetail.name || 'Service Details'}
-              </Text>
-              <View style={{ width: 40 }} />
-            </View>
-          </SafeAreaView>
-        </ImageBackground>
-      </View>
+      <Header
+        title={serviceDetail.name || 'Service Details'}
+        showBack
+      />
 
       <ScrollView
         ref={scrollViewRef}
@@ -406,36 +408,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FDFDFD',
   },
-  // Header Section
-  headerSection: {
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    overflow: 'hidden',
-  },
-  headerBackground: {
-    paddingHorizontal: 24,
-    paddingBottom: 45,
-  },
-  headerSafeArea: {
-  },
-  headerContent: {
-    paddingTop: 24,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    flex: 1,
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '600' as any,
-    lineHeight: 24,
-    textAlign: 'center',
-    marginHorizontal: 8,
-  },
   scrollView: {
     flex: 1,
   },
@@ -486,7 +458,7 @@ const styles = StyleSheet.create({
   infoValue: {
     flex: 1,
     fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semiBold as any,
+    fontWeight: '600',
     color: Colors.textDark,
     lineHeight: 22,
   },
@@ -515,7 +487,7 @@ const styles = StyleSheet.create({
   faqQuestion: {
     flex: 1,
     fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semiBold as any,
+    fontWeight: '600',
     color: Colors.textDark,
     marginRight: Spacing.sm,
   },
@@ -549,7 +521,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold as any,
+    fontWeight: '700',
     color: Colors.background,
     lineHeight: 15,
   },

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Family & Assets Screen
  * Mirrors happi-app-customer/src/views/profile/family-assets/index.vue
  */
@@ -17,6 +17,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../../../shared/components';
 import { ProfileStackParamList } from '../../../app/navigation/types';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 const imgPerson  = require('../../../../assets/images/profile/family-person-icon.png');
 const imgVehicle = require('../../../../assets/images/profile/family-vehicle-icon.png');
@@ -180,6 +181,7 @@ const styles = StyleSheet.create({
   // ── Shared ──────────────────────────────────────────────────────────────────
   cardTitle: {
     fontSize: 21,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#FDB813',
     lineHeight: 24,
@@ -197,6 +199,7 @@ const styles = StyleSheet.create({
 
   selectBtnText: {
     fontSize: 14,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#ffffff',
     lineHeight: 14,

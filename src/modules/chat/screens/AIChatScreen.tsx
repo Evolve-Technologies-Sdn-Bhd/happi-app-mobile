@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AI Chat Screen - Creamy Assistant
  * Ported from happi-app-customer/src/views/public/message/ai-chat.vue
  * AI chatbot with welcome screen, quick actions, and rich text
@@ -32,6 +32,7 @@ import {
   clearChatbotHistory,
 } from '../../../api/msg';
 import { useUserStore } from '../../../store/userStore';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 type AIChatScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AIChat'>;
 type AIChatScreenRouteProp = RouteProp<RootStackParamList, 'AIChat'>;
@@ -668,6 +669,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
     color: '#FFFFFF',
   },
@@ -736,12 +738,14 @@ const styles = StyleSheet.create({
   },
   welcomeTitle: {
     fontSize: 26,
+    fontFamily: FontFamily.black,
     fontWeight: '800',
     color: '#333333',
     marginBottom: 6,
   },
   welcomeSubtitle: {
     fontSize: 16,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#FDB813',
     marginBottom: 14,
@@ -785,6 +789,7 @@ const styles = StyleSheet.create({
   },
   quickBtnText: {
     fontSize: 12,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#343434',
     textAlign: 'center',
@@ -803,6 +808,7 @@ const styles = StyleSheet.create({
   topicBackText: {
     fontSize: 14,
     color: '#704214',
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
   },
   topicIntro: {
@@ -862,6 +868,7 @@ const styles = StyleSheet.create({
   suggestionChipText: {
     fontSize: 13,
     color: '#704214',
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
   },
   dateSeparator: {
@@ -946,6 +953,7 @@ const styles = StyleSheet.create({
   },
   recommendationTitle: {
     fontSize: 13,
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
     color: '#704214',
   },
@@ -959,6 +967,7 @@ const styles = StyleSheet.create({
   },
   recommendationBtnText: {
     fontSize: 13,
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
     color: '#FFFFFF',
   },

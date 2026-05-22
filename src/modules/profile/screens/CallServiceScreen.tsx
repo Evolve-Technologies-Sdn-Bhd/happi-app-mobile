@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Call Service Screen
  * Matches happi-app-customer/src/views/profile/support/phone.vue
  */
@@ -19,6 +19,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { ProfileStackParamList } from '../../../app/navigation/types';
 import { Header } from '../../../shared/components';
+import { FontFamily } from '../../../shared/constants/fonts';
 
 const imgPhoneIcon = require('../../../../assets/images/support/call-phone-icon.png');
 const imgInfoBg    = require('../../../../assets/images/support/call-info-bg.png');
@@ -114,6 +115,7 @@ const styles = StyleSheet.create({
   text3: {
     color: '#343434',
     fontSize: 25,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     lineHeight: 32,
   },
@@ -129,6 +131,7 @@ const styles = StyleSheet.create({
 
   font: {
     fontSize: 14,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
     color: '#343434',
     lineHeight: 20,
@@ -157,6 +160,7 @@ const styles = StyleSheet.create({
   text5: {
     color: '#ffffff',
     fontSize: 17,
+    fontFamily: FontFamily.medium,
     fontWeight: '600',
     lineHeight: 20,
   },

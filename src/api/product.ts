@@ -19,6 +19,18 @@ export interface Company {
   description?: string;
 }
 
+export interface ProductAddon {
+  name: string;
+  premium: number;
+  description?: string;
+}
+
+export interface ProductTax {
+  name: string;
+  type: number; // 1=percentage of premium, 2=fixed
+  value: number;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -27,7 +39,15 @@ export interface Product {
   categoryId: string;
   companyId: string;
   image?: string;
+  cardImgUrl?: string;
   status: number;
+  // Payable calc fields
+  premium?: number;
+  addons?: ProductAddon[];
+  taxes?: ProductTax[];
+  grossDescription?: string;
+  commissionPercentage?: number;
+  sumInsured?: number;
 }
 
 /**

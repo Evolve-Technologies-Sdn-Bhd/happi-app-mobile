@@ -10,6 +10,9 @@ export const FontFamily = {
   medium: 'ZenMaruGothic_500Medium',
   bold: 'ZenMaruGothic_700Bold',
   black: 'ZenMaruGothic_900Black',
+  // Inter – used for numeric accent text (e.g. multiplier circles)
+  inter: 'Inter_400Regular',
+  inter700: 'Inter_700Bold',
 } as const;
 
 // Default font for the app
