@@ -4,7 +4,12 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ViewStyle,
+} from 'react-native';
+import { Text } from '../Text';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { Spacing, Typography } from '../../constants/styles';
@@ -66,14 +71,16 @@ const styles = StyleSheet.create({
   },
   
   title: {
+    fontFamily: Typography.fontFamily.semiBold,
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.semiBold,
     color: Colors.textPrimary,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
-  
+
   description: {
+    fontFamily: Typography.fontFamily.regular,
     fontSize: Typography.size.base,
     color: Colors.textSecondary,
     textAlign: 'center',

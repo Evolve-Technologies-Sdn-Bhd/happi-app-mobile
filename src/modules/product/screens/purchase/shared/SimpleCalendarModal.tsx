@@ -1,12 +1,12 @@
 ﻿import React, { useState } from 'react';
 import {
   View,
-  Text,
   TouchableOpacity,
   Modal,
   StyleSheet,
   Dimensions,
 } from 'react-native';
+import { Text } from '../../../../../shared/components/Text';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
 import { Colors } from '../../../../../shared/constants/colors';

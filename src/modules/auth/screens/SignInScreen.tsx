@@ -8,10 +8,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   KeyboardAvoidingView,
   Platform,
   Animated,
@@ -23,6 +21,8 @@ import {
   ImageBackground,
   Easing,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
+import { TextInput } from '../../../shared/components/TextInput';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';

@@ -9,8 +9,8 @@ import {
   ActivityIndicator,
   StyleSheet,
   Modal,
-  Text,
 } from 'react-native';
+import { Text } from '../Text';
 import { Colors } from '../../constants/colors';
 import { Typography, Spacing } from '../../constants/styles';
 
@@ -88,10 +88,11 @@ const styles = StyleSheet.create({
   
   text: {
     marginTop: Spacing.md,
+    fontFamily: Typography.fontFamily.regular,
     fontSize: Typography.size.sm,
     color: Colors.textSecondary,
   },
-  
+
   screenLoading: {
     flex: 1,
     backgroundColor: Colors.background,
@@ -99,8 +100,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.md,
   },
-  
+
   screenLoadingText: {
+    fontFamily: Typography.fontFamily.regular,
     fontSize: Typography.size.base,
     color: Colors.textSecondary,
   },

@@ -6,10 +6,10 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';

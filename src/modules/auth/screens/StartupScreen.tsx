@@ -7,9 +7,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Image,
+  ImageBackground,
   ScrollView,
   TouchableOpacity,
   Alert,
@@ -18,15 +18,15 @@ import {
   Animated,
   Easing,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { AuthStackParamList } from '../../../app/navigation/types';
-import { Button } from '../../../shared/components';
 import { Colors } from '../../../shared/constants/colors';
-import { Spacing, Typography } from '../../../shared/constants/styles';
+import { Spacing, Screen } from '../../../shared/constants/styles';
 import { useTranslation } from 'react-i18next';
 import { useCommonStore } from '../../../store';
 import { useAppStore } from '../../../store/appStore';
@@ -275,70 +275,79 @@ export const StartupScreen: React.FC = () => {
   }
 
   // Show privacy notice if not agreed
+  // UI matches happi-app-customer/src/views/startup.vue (privacy notice card over gradient background)
   return (
-    <View style={styles.container}>
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 }
+    <ImageBackground
+      source={require('../../../../assets/images/sign-in-background.png')}
+      style={styles.privacyBackground}
+      resizeMode="cover"
+    >
+      <View
+        style={[
+          styles.privacyContainer,
+          { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 12 },
         ]}
       >
-        {/* Logo */}
-        <View style={styles.logoContainer}>
-          <View style={[styles.logoPlaceholder, styles.logoPlaceholderPrimary]}>
-            <Text style={styles.logoTextPrimary}>HAPPI</Text>
+        <ScrollView
+          contentContainerStyle={styles.cardScrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.card}>
+            {/* Logo */}
+            <Image
+              source={require('../../../../assets/images/happi-primary.png')}
+              style={styles.cardLogo}
+              resizeMode="contain"
+            />
+
+            {/* Title */}
+            <Text style={styles.title}>Privacy & Cookie Notice</Text>
+
+            {/* Privacy Content */}
+            <View style={styles.privacyContent}>
+              <Text style={styles.privacyText}>Welcome to HAPPI</Text>
+
+              <Text style={styles.privacyText}>
+                To provide you with a secure and personalized app experience, we may collect and use your personal information, including data related to your usage, preferences, and transactions.
+              </Text>
+
+              <Text style={styles.privacyText}>
+                We also use cookies and similar technologies to improve the performance of our app and tailor our services to your needs.
+              </Text>
+
+              <Text style={styles.privacyText}>
+                By tapping "Agree", you consent to our use of data and cookies as explained in our Privacy Policy. You may review or update your privacy preferences in the app settings at any time.
+              </Text>
+
+              <TouchableOpacity onPress={handleViewPrivacyPolicy}>
+                <Text style={styles.policyLink}>View Privacy Policy</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Buttons */}
+            <View style={styles.buttonsContainer}>
+              <TouchableOpacity
+                style={styles.agreeButton}
+                onPress={handleAgree}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.agreeButtonText}>Agree</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.disagreeButton}
+                onPress={handleDisagree}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.disagreeButtonText}>Disagree</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-
-        {/* Title */}
-        <Text style={styles.title}>Privacy & Cookie Notice</Text>
-
-        {/* Privacy Content */}
-        <View style={styles.privacyContent}>
-          <Text style={styles.privacyText}>Welcome to HAPPI</Text>
-          
-          <Text style={styles.privacyText}>
-            To provide you with a secure and personalized app experience, we may collect and use your personal information, including data related to your usage, preferences, and transactions.
-          </Text>
-          
-          <Text style={styles.privacyText}>
-            We also use cookies and similar technologies to improve the performance of our app and tailor our services to your needs.
-          </Text>
-          
-          <Text style={styles.privacyText}>
-            By tapping "Agree", you consent to our use of data and cookies as explained in our Privacy Policy. You may review or update your privacy preferences in the app settings at any time.
-          </Text>
-          
-          <TouchableOpacity onPress={handleViewPrivacyPolicy}>
-            <Text style={styles.policyLink}>View Privacy Policy</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Buttons */}
-        <View style={styles.buttonsContainer}>
-          <Button
-            title="Agree"
-            variant="primary"
-            size="lg"
-            fullWidth
-            onPress={handleAgree}
-            style={styles.agreeButton}
-          />
-          <Button
-            title="Disagree"
-            variant="outline"
-            size="lg"
-            fullWidth
-            onPress={handleDisagree}
-            style={styles.disagreeButton}
-          />
-        </View>
+        </ScrollView>
 
         {/* Version */}
         <Text style={styles.versionText}>Version {versionCode}</Text>
-      </ScrollView>
-    </View>
+      </View>
+    </ImageBackground>
   );
 };
 
@@ -386,90 +395,117 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
   
-  logoPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+  // Privacy notice styles — matches happi-app-customer/src/views/startup.vue
+  privacyBackground: {
+    flex: 1,
+  },
+
+  privacyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+
+  cardScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // 364x608 in a 430x932 design (happi-app-customer startup.vue .section_2) — same ratio, not full width
+  card: {
+    width: Screen.width * (364 / 430),
+    backgroundColor: Colors.background,
+    borderRadius: 28,
+    paddingTop: 30,
+    paddingHorizontal: 20,
+    paddingBottom: 28,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+
+  cardLogo: {
+    width: 82,
+    height: 37,
+    marginBottom: 24,
+  },
+
+  title: {
+    fontFamily: FontFamily.inter700,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#343434',
+    textDecorationLine: 'underline',
+    marginBottom: 20,
+  },
+
+  privacyContent: {
+    marginBottom: 8,
+  },
+
+  privacyText: {
+    fontFamily: FontFamily.inter,
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#808080',
+    lineHeight: 20,
+    textAlign: 'justify',
+    marginBottom: 15,
+  },
+
+  policyLink: {
+    fontFamily: FontFamily.inter700,
+    fontSize: 14,
+    color: Colors.primary,
+    textDecorationLine: 'underline',
+  },
+
+  buttonsContainer: {
+    marginTop: Spacing.xl,
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+
+  agreeButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: 999,
+    paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  
-  logoPlaceholderPrimary: {
-    backgroundColor: Colors.primary + '20',
-  },
-  
-  logoTextWhite: {
-    fontSize: 32,
-    fontFamily: FontFamily.bold, fontWeight: '700',
+
+  agreeButtonText: {
+    fontFamily: FontFamily.inter700,
+    fontSize: 18,
+    fontWeight: '700',
     color: Colors.textWhite,
   },
-  
-  logoTextPrimary: {
-    fontSize: 28,
-    fontFamily: FontFamily.bold, fontWeight: '700',
-    color: Colors.primary,
-  },
-  
-  // Privacy notice styles
-  scrollView: {
-    flex: 1,
-  },
-  
-  scrollContent: {
-    paddingHorizontal: Spacing.xl,
-    flexGrow: 1,
-  },
-  
-  logoContainer: {
-    alignItems: 'flex-start',
-    marginBottom: Spacing.xl,
-  },
-  
-  title: {
-    fontSize: Typography.size.xl,
-    fontFamily: FontFamily.bold, fontWeight: '700',
-    color: Colors.textPrimary,
-    marginBottom: Spacing.lg,
-  },
-  
-  privacyContent: {
-    flex: 1,
-  },
-  
-  privacyText: {
-    fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
-    lineHeight: 22,
-    marginBottom: Spacing.md,
-  },
-  
-  policyLink: {
-    fontSize: Typography.size.sm,
-    color: Colors.primary,
-    fontFamily: FontFamily.medium, fontWeight: '600',
-    marginTop: Spacing.sm,
-    marginBottom: Spacing.xl,
-  },
-  
-  buttonsContainer: {
-    marginTop: 'auto',
-    gap: Spacing.md,
-  },
-  
-  agreeButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: 25,
-  },
-  
+
   disagreeButton: {
-    borderRadius: 25,
+    backgroundColor: Colors.background,
+    borderRadius: 999,
+    borderWidth: 1.5,
     borderColor: Colors.primary,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  
+
+  disagreeButtonText: {
+    fontFamily: FontFamily.inter700,
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
+
   versionText: {
-    fontSize: Typography.size.xs,
-    color: Colors.textLight,
+    fontFamily: FontFamily.inter,
+    fontSize: 14,
+    fontWeight: '400',
+    color: Colors.textWhite,
     textAlign: 'center',
-    marginTop: Spacing.lg,
+    paddingTop: 12,
   },
 });

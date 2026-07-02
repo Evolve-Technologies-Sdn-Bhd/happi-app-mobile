@@ -7,13 +7,13 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Image,
   TouchableOpacity,
   ImageBackground,
   Animated,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
 import { FontFamily } from '../../../shared/constants/fonts';
 import { Policy } from '../../../api/policy';
 import { getOssImg } from '../../../api/client';

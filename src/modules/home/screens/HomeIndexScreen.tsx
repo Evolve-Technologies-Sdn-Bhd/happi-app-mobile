@@ -7,7 +7,6 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -15,6 +14,7 @@ import {
   Alert,
   ImageBackground,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
 import { Image } from 'expo-image';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';

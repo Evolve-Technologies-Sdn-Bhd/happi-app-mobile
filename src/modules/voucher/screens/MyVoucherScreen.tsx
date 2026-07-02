@@ -6,16 +6,16 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  TextInput,
   RefreshControl,
   ActivityIndicator,
   Dimensions,
   Image as RNImage,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
+import { TextInput } from '../../../shared/components/TextInput';
 import { Image } from 'expo-image';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';

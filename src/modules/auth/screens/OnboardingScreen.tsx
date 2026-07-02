@@ -8,7 +8,6 @@
 import React, { useRef, useState, useCallback } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Image,
   Dimensions,
@@ -18,6 +17,7 @@ import {
   NativeSyntheticEvent,
   ScrollView,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';

@@ -7,7 +7,6 @@
 import React from 'react';
 import {
   View,
-  Text,
   Image,
   ScrollView,
   StyleSheet,
@@ -17,6 +16,7 @@ import {
   ImageSourcePropType,
   Dimensions,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';

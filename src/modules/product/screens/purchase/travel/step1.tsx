@@ -15,16 +15,16 @@
 import React, { useMemo, useRef, useState } from 'react';
 import {
   View,
-  Text,
   ScrollView,
   TouchableOpacity,
   ImageBackground,
-  TextInput,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
   Animated,
 } from 'react-native';
+import { Text } from '../../../../../shared/components/Text';
+import { TextInput } from '../../../../../shared/components/TextInput';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';

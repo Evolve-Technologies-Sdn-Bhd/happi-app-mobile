@@ -1,5 +1,10 @@
 ﻿import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
+import { Text } from '../../../../../shared/components/Text';
 import { Colors } from '../../../../../shared/constants/colors';
 import { FontFamily } from '../../../../../shared/constants/fonts';
 import { RadioOption } from './types';

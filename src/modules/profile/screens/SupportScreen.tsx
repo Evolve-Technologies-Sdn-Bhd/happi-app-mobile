@@ -6,20 +6,20 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
   Image,
   Alert,
   Modal,
-  TextInput,
   ActivityIndicator,
   Linking,
   Clipboard,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
+import { TextInput } from '../../../shared/components/TextInput';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';

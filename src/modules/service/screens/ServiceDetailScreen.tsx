@@ -7,7 +7,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -16,6 +15,7 @@ import {
   Animated,
   Easing,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
 import { Image } from 'expo-image';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

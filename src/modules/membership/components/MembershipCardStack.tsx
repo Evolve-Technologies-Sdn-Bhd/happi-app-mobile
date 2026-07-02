@@ -6,12 +6,12 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Dimensions,
   Animated,
   Easing,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { Image } from 'expo-image';
 import { getOssImg } from '../../../api';

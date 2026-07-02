@@ -11,3 +11,5 @@ export * from './Loading';
 export * from './EmptyState';
 export * from './Toast';
 export * from './HtmlText';
+export * from './Text';
+export * from './TextInput';

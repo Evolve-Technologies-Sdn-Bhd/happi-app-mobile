@@ -7,18 +7,18 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   PanResponder,
-  TextInput,
   Modal,
   KeyboardAvoidingView,
   Platform,
   FlatList,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
+import { TextInput } from '../../../shared/components/TextInput';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';

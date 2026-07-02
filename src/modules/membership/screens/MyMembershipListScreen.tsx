@@ -7,7 +7,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -16,6 +15,7 @@ import {
   Dimensions,
   Modal,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';

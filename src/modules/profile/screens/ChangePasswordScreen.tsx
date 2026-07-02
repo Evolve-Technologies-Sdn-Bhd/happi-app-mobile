@@ -6,14 +6,14 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
-  TextInput,
   TouchableOpacity,
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
+import { TextInput } from '../../../shared/components/TextInput';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';

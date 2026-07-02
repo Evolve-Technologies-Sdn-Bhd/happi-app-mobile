@@ -54,6 +54,7 @@ export const MainTabs: React.FC = () => {
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.textLight,
         tabBarLabelStyle: {
+          fontFamily: Typography.fontFamily.medium,
           fontSize: Typography.size.xs,
           fontWeight: Typography.weight.medium,
         },

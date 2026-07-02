@@ -7,12 +7,12 @@ import React, { useState, forwardRef } from 'react';
 import {
   View,
   TextInput,
-  Text,
   StyleSheet,
   TextInputProps,
   TouchableOpacity,
   ViewStyle,
 } from 'react-native';
+import { Text } from '../Text';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { Spacing, BorderRadius, Typography } from '../../constants/styles';
@@ -130,6 +130,7 @@ const styles = StyleSheet.create({
   },
   
   label: {
+    fontFamily: Typography.fontFamily.medium,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.medium,
     color: Colors.textPrimary,
@@ -169,6 +170,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.md,
+    fontFamily: Typography.fontFamily.regular,
     fontSize: Typography.size.base,
     color: Colors.textPrimary,
   },
@@ -191,12 +193,14 @@ const styles = StyleSheet.create({
   },
   
   error: {
+    fontFamily: Typography.fontFamily.regular,
     fontSize: Typography.size.xs,
     color: Colors.error,
     marginTop: Spacing.xs,
   },
-  
+
   hint: {
+    fontFamily: Typography.fontFamily.regular,
     fontSize: Typography.size.xs,
     color: Colors.textLight,
     marginTop: Spacing.xs,

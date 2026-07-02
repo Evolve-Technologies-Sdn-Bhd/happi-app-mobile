@@ -6,12 +6,12 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   Linking,
   TouchableOpacity,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';

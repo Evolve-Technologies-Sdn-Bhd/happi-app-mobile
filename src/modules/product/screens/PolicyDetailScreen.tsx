@@ -6,7 +6,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -14,6 +13,7 @@ import {
   ImageBackground,
   ActivityIndicator,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, RouteProp, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';

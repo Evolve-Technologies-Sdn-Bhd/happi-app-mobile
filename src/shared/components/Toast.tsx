@@ -6,12 +6,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Animated,
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
+import { Text } from './Text';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
 import { Typography, Spacing, BorderRadius } from '../constants/styles';
@@ -184,6 +184,7 @@ const styles = StyleSheet.create({
   },
   message: {
     flex: 1,
+    fontFamily: Typography.fontFamily.semiBold,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semiBold as any,
     marginLeft: Spacing.sm,

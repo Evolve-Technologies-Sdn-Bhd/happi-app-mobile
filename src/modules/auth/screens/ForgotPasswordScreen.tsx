@@ -6,8 +6,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
-  TextInput,
   StyleSheet,
   Alert,
   ActivityIndicator,
@@ -15,6 +13,8 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
+import { TextInput } from '../../../shared/components/TextInput';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { TouchableOpacity, Linking } from 'react-native';

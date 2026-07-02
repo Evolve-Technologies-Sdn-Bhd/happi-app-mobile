@@ -7,7 +7,6 @@
 import React, { useRef, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Dimensions,
   ScrollView,
@@ -17,6 +16,7 @@ import {
   TouchableOpacity,
   ImageBackground,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
 import { Colors } from '../../../shared/constants/colors';
 import { FontFamily } from '../../../shared/constants/fonts';
 

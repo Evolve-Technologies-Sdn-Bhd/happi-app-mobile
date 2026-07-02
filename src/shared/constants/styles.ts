@@ -4,6 +4,7 @@
  */
 
 import { Dimensions, Platform, StatusBar } from 'react-native';
+import { FontFamily } from './fonts';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -53,7 +54,17 @@ export const Typography = {
     semiBold: '600' as const,
     bold: '700' as const,
   },
-  
+
+  // Zen Maru Gothic only ships discrete weights (300/400/500/700/900), so each
+  // numeric weight above maps to the closest loaded font file — mirrors the
+  // customer app's CSS @font-face weight resolution (600 resolves to 700).
+  fontFamily: {
+    regular: FontFamily.regular,
+    medium: FontFamily.medium,
+    semiBold: FontFamily.bold,
+    bold: FontFamily.bold,
+  },
+
   // Line Heights
   lineHeight: {
     tight: 1.2,

@@ -6,11 +6,11 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   FlatList,
   RefreshControl,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Header, Card, EmptyState } from '../../../shared/components';

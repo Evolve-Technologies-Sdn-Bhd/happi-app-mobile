@@ -1,5 +1,11 @@
 import React, { useState, useCallback } from 'react';
-import { View, ActivityIndicator, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import {
+  View,
+  ActivityIndicator,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import { Text } from '../components/Text';
 import { WebView } from 'react-native-webview';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../app/navigation/types';

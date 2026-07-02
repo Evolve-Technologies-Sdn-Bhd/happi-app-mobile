@@ -6,7 +6,6 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -15,6 +14,7 @@ import {
   ImageBackground,
   Clipboard,
 } from 'react-native';
+import { Text } from '../../../shared/components/Text';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

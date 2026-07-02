@@ -6,13 +6,13 @@
 import React from 'react';
 import {
   TouchableOpacity,
-  Text,
   StyleSheet,
   ActivityIndicator,
   ViewStyle,
   TextStyle,
   TouchableOpacityProps,
 } from 'react-native';
+import { Text } from '../Text';
 import { Colors } from '../../constants/colors';
 import { Spacing, BorderRadius, Typography, Shadows } from '../../constants/styles';
 
@@ -154,6 +154,7 @@ const styles = StyleSheet.create({
   
   // Text base
   text: {
+    fontFamily: Typography.fontFamily.semiBold,
     fontWeight: Typography.weight.semiBold,
   },
   
